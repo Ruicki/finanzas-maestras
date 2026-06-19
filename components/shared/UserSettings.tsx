@@ -39,8 +39,8 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                     <h3 className="font-black text-xl text-zinc-900 dark:text-white flex items-center gap-2">
                         <span className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl">⚙️</span>

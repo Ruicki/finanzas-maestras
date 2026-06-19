@@ -78,8 +78,8 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     // Step 1: Bank and Name
     if (step === 1) {
         return (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in backdrop-blur-sm">
-                <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
                     {/* Header */}
                     <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                         <h2 className="font-bold text-lg text-zinc-900 dark:text-white">Nueva Tarjeta de Crédito</h2>
@@ -136,8 +136,8 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
 
     // Step 2: Details
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in backdrop-blur-sm">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">

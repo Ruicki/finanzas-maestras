@@ -343,8 +343,8 @@ export default function ExpenseWizard({
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-950 w-full md:max-w-2xl rounded-t-[2.5rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-10 duration-300 max-h-[95vh] min-h-[85vh] md:min-h-0 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 hover:text-red-500 transition-colors z-10"
@@ -352,8 +352,8 @@ export default function ExpenseWizard({
                     <X className="w-6 h-6" />
                 </button>
 
-                {step === 1 && renderStep1_Categories()}
-                {step === 2 && renderStep2_Details()}
+                {step === 1 && <div className="p-6 md:p-8 overflow-y-auto flex-1">{renderStep1_Categories()}</div>}
+                {step === 2 && <div className="p-6 md:p-8 overflow-y-auto flex-1">{renderStep2_Details()}</div>}
             </div>
         </div>
     );

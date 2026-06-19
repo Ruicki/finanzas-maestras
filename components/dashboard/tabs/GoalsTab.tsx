@@ -482,8 +482,8 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
             {/* MODAL DE RECLAMO */}
             {reclaimModal.isOpen && reclaimModal.goal && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-950 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 text-center">
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 text-center">
                         <div className="mb-6 flex justify-center">
                             <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-full animate-bounce">
                                 <PiggyBank size={48} />
@@ -545,7 +545,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* MODAL DE FORMULARIO */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-950 w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-8">
                             <h3 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                                 {editingGoalId ? 'Editar Meta' : 'Nueva Meta'}

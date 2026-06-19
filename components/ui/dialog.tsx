@@ -5,10 +5,8 @@ import { cn } from "@/lib/utils"
 const Dialog = ({ open, onOpenChange, children }: any) => {
     if (!open) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
-            {/* Content Container (Actual dialog handled by Content) */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0" onClick={() => onOpenChange(false)} />
             {children}
         </div>
     );
@@ -16,7 +14,7 @@ const Dialog = ({ open, onOpenChange, children }: any) => {
 
 const DialogContent = ({ className, children, ...props }: any) => (
     <div className={cn(
-        "relative z-50 grid w-full max-w-lg gap-4 bg-white dark:bg-zinc-950 p-6 shadow-lg sm:rounded-lg border border-zinc-200 dark:border-zinc-800",
+        "relative z-50 w-full max-w-md rounded-3xl bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto",
         className
     )} {...props}>
         {children}

@@ -326,8 +326,8 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
 
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-200">
-            <div className={`bg-white dark:bg-zinc-950 w-full md:max-w-2xl rounded-t-[2.5rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-10 duration-300 ${type === 'SALARY' ? 'md:max-w-3xl' : ''} max-h-[95vh] min-h-[85vh] md:min-h-0 overflow-y-auto`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className={`bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col ${type === 'SALARY' ? 'md:max-w-3xl' : ''}`}>
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 hover:text-red-500 transition-colors z-10"
@@ -335,8 +335,8 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
 
-                {step === 1 && renderStep1_TypeSelection()}
-                {step === 2 && renderStep2_Details()}
+                {step === 1 && <div className="p-6 md:p-8 overflow-y-auto flex-1">{renderStep1_TypeSelection()}</div>}
+                {step === 2 && <div className="p-6 md:p-8 overflow-y-auto flex-1">{renderStep2_Details()}</div>}
             </div>
         </div>
     );

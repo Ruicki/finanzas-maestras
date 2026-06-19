@@ -400,8 +400,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
             {/* --- WIZARD UNIFICADO --- */}
             {isWizardOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in zoom-in-95">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-4xl p-8 shadow-2xl relative">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto">
                         <button onClick={() => setIsWizardOpen(false)} className="absolute top-6 right-6 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200"><X size={20} /></button>
 
                         <h3 className="text-2xl font-black mb-1">
@@ -601,8 +601,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
             {/* --- MODAL DE PAGO (Reutilizado) --- */}
             {paymentModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-black">Abonar a {paymentModal.name}</h3>
                             <button onClick={() => setPaymentModal(null)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full"><X size={20} /></button>
