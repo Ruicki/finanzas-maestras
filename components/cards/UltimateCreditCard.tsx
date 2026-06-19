@@ -1,6 +1,6 @@
 'use client';
 
-import { calculateCreditHealth } from '@/lib/financial-engine';
+import { calculateCreditHealth, calculateProjectedInterest, calculateMinimumPayment } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
 import { CreditCard, Wifi, MoreHorizontal, Calendar, TrendingUp, AlertCircle, Pencil } from 'lucide-react';
 import React from 'react';
@@ -21,12 +21,11 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
     const available = Number(card.limit) - Number(card.balance);
     const health = calculateCreditHealth(utilization);
 
-    // Smart Estimates (Restored Logic)
+    // Smart Estimates (Corrected for real-world calculations)
     const hasRate = Number(card.interestRate) > 0;
     const effectiveRate = hasRate ? Number(card.interestRate) : 45.0;
-    const monthlyRate = effectiveRate / 100 / 12;
-    const estimatedInterest = Number(card.balance) * monthlyRate;
-    const minPayment = Math.max(0, (Number(card.balance) * 0.03) + estimatedInterest); // Rough calc: 3% + Interest
+    const estimatedInterest = calculateProjectedInterest(Number(card.balance), effectiveRate);
+    const minPayment = calculateMinimumPayment(Number(card.balance), effectiveRate, Number(card.minPaymentPercentage) || 3.0);
 
     // Dates
     const today = new Date();
@@ -107,11 +106,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                             <TrendingUp size={12} /> Interés {Number(card.interestRate) ? `(${card.interestRate}%)` : '(Est. 45%)'}
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                            {(() => {
-                                const rate = Number(card.interestRate) || 45;
-                                const monthly = rate / 100 / 12;
-                                return `+${formatMoney(Number(card.balance) * monthly)}`;
-                            })()}
+                            +{formatMoney(estimatedInterest)}
                         </span>
                     </div>
                     <div className="flex flex-col gap-1">

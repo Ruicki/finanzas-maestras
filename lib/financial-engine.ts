@@ -64,15 +64,18 @@ export function calculateCreditHealth(utilization: number): { status: 'Excellent
     return { status: 'Critical', color: 'text-red-500' };
 }
 
-export function calculateMinimumPayment(balance: number, percentage: number = 3.0): number {
-    return Math.max(balance * (percentage / 100), 0);
+export function calculateMinimumPayment(balance: number, annualRate: number, percentage: number = 3.0, floor: number = 25): number {
+    if (balance <= 0) return 0;
+    const interest = calculateProjectedInterest(balance, annualRate);
+    const baseAmount = balance * (percentage / 100) + interest;
+    if (balance <= floor) return balance;
+    return Math.max(Math.round(baseAmount), floor);
 }
 
-export function calculateProjectedInterest(balance: number, annualRate: number): number {
-    if (!annualRate) return 0;
-    // Simple estimation: Monthly Rate * Balance
-    // Monthly Rate = Annual / 12
-    return (balance * (annualRate / 100)) / 12;
+export function calculateProjectedInterest(balance: number, annualRate: number, daysInMonth: number = 30): number {
+    if (!annualRate || balance <= 0) return 0;
+    const dailyRate = annualRate / 100 / 365;
+    return balance * dailyRate * daysInMonth;
 }
 
 export function getDaysToCutoff(cutoffDay: number): number {
