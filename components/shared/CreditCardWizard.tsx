@@ -56,7 +56,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
             await onCreate({
                 name: getDisplayName(),
                 limit: parseFloat(limit) || 0,
-                balance: parseFloat(balance) || 0,
+                initialBalance: parseFloat(balance) || 0,
                 interestRate: parseFloat(interestRate) || 0,
                 insuranceRate: getPreset()?.insuranceRate || 0.25,
                 cutoffDay: parseInt(cutoffDay) || 1,
