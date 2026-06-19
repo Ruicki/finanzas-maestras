@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finanzas Masestras",
-  description: "Gestor de salarios by Ricardo Pinzón",
+  title: "Finanzas Maestras",
+  description: "Gestor de finanzas personales by Ricardo Pinzón",
 };
 
 export default function RootLayout({
