@@ -301,26 +301,39 @@ export default function ExpenseWizard({
                 </div>
             </div>
 
-            <div className="pt-4 flex flex-col-reverse md:flex-row items-center justify-between gap-4 border-t border-zinc-100 dark:border-zinc-800 mt-4">
-                <div className="flex items-center justify-between w-full md:w-auto gap-3">
+            {/* Fecha y Recurrencia - Sección destacada */}
+            <div className="bg-zinc-50 dark:bg-zinc-900 rounded-3xl p-5 border border-zinc-100 dark:border-zinc-800 space-y-4">
+                <div>
+                    <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase mb-3 pl-1">
+                        <Calendar className="w-4 h-4" />
+                        Fecha del Gasto
+                    </label>
                     <input
                         type="date"
                         value={date}
                         onChange={e => setDate(e.target.value)}
-                        className="bg-zinc-50 dark:bg-zinc-900 border-none rounded-xl px-3 py-2 font-bold text-sm text-zinc-600 dark:text-zinc-300 outline-none flex-1 md:flex-none"
+                        className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4 font-bold text-base text-zinc-800 dark:text-zinc-200 outline-none focus:ring-2 ring-purple-500/50 transition-all"
                     />
-                    <label className="flex items-center gap-2 cursor-pointer group whitespace-nowrap">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isRecurring ? 'bg-purple-500 border-purple-500' : 'border-zinc-300 dark:border-zinc-700'}`}>
-                            {isRecurring && <CreditCardIcon className="w-3 h-3 text-white" />}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} />
-                        <span className="text-xs font-bold text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-300 transition-colors">Recurrente</span>
-                    </label>
                 </div>
 
+                <div className="flex items-center justify-between bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
+                    <div className="flex flex-col">
+                        <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Gasto recurrente</span>
+                        <span className="text-xs text-zinc-400">Se repite cada mes automáticamente</span>
+                    </div>
+                    <button
+                        onClick={() => setIsRecurring(!isRecurring)}
+                        className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${isRecurring ? 'bg-purple-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+                    >
+                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${isRecurring ? 'left-7' : 'left-1'}`} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
                 <button
                     onClick={handleSave}
-                    className="w-full md:w-auto md:flex-1 md:max-w-[200px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
+                    className="w-full md:w-auto md:max-w-[240px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                     <Save className="w-5 h-5" />
                     Guardar
