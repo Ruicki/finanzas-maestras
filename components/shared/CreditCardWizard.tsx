@@ -10,25 +10,37 @@ interface CreditCardWizardProps {
     onClose: () => void;
     onSuccess: () => void;
     onCreate: (data: any) => Promise<any>;
+    onUpdate?: (id: number, data: any) => Promise<any>;
+    editingCard?: {
+        id: number;
+        name: string;
+        limit: number;
+        balance: number;
+        cutoffDay: number;
+        paymentDay: number;
+        interestRate: number;
+        annualFee?: number;
+        annualFeeMonth?: number | null;
+    };
 }
 
-export default function CreditCardWizard({ profileId, onClose, onSuccess, onCreate }: CreditCardWizardProps) {
+export default function CreditCardWizard({ profileId, onClose, onSuccess, onCreate, onUpdate, editingCard }: CreditCardWizardProps) {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
     // Step 1
     const [bank, setBank] = useState('');
-    const [name, setName] = useState('');
+    const [name, setName] = useState(editingCard?.name || '');
 
     // Step 2
-    const [limit, setLimit] = useState('');
-    const [balance, setBalance] = useState('');
-    const [interestRate, setInterestRate] = useState('');
-    const [cutoffDay, setCutoffDay] = useState('');
-    const [paymentDay, setPaymentDay] = useState('');
-    const [hasAnnualFee, setHasAnnualFee] = useState(false);
-    const [annualFee, setAnnualFee] = useState('');
-    const [annualFeeMonth, setAnnualFeeMonth] = useState('');
+    const [limit, setLimit] = useState(editingCard?.limit.toString() || '');
+    const [balance, setBalance] = useState(editingCard?.balance.toString() || '');
+    const [interestRate, setInterestRate] = useState(editingCard?.interestRate.toString() || '');
+    const [cutoffDay, setCutoffDay] = useState(editingCard?.cutoffDay.toString() || '');
+    const [paymentDay, setPaymentDay] = useState(editingCard?.paymentDay.toString() || '');
+    const [hasAnnualFee, setHasAnnualFee] = useState(!!editingCard?.annualFee);
+    const [annualFee, setAnnualFee] = useState(editingCard?.annualFee?.toString() || '');
+    const [annualFeeMonth, setAnnualFeeMonth] = useState(editingCard?.annualFeeMonth?.toString() || '');
 
     useScrollLock(true);
 
@@ -53,7 +65,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     const handleCreate = async () => {
         setLoading(true);
         try {
-            await onCreate({
+            const data = {
                 name: getDisplayName(),
                 limit: parseFloat(limit) || 0,
                 initialBalance: parseFloat(balance) || 0,
@@ -65,7 +77,13 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 annualFeeMonth: hasAnnualFee ? (parseInt(annualFeeMonth) || null) : null,
                 bank: bank || null,
                 profileId,
-            });
+            };
+            
+            if (editingCard && onUpdate) {
+                await onUpdate(editingCard.id, data);
+            } else {
+                await onCreate(data);
+            }
             onSuccess();
             onClose();
         } catch (error) {

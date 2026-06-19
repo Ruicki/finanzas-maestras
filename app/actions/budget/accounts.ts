@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
+import { logger } from '@/lib/logger';
 
 // ─── ACCOUNTS ──────────────────────────────────────────────────────────────
 
@@ -182,19 +183,25 @@ export async function createTransfer(
         );
     }
 
-    await prisma.$transaction(async (tx) => {
-        await tx.account.update({
-            where: { id: sourceAccountId },
-            data: { balance: { decrement: amount } },
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.account.update({
+                where: { id: sourceAccountId },
+                data: { balance: { decrement: amount } },
+            });
+            await tx.account.update({
+                where: { id: destinationAccountId },
+                data: { balance: { increment: amount } },
+            });
+            await tx.transfer.create({
+                data: { amount, sourceAccountId, destinationAccountId, description, date: new Date() },
+            });
         });
-        await tx.account.update({
-            where: { id: destinationAccountId },
-            data: { balance: { increment: amount } },
-        });
-        await tx.transfer.create({
-            data: { amount, sourceAccountId, destinationAccountId, description, date: new Date() },
-        });
-    });
 
-    revalidatePath('/budget');
+        logger.info(`Transfer created: ${amount} from account ${sourceAccountId} to ${destinationAccountId}`);
+        revalidatePath('/budget');
+    } catch (error) {
+        logger.error('Error creating transfer:', error);
+        throw error;
+    }
 }

@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum, serializeCreditCard } from './serializers';
+import { logger } from '@/lib/logger';
 
 // ─── CREDIT CARDS ──────────────────────────────────────────────────────────
 
@@ -92,48 +93,54 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
     if (!card) throw new Error('Tarjeta no encontrada');
     if (amount > Number(card.balance)) throw new Error(`El pago excede el saldo de la tarjeta ($${Number(card.balance).toFixed(2)})`);
 
-    await prisma.$transaction(async (tx) => {
-        await tx.account.update({
-            where: { id: accountId },
-            data: { balance: { decrement: amount } },
-        });
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.account.update({
+                where: { id: accountId },
+                data: { balance: { decrement: amount } },
+            });
 
-        await tx.creditCard.update({
-            where: { id: cardId },
-            data: { balance: { decrement: amount } },
-        });
+            await tx.creditCard.update({
+                where: { id: cardId },
+                data: { balance: { decrement: amount } },
+            });
 
-        const card = await tx.creditCard.findUnique({ where: { id: cardId } });
+            const card = await tx.creditCard.findUnique({ where: { id: cardId } });
 
-        let cat = await tx.category.findFirst({
-            where: { profileId: account.profileId, name: 'Pagos Tarjeta' },
-        });
-        if (!cat) {
-            cat = await tx.category.create({
+            let cat = await tx.category.findFirst({
+                where: { profileId: account.profileId, name: 'Pagos Tarjeta' },
+            });
+            if (!cat) {
+                cat = await tx.category.create({
+                    data: {
+                        name: 'Pagos Tarjeta',
+                        icon: 'CreditCard',
+                        profileId: account.profileId,
+                        type: 'FIXED',
+                        color: 'zinc',
+                    },
+                });
+            }
+
+            await tx.expense.create({
                 data: {
-                    name: 'Pagos Tarjeta',
-                    icon: 'CreditCard',
+                    name: `Pago: ${card?.name || 'Tarjeta'}`,
+                    amount,
+                    category: 'Pagos Tarjeta',
+                    categoryId: cat.id,
                     profileId: account.profileId,
-                    type: 'FIXED',
-                    color: 'zinc',
+                    accountId,
+                    isOneTime: true,
+                    isRecurring: false,
+                    paymentMethod: 'TRANSFER',
                 },
             });
-        }
-
-        await tx.expense.create({
-            data: {
-                name: `Pago: ${card?.name || 'Tarjeta'}`,
-                amount,
-                category: 'Pagos Tarjeta',
-                categoryId: cat.id,
-                profileId: account.profileId,
-                accountId,
-                isOneTime: true,
-                isRecurring: false,
-                paymentMethod: 'TRANSFER',
-            },
         });
-    });
 
-    revalidatePath('/budget');
+        logger.info(`Credit card payment: $${amount} to card ${cardId} from account ${accountId}`);
+        revalidatePath('/budget');
+    } catch (error) {
+        logger.error('Error paying credit card:', error);
+        throw error;
+    }
 }

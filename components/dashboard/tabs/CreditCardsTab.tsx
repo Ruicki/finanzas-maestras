@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ProfileWithData } from '@/types';
-import { deleteCreditCard, payCreditCard } from '@/app/actions/budget';
+import { deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { Plus } from 'lucide-react';
@@ -25,6 +25,7 @@ interface CreditCardsTabProps {
 export default function CreditCardsTab({ creditCards, accounts, profileId, profileName, onUpdate }: CreditCardsTabProps) {
     const [showWizard, setShowWizard] = useState(false);
     const [payingCard, setPayingCard] = useState<CreditCard | null>(null);
+    const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
 
     // Strategy
     const [strategy, setStrategy] = useState<'SNOWBALL' | 'AVALANCHE'>('SNOWBALL');
@@ -117,7 +118,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         cardholderName={profileName}
                         onPay={(c) => setPayingCard(c)}
                         onDelete={(id) => handleDelete(id)}
-                        onEdit={() => {}}
+                        onEdit={() => setEditingCard(card)}
                     />
                 ))}
 
@@ -138,12 +139,24 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
             </div>
 
             {/* Wizard modal */}
-            {showWizard && (
+            {(showWizard || editingCard) && (
                 <CreditCardWizard
                     profileId={profileId}
-                    onClose={() => setShowWizard(false)}
-                    onSuccess={onUpdate}
+                    onClose={() => { setShowWizard(false); setEditingCard(null); }}
+                    onSuccess={() => { onUpdate(); setEditingCard(null); }}
                     onCreate={createCreditCard}
+                    onUpdate={updateCreditCardDetails}
+                    editingCard={editingCard ? {
+                        id: editingCard.id,
+                        name: editingCard.name,
+                        limit: Number(editingCard.limit),
+                        balance: Number(editingCard.balance),
+                        cutoffDay: editingCard.cutoffDay,
+                        paymentDay: editingCard.paymentDay,
+                        interestRate: Number(editingCard.interestRate),
+                        annualFee: editingCard.annualFee ? Number(editingCard.annualFee) : undefined,
+                        annualFeeMonth: editingCard.annualFeeMonth,
+                    } : undefined}
                 />
             )}
 
