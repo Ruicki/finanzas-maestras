@@ -41,6 +41,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
 
     const renderCutoffAlert = () => {
         if (cutoffInfo.status === 'normal') return null;
+        if (Number(card.balance) <= 0) return null;
 
         const bgColor = cutoffInfo.status === 'warning'
             ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
