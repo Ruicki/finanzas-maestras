@@ -109,6 +109,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                 category: data.category,
                 dueDate: data.dueDate,
                 isRecurring: data.isRecurring,
+                isOneTime: data.isOneTime,
                 paymentMethod: data.paymentMethod,
                 linkedCardId: newCardId,
                 accountId: newAccountId,

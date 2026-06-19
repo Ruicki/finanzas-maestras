@@ -56,12 +56,14 @@ export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {
         data: {
             name: data.name,
             lender: data.lender,
+            type: data.type,
             totalAmount: data.totalAmount,
-            // currentBalance: data.currentBalance, // Only manually update balance? Dangerous if edits happen mid-payment history. 
-            // Better to let user edit balance only if strictly needed.
+            currentBalance: data.currentBalance,
             interestRate: data.interestRate,
             termMonths: data.termMonths,
-            monthlyPayment: data.monthlyPayment
+            monthlyPayment: data.monthlyPayment,
+            paymentDay: data.paymentDay,
+            isAutomatic: data.isAutomatic,
         }
     });
     revalidatePath('/budget');

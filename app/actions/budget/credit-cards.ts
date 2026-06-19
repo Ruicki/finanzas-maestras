@@ -14,6 +14,7 @@ export interface CreateCreditCardInput {
     profileId: number;
     interestRate?: number;
     insuranceRate?: number;
+    minPaymentPercentage?: number;
     annualFee?: number;
     annualFeeMonth?: number;
     bank?: string;
@@ -53,6 +54,7 @@ export async function updateCreditCardDetails(
             paymentDay: data.paymentDay,
             interestRate: data.interestRate,
             insuranceRate: data.insuranceRate,
+            minPaymentPercentage: data.minPaymentPercentage,
             annualFee: data.annualFee,
             annualFeeMonth: data.annualFeeMonth,
             bank: data.bank,
@@ -81,7 +83,14 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
 
     const account = await prisma.account.findUnique({ where: { id: accountId } });
     if (!account) throw new Error('Cuenta no encontrada');
+    if (account.lockDate && new Date(account.lockDate) > new Date()) {
+        throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+    }
     if (Number(account.balance) < amount) throw new Error('Fondos insuficientes');
+
+    const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
+    if (!card) throw new Error('Tarjeta no encontrada');
+    if (amount > Number(card.balance)) throw new Error(`El pago excede el saldo de la tarjeta ($${Number(card.balance).toFixed(2)})`);
 
     await prisma.$transaction(async (tx) => {
         await tx.account.update({

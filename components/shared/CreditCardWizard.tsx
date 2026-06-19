@@ -165,25 +165,25 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                                 type="number"
                                 value={limit}
                                 onChange={(e) => setLimit(e.target.value)}
-                                placeholder="0.00"
+                                placeholder={getPreset() ? '500.00' : '0.00'}
                                 className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Saldo actual</label>
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Saldo actual (deuda anterior)</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
                             <input
                                 type="number"
                                 value={balance}
                                 onChange={(e) => setBalance(e.target.value)}
-                                placeholder="0.00"
+                                placeholder={getPreset() ? '172.50' : '0.00'}
                                 className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             />
                         </div>
-                        <p className="text-xs text-zinc-500 mt-1">Si es nueva, déjalo en 0</p>
+                        <p className="text-xs text-zinc-500 mt-1">Lo que debes actualmente en esta tarjeta</p>
                     </div>
 
                     <div>
@@ -193,13 +193,13 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                                 type="number"
                                 value={interestRate}
                                 onChange={(e) => setInterestRate(e.target.value)}
-                                placeholder="0.00"
+                                placeholder={getPreset()?.interestRate.toString() || '2.00'}
                                 step="0.01"
                                 className="w-full pl-4 pr-8 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">%</span>
                         </div>
-                        <p className="text-xs text-zinc-500 mt-1">En tu estado: &quot;Tasa de interés nominal mensual&quot;</p>
+                        <p className="text-xs text-zinc-500 mt-1">En tu estado de cuenta: &quot;Tasa de interés nominal mensual&quot;</p>
                     </div>
 
                     {/* Fechas */}
@@ -267,7 +267,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                                         type="number"
                                         value={annualFee}
                                         onChange={(e) => setAnnualFee(e.target.value)}
-                                        placeholder="0.00"
+                                        placeholder={getPreset()?.annualFee ? getPreset()!.annualFee.toString() : '40.00'}
                                         className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                                     />
                                 </div>

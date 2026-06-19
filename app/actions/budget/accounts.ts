@@ -166,6 +166,8 @@ export async function createTransfer(
 ) {
     if (sourceAccountId === destinationAccountId)
         throw new Error('No puedes transferir a la misma cuenta');
+    if (amount <= 0)
+        throw new Error('El monto debe ser mayor a cero');
 
     const sourceAccount = await prisma.account.findUnique({
         where: { id: sourceAccountId },

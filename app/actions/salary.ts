@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { SalaryRepository } from "@/lib/repositories/salary.repository";
 import { AccountRepository } from "@/lib/repositories/account.repository";
 import { calculateSalary } from "@/lib/financial-engine";
@@ -90,6 +91,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
 
         logger.info(`Salary created successfully: ID ${newSalary.id}`);
 
+        revalidatePath('/budget');
         return {
             ...newSalary,
             grossVal: Number(newSalary.grossVal),
@@ -128,6 +130,7 @@ export async function deleteSalaryById(id: number): Promise<void> {
                 await SalaryRepository.delete(tx, id);
             }
         });
+        revalidatePath('/budget');
     } catch (err) {
         logger.error(`Error deleting salary ${id}`, err);
         throw err;
@@ -203,6 +206,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             // 3. Update Record
             await SalaryRepository.update(tx, id, salaryData);
         });
+        revalidatePath('/budget');
     } catch (err) {
         logger.error(`Error updating salary ${id}`, err);
         throw err;
