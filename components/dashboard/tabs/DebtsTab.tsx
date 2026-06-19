@@ -17,6 +17,7 @@ import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
 import BankLoanCard from '@/components/cards/BankLoanCard';
 import FriendLoanCard from '@/components/cards/FriendLoanCard';
 import PaymentModal from '@/components/shared/PaymentModal';
+import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import { formatMoney } from '@/lib/utils';
 import {
     calculateLoanPayoffDate
@@ -35,6 +36,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [wizardType, setWizardType] = useState<'CARD' | 'LOAN'>('CARD');
     const [editingId, setEditingId] = useState<number | null>(null); // EDIT STATE
+    const [showCardWizard, setShowCardWizard] = useState(false);
 
     // For Loans Wizard
     const [loanWizardMode, setLoanWizardMode] = useState<'BANK' | 'FRIEND'>('BANK');
@@ -326,7 +328,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
                 {/* ACTION BUTTONS */}
                 <div className="flex flex-col justify-center gap-4">
-                    <button onClick={() => startCreate('CARD')} className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
+                    <button onClick={() => { resetForms(); setShowCardWizard(true); }} className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
                         <div className="p-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500 rounded-full"><Plus size={20} /></div>
                         Nueva Tarjeta
                     </button>
@@ -665,6 +667,16 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                         toast.success("Pago registrado");
                     }}
                     onClose={() => setPayingCard(null)}
+                />
+            )}
+
+            {/* --- WIZARD NUEVO DE TARJETA --- */}
+            {showCardWizard && (
+                <CreditCardWizard
+                    profileId={profileId}
+                    onClose={() => setShowCardWizard(false)}
+                    onSuccess={() => { setShowCardWizard(false); onUpdate(); }}
+                    onCreate={createCreditCard}
                 />
             )}
         </div>
