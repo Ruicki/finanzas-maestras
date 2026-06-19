@@ -10,12 +10,13 @@ import { Plus, CreditCard as CardIcon, Building, Flag, X, Calendar, TrendingDown
 import { toast } from 'sonner';
 import { createLoan, deleteLoan, payLoan, updateLoan, CreateLoanInput } from '@/app/actions/debts';
 import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
-import { confirmDelete } from '@/components/DeleteConfirmation';
-import { SmartMoneyInput } from '@/components/SmartMoneyInput';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
 import BankLoanCard from '@/components/cards/BankLoanCard';
 import FriendLoanCard from '@/components/cards/FriendLoanCard';
+import PaymentModal from '@/components/shared/PaymentModal';
 import { formatMoney } from '@/lib/utils';
 import {
     calculateLoanPayoffDate
@@ -41,6 +42,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
     // Modal de Pago
     const [paymentModal, setPaymentModal] = useState<{ isOpen: boolean; type: 'CARD' | 'LOAN'; id: number; name: string; maxAmount: number } | null>(null);
+    const [payingCard, setPayingCard] = useState<CreditCard | null>(null);
 
     useScrollLock(isWizardOpen || !!paymentModal?.isOpen);
 
@@ -384,7 +386,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                             <UltimateCreditCard
                                 card={card}
                                 cardholderName={profileName}
-                                onPay={(c) => setPaymentModal({ isOpen: true, type: 'CARD', id: c.id, name: c.name, maxAmount: Number(c.balance) })}
+                                onPay={(c) => setPayingCard(c)}
                                 onDelete={(id) => handleDelete(id, 'CARD')}
                                 onEdit={() => openEditCard(card)}
                             />
@@ -639,6 +641,31 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* --- MODAL DE PAGO TARJETA --- */}
+            {payingCard && (
+                <PaymentModal
+                    card={{
+                        id: payingCard.id,
+                        name: payingCard.name,
+                        balance: Number(payingCard.balance),
+                        interestRate: Number(payingCard.interestRate) || 0,
+                        insuranceRate: Number(payingCard.insuranceRate) || 0.25,
+                        minPaymentPercentage: Number(payingCard.minPaymentPercentage) || 3.0,
+                    }}
+                    accounts={accounts.map(a => ({
+                        id: a.id,
+                        name: a.name,
+                        balance: Number(a.balance),
+                    }))}
+                    onConfirm={async (cardId, amount, accountId) => {
+                        await payCreditCard(cardId, amount, accountId);
+                        onUpdate();
+                        toast.success("Pago registrado");
+                    }}
+                    onClose={() => setPayingCard(null)}
+                />
             )}
         </div>
     );

@@ -163,19 +163,25 @@ model Goal {
 
 model CreditCard {
   id      Int    @id @default(autoincrement())
-  name    String // Ej: "Visa Infinite"
+  name    String // Ej: "Mi Tarjeta CMF"
   limit   Decimal @db.Decimal(10, 2) // Límite de crédito
   balance Decimal @db.Decimal(10, 2) @default(0) // Deuda actual
 
   cutoffDay  Int // Día de corte (1-31)
   paymentDay Int // Día límite de pago (1-31)
 
-  // Pro Features - Phase 2 Updates
-  interestRate         Decimal? @db.Decimal(6, 2) // Tasa de interés anual (%) - Increased precision
-  annualFee            Decimal? @db.Decimal(10, 2) // Anualidad ($)
-  annualFeeMonth       Int?     // [NEW] Mes de cobro (1-12)
-  minPaymentPercentage Decimal? @db.Decimal(6, 2) @default(3.0) // % Pago Mínimo (Capital)
-  insuranceRate        Decimal? @db.Decimal(6, 2) @default(0.0) // % Seguro Deuda Mensual
+  // Banco emisor
+  bank String? // 'CMF', 'BAC', 'BANISTMO', 'BANCO_GENERAL', 'OTRO'
+
+  // Costos financieros
+  interestRate         Decimal? @db.Decimal(6, 2) // Tasa mensual nominal (%)
+  insuranceRate        Decimal? @db.Decimal(6, 2) @default(0.25) // Desgravamen mensual (%)
+  minPaymentPercentage Decimal? @db.Decimal(6, 2) @default(3.0) // % Pago Mínimo (capital)
+  lateFee              Decimal? @db.Decimal(10, 2) @default(25.0) // Cargo por mora ($)
+
+  // Anualidad
+  annualFee      Decimal? @db.Decimal(10, 2) // Membresía anual ($)
+  annualFeeMonth Int?     // Mes de cobro (1-12)
 
   profileId Int
   profile   Profile @relation(fields: [profileId], references: [id])

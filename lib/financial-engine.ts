@@ -3,7 +3,8 @@ export interface FinancialCreditCard {
     balance: number;
     cutoffDay: number;
     paymentDay: number;
-    interestRate?: number | null;
+    interestRate?: number | null;   // Tasa mensual nominal %
+    insuranceRate?: number | null;  // Desgravamen mensual %
 }
 
 /**
@@ -64,31 +65,81 @@ export function calculateCreditHealth(utilization: number): { status: 'Excellent
     return { status: 'Critical', color: 'text-red-500' };
 }
 
-export function calculateMinimumPayment(balance: number, annualRate: number, percentage: number = 3.0, floor: number = 25): number {
+export function calculateMinimumPayment(balance: number, monthlyRate: number, insuranceRate: number = 0.25, percentage: number = 3.0, floor: number = 25): number {
     if (balance <= 0) return 0;
-    const interest = calculateProjectedInterest(balance, annualRate);
-    const baseAmount = balance * (percentage / 100) + interest;
+    const interest = calculateProjectedInterest(balance, monthlyRate);
+    const insurance = balance * (insuranceRate / 100);
+    const capital = balance * (percentage / 100);
+    const total = interest + insurance + capital;
     if (balance <= floor) return balance;
-    return Math.max(Math.round(baseAmount), floor);
+    return Math.max(Math.round(total * 100) / 100, floor);
 }
 
-export function calculateProjectedInterest(balance: number, annualRate: number, daysInMonth: number = 30): number {
-    if (!annualRate || balance <= 0) return 0;
-    const dailyRate = annualRate / 100 / 365;
-    return balance * dailyRate * daysInMonth;
+export function calculateProjectedInterest(balance: number, monthlyRate: number): number {
+    if (!monthlyRate || balance <= 0) return 0;
+    return balance * (monthlyRate / 100);
 }
 
-export function getDaysToCutoff(cutoffDay: number): number {
+export function calculateMonthlyCharges(balance: number, monthlyRate: number, insuranceRate: number = 0.25): {
+    interest: number;
+    insurance: number;
+    total: number;
+} {
+    if (balance <= 0) return { interest: 0, insurance: 0, total: 0 };
+    const interest = balance * (monthlyRate / 100);
+    const insurance = balance * (insuranceRate / 100);
+    return {
+        interest,
+        insurance,
+        total: interest + insurance,
+    };
+}
+
+export function getDaysToCutoff(cutoffDay: number): { days: number; date: Date; status: 'normal' | 'warning' | 'urgent' | 'passed' } {
     const today = new Date();
     const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    let nextCutoffDate: Date;
+    let days: number;
 
     if (currentDay <= cutoffDay) {
-        return cutoffDay - currentDay;
+        nextCutoffDate = new Date(currentYear, currentMonth, cutoffDay);
+        days = cutoffDay - currentDay;
     } else {
-        // Cutoff passed, next cutoff is next month
-        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-        return (daysInMonth - currentDay) + cutoffDay;
+        nextCutoffDate = new Date(currentYear, currentMonth + 1, cutoffDay);
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        days = (daysInMonth - currentDay) + cutoffDay;
     }
+
+    let status: 'normal' | 'warning' | 'urgent' | 'passed';
+    if (days > 7) status = 'normal';
+    else if (days > 3) status = 'warning';
+    else if (days > 0) status = 'urgent';
+    else status = 'passed';
+
+    return { days, date: nextCutoffDate, status };
+}
+
+export function getDaysToPayment(paymentDay: number): { days: number; date: Date } {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    let nextPaymentDate: Date;
+
+    if (currentDay <= paymentDay) {
+        nextPaymentDate = new Date(currentYear, currentMonth, paymentDay);
+    } else {
+        nextPaymentDate = new Date(currentYear, currentMonth + 1, paymentDay);
+    }
+
+    const diffTime = nextPaymentDate.getTime() - today.getTime();
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return { days, date: nextPaymentDate };
 }
 
 
