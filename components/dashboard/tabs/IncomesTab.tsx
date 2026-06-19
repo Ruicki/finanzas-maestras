@@ -6,10 +6,10 @@ type Salary = ProfileWithData['salaries'][number];
 type Account = ProfileWithData['accounts'][number];
 import { deleteIncome } from '@/app/actions/budget'; // Eliminada importación createIncome ya que se maneja por Wizard
 import { toast } from 'sonner';
-import { confirmDelete } from '@/components/DeleteConfirmation';
-import SalaryCalculator from '@/components/SalaryCalculator';
-import IncomeHistory from '@/components/SalaryHistory';
-import IncomeWizard from '@/components/IncomeWizard'; // Importar Wizard
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import SalaryCalculator from '@/components/salary/SalaryCalculator';
+import IncomeHistory from '@/components/salary/SalaryHistory';
+import IncomeWizard from '@/components/incomes/IncomeWizard';
 import { Plus } from 'lucide-react';
 
 interface IncomesTabProps {

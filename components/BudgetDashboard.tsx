@@ -6,7 +6,7 @@ import { getProfiles } from '@/app/actions/budget';
 import { logout, stopImpersonation } from '@/app/actions/auth';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
-import { NetWorthCard } from "@/components/NetWorthCard";
+import { NetWorthCard } from "@/components/shared/NetWorthCard";
 import { ProfileWithData } from '@/types';
 import { Settings, LogOut, Briefcase, Eye, EyeOff, Wallet, TrendingUp, Landmark, DollarSign, Target, CreditCard as CardIcon } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';

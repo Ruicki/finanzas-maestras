@@ -10,7 +10,7 @@ type Expense = ProfileWithData['expenses'][number];
 type Category = ProfileWithData['categories'][number];
 type AdditionalIncome = ProfileWithData['incomes'][number];
 type Salary = ProfileWithData['salaries'][number];
-import { CategoryIcon } from '@/components/CategoryIcon';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 // Tipos auxiliares
 type InsightsTabProps = {

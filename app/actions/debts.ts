@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { toNum, toNumOrNull } from './budget/serializers';
 
 export type CreateLoanInput = {
     name: string;
@@ -37,7 +38,13 @@ export async function createLoan(data: CreateLoanInput) {
     });
 
     revalidatePath('/budget');
-    return loan;
+    return {
+        ...loan,
+        totalAmount: toNum(loan.totalAmount),
+        currentBalance: toNum(loan.currentBalance),
+        interestRate: toNumOrNull(loan.interestRate),
+        monthlyPayment: toNumOrNull(loan.monthlyPayment),
+    };
 }
 
 export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {

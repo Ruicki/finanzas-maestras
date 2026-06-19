@@ -11,10 +11,10 @@ type Category = ProfileWithData['categories'][number];
 
 import { createExpense, deleteExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
-import { confirmDelete } from '@/components/DeleteConfirmation';
-import ExpenseWizard from '@/components/ExpenseWizard';
-import CategoryManager from '@/components/CategoryManager';
-import { CategoryIcon } from '@/components/CategoryIcon';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import ExpenseWizard from '@/components/expenses/ExpenseWizard';
+import CategoryManager from '@/components/shared/CategoryManager';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { updateCategoryLimit } from '@/app/actions/categories';
 import { Pencil, Search, Plus, Trash2, CreditCard as CardIcon, DollarSign, Wallet } from 'lucide-react';
 

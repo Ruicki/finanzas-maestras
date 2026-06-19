@@ -8,7 +8,7 @@ type Goal = ProfileWithData['goals'][number];
 type Account = ProfileWithData['accounts'][number];
 import { createGoal, deleteGoal, handleGoalTransaction, updateGoal, deleteGoalWithReclaim } from '@/app/actions/budget';
 import { toast } from 'sonner';
-import { confirmDelete } from '@/components/DeleteConfirmation';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { Pencil, Trash2, X, PiggyBank, Calculator, Plus, Eye, EyeOff, Calendar } from 'lucide-react';
 

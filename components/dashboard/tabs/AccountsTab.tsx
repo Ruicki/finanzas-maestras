@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { ProfileWithData } from '@/types';
+'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { ProfileWithData } from '@/types';
 type Account = ProfileWithData['accounts'][number];
+
 import { deleteAccount } from '@/app/actions/budget';
-import { Plus, Trash2, Wallet, Landmark, PiggyBank, Banknote, Edit2 } from 'lucide-react';
+import { Plus, Wallet, Landmark, PiggyBank, Banknote, ArrowRightLeft, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import AccountWizard from '@/components/AccountWizard';
-import TransferModal from '@/components/TransferModal';
-import AccountHistoryModal from '@/components/AccountHistoryModal';
-import { ArrowRightLeft } from 'lucide-react';
+import AccountWizard from '@/components/accounts/AccountWizard';
+import TransferModal from '@/components/accounts/TransferModal';
+import AccountHistoryModal from '@/components/accounts/AccountHistoryModal';
 
 interface AccountsTabProps {
     accounts: Account[];
@@ -16,16 +17,84 @@ interface AccountsTabProps {
     onUpdate: () => void;
 }
 
+// ── Menú contextual de 3 puntos ────────────────────────────────────────────
+function AccountMenu({
+    account,
+    onView,
+    onEdit,
+    onDelete,
+}: {
+    account: Account;
+    onView: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        }
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    return (
+        <div ref={ref} className="relative" onClick={e => e.stopPropagation()}>
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="p-2 rounded-xl bg-white/15 hover:bg-white/30 text-white transition-all backdrop-blur-md"
+                title="Opciones"
+            >
+                <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {open && (
+                <div className="absolute right-0 top-10 z-50 w-44 bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <button
+                        onClick={() => { setOpen(false); onView(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                        <Eye className="w-4 h-4 text-indigo-500" />
+                        Ver movimientos
+                    </button>
+                    <button
+                        onClick={() => { setOpen(false); onEdit(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                        <Pencil className="w-4 h-4 text-amber-500" />
+                        Editar cuenta
+                    </button>
+                    {account.name !== 'Efectivo' && (
+                        <>
+                            <div className="h-px bg-zinc-100 dark:bg-zinc-700 mx-3" />
+                            <button
+                                onClick={() => { setOpen(false); onDelete(); }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Eliminar
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Componente principal ───────────────────────────────────────────────────
 export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsTabProps) {
     const [isCreating, setIsCreating] = useState(false);
     const [isTransferring, setIsTransferring] = useState(false);
-    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null); // Para el modal de historial
-    const [editingAccount, setEditingAccount] = useState<Account | null>(null); // Para edición
-    const [loading, setLoading] = useState(false);
-    const handleCreateSuccess = () => {
-        setIsCreating(false);
-        setEditingAccount(null);
-        onUpdate();
+    // modal unificado: null = cerrado, 'movements' | 'settings' = pestaña inicial
+    const [modalAccount, setModalAccount] = useState<Account | null>(null);
+    const [modalTab, setModalTab] = useState<'movements' | 'settings'>('movements');
+
+    const openModal = (acc: Account, tab: 'movements' | 'settings') => {
+        setModalAccount(acc);
+        setModalTab(tab);
     };
 
     const handleDelete = async (id: number) => {
@@ -34,29 +103,28 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             await deleteAccount(id);
             toast.success('Cuenta eliminada');
             onUpdate();
-        } catch (error) {
-            console.error(error);
-            toast.error('Error al eliminar');
+        } catch (error: any) {
+            toast.error(error?.message || 'Error al eliminar');
         }
     };
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'BANK': return <Landmark className="w-6 h-6 text-blue-500" />;
-            case 'CASH': return <Banknote className="w-6 h-6 text-green-500" />;
-            case 'SAVINGS': return <PiggyBank className="w-6 h-6 text-pink-500" />;
-            case 'WALLET': return <Wallet className="w-6 h-6 text-purple-500" />;
-            default: return <Wallet className="w-6 h-6 text-zinc-500" />;
+            case 'BANK':    return <Landmark className="w-6 h-6" />;
+            case 'CASH':    return <Banknote className="w-6 h-6" />;
+            case 'SAVINGS': return <PiggyBank className="w-6 h-6" />;
+            case 'WALLET':  return <Wallet className="w-6 h-6" />;
+            default:        return <Wallet className="w-6 h-6" />;
         }
     };
 
     const getTypeName = (type: string) => {
         switch (type) {
-            case 'BANK': return 'Banco';
-            case 'CASH': return 'Efectivo';
+            case 'BANK':    return 'Banco';
+            case 'CASH':    return 'Efectivo';
             case 'SAVINGS': return 'Ahorro';
-            case 'WALLET': return 'Billetera';
-            default: return type;
+            case 'WALLET':  return 'Billetera';
+            default:        return type;
         }
     };
 
@@ -64,13 +132,15 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pt-6">
-            {/* Encabezado / Resumen */}
+
+            {/* ── Encabezado ── */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold dark:text-white">Cuentas y Efectivo</h2>
-                    <p className="text-zinc-500 dark:text-zinc-400">Total Disponible:
+                    <p className="text-zinc-500 dark:text-zinc-400">
+                        Total disponible:
                         <span className="ml-2 font-bold text-emerald-600 dark:text-emerald-400 text-xl">
-                            ${totalBalance.toFixed(2)}
+                            ${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
                     </p>
                 </div>
@@ -78,7 +148,6 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     <button
                         onClick={() => setIsTransferring(true)}
                         className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 py-2 rounded-xl font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
-                        title="Transferir entre cuentas"
                     >
                         <ArrowRightLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">Transferir</span>
@@ -94,22 +163,12 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                 </div>
             </div>
 
-            {/* Asistente de Creación */}
+            {/* ── Modales ── */}
             {isCreating && (
                 <AccountWizard
                     profileId={profileId}
                     onClose={() => setIsCreating(false)}
-                    onSuccess={handleCreateSuccess}
-                />
-            )}
-
-            {editingAccount && (
-                <AccountWizard
-                    profileId={profileId}
-                    onClose={() => setEditingAccount(null)}
-                    onSuccess={handleCreateSuccess}
-                    initialData={editingAccount}
-                    isEditing={true}
+                    onSuccess={() => { setIsCreating(false); onUpdate(); }}
                 />
             )}
 
@@ -121,93 +180,82 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                 />
             )}
 
-            {/* Modal de Historial */}
-            {selectedAccount && (
+            {modalAccount && (
                 <AccountHistoryModal
-                    account={selectedAccount}
-                    onClose={() => setSelectedAccount(null)}
+                    account={modalAccount}
+                    initialTab={modalTab}
+                    onClose={() => setModalAccount(null)}
                     onUpdate={onUpdate}
                 />
             )}
 
-            {/* Lista */}
+            {/* ── Grid de tarjetas ── */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {accounts.map(acc => {
-                    const isPositive = acc.balance >= 0;
-                    return (
-                        <div
-                            key={acc.id}
-                            onClick={() => setSelectedAccount(acc)}
-                            className={`
-                                relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2
-                                ${acc.type === 'BANK' ? 'bg-linear-to-br from-zinc-900 to-zinc-800 text-white' : ''}
-                                ${acc.type === 'CASH' ? 'bg-linear-to-br from-emerald-500 to-teal-700 text-white' : ''}
-                                ${acc.type === 'WALLET' ? 'bg-linear-to-br from-purple-600 to-indigo-800 text-white' : ''}
-                                ${acc.type === 'SAVINGS' ? 'bg-linear-to-br from-pink-500 to-rose-700 text-white' : ''}
-                                ${!['BANK', 'CASH', 'WALLET', 'SAVINGS'].includes(acc.type) ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800' : ''}
-                            `}
-                        >
-                            {/* Decoraciones de Fondo */}
-                            <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                            <div className="absolute bottom-0 left-0 -ml-12 -mb-12 w-48 h-48 bg-black/10 rounded-full blur-3xl pointer-events-none" />
+                {accounts.map(acc => (
+                    <div
+                        key={acc.id}
+                        onClick={() => openModal(acc, 'movements')}
+                        className={`
+                            relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg
+                            hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1
+                            ${acc.type === 'BANK'    ? 'bg-gradient-to-br from-zinc-900 to-zinc-700 text-white' : ''}
+                            ${acc.type === 'CASH'    ? 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white' : ''}
+                            ${acc.type === 'WALLET'  ? 'bg-gradient-to-br from-purple-600 to-indigo-800 text-white' : ''}
+                            ${acc.type === 'SAVINGS' ? 'bg-gradient-to-br from-pink-500 to-rose-700 text-white' : ''}
+                            ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
+                                ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800' : ''}
+                        `}
+                    >
+                        {/* Decoración de fondo */}
+                        <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-black/10 rounded-full blur-3xl pointer-events-none" />
 
-                            <div className="relative z-10 flex flex-col justify-between h-full min-h-[160px]">
-                                {/* Encabezado */}
-                                <div className="flex justify-between items-start">
-                                    <div className={`p-3 rounded-2xl backdrop-blur-md ${['BANK', 'CASH', 'WALLET', 'SAVINGS'].includes(acc.type) ? 'bg-white/20 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white'}`}>
-                                        {getIcon(acc.type)}
-                                    </div>
-                                    {acc.name !== 'Efectivo' && (
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setEditingAccount(acc); }}
-                                                className={`p-2 rounded-xl transition-all bg-white/10 hover:bg-white/30 text-white shadow-sm backdrop-blur-md`}
-                                                title="Editar Cuenta"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDelete(acc.id); }}
-                                                className={`p-2 rounded-xl transition-all bg-white/10 hover:bg-white/30 text-white shadow-sm backdrop-blur-md`}
-                                                title="Eliminar Cuenta"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    )}
+                        <div className="relative z-10 flex flex-col justify-between h-full min-h-[160px]">
+                            {/* Fila superior: ícono + menú */}
+                            <div className="flex justify-between items-start">
+                                <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-md">
+                                    {getIcon(acc.type)}
                                 </div>
+                                <AccountMenu
+                                    account={acc}
+                                    onView={() => openModal(acc, 'movements')}
+                                    onEdit={() => openModal(acc, 'settings')}
+                                    onDelete={() => handleDelete(acc.id)}
+                                />
+                            </div>
 
-                                {/* Contenido */}
-                                <div className="mt-8">
-                                    <div className="flex items-center gap-2 mb-2 opacity-80">
-                                        <span className="text-xs font-bold uppercase tracking-widest">
-                                            {getTypeName(acc.type)}
-                                        </span>
-                                    </div>
-                                    <h3 className={`text-xl font-bold truncate mb-1 ${['BANK', 'CASH', 'WALLET', 'SAVINGS'].includes(acc.type) ? 'text-white' : 'text-zinc-900 dark:text-white'}`}>
-                                        {acc.name}
-                                    </h3>
-                                    <p className={`text-3xl md:text-3xl lg:text-3xl font-black tracking-tight ${['BANK', 'CASH', 'WALLET', 'SAVINGS'].includes(acc.type) ? 'text-white' : 'text-zinc-900 dark:text-white'}`}>
-                                        ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            {/* Contenido */}
+                            <div className="mt-6">
+                                <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">
+                                    {getTypeName(acc.type)}
+                                </p>
+                                <h3 className="text-xl font-bold truncate mb-2">{acc.name}</h3>
+                                <p className="text-3xl font-black tracking-tight">
+                                    ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </p>
+                                {acc.lockDate && new Date(acc.lockDate) > new Date() && (
+                                    <p className="text-xs mt-2 opacity-70">
+                                        🔒 Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
                                     </p>
-                                </div>
+                                )}
                             </div>
                         </div>
-                    );
-                })}
+                    </div>
+                ))}
 
+                {/* Estado vacío */}
                 {accounts.length === 0 && !isCreating && (
                     <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
                         <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                             <Landmark className="w-10 h-10 text-zinc-300" />
                         </div>
                         <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>
-                        <p className="text-zinc-500 max-w-sm mx-auto">
-                            {/* Lógica para Reversión (Si es necesario, lógica futura) */}Comienza agregando tu primera cuenta bancaria o efectivo para llevar el control.
+                        <p className="text-zinc-500 max-w-sm mx-auto mb-6">
+                            Agrega tu primera cuenta bancaria o de efectivo para empezar a llevar el control.
                         </p>
                         <button
                             onClick={() => setIsCreating(true)}
-                            className="mt-6 px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+                            className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
                         >
                             Crear Cuenta
                         </button>

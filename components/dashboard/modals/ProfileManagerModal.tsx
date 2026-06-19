@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ProfileWithData } from '@/types';
-import ProfileManager from '@/components/ProfileManager'; // Ensure this path is correct
+import ProfileManager from '@/components/profiles/ProfileManager'; // Ensure this path is correct
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 
