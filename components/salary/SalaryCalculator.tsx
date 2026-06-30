@@ -35,15 +35,22 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
     const [result, setResult] = useState<{
         gross: number;
+        grossAfterAbsence: number;
+        absentDays: number;
         socialSec: number;
         eduIns: number;
         incomeTax: number;
+        annualISRBase: number;
+        annualISRTax: number;
+        isrRateUsed: number;
         net: number;
-        decimo: number; // Estimado Neto
-        decimoGross: number; // Estimado Bruto
+        decimo: number;
+        decimoGross: number;
         bonus: number;
         isDecimoIncluded?: boolean;
     } | null>(null);
+
+    const [tooltip, setTooltip] = useState<'isr' | 'decimo' | null>(null);
 
 
 
@@ -80,9 +87,14 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
             setResult({
                 gross: response.grossVal,
+                grossAfterAbsence: response.grossAfterAbsence ?? response.grossVal,
+                absentDays: response.absentDays ?? 0,
                 socialSec: response.socialSec,
                 eduIns: response.eduIns,
                 incomeTax: response.incomeTax,
+                annualISRBase: response.annualISRBase ?? 0,
+                annualISRTax: response.annualISRTax ?? 0,
+                isrRateUsed: response.isrRateUsed ?? 0,
                 net: response.netVal,
                 decimo: response._uiResult.decimoNet,
                 decimoGross: response._uiResult.decimoGross,
@@ -258,38 +270,135 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 {/* RESULTADO */}
                 {result && (
                     <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
-                        {/* Tarjeta de Desglose */}
-                        <div className="bg-zinc-100 dark:bg-black/20 p-6 rounded-2xl border border-zinc-200 dark:border-white/10 text-base space-y-3">
-                            <div className="flex justify-between text-zinc-600 dark:text-zinc-300">
+                        {/* Paso a paso */}
+                        <div className="bg-zinc-100 dark:bg-black/20 p-6 rounded-2xl border border-zinc-200 dark:border-white/10 text-base space-y-2.5 font-mono text-sm">
+                            {/* Salario Bruto */}
+                            <div className="flex justify-between text-zinc-900 dark:text-zinc-100 font-semibold">
                                 <span>Salario Bruto</span>
-                                <span className="font-mono">${result.gross.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-zinc-600 dark:text-zinc-300">
-                                <span>Bonos</span>
-                                <span className="font-mono">${result.bonus.toFixed(2)}</span>
+                                <span>${result.gross.toFixed(2)}</span>
                             </div>
 
-                            {/* NUEVO: DÉCIMO INTEGRADO EN LISTA */}
+                            {/* Ausencias (solo si > 0) */}
+                            {result.absentDays > 0 && (
+                                <div className="flex justify-between text-red-500 dark:text-red-400 pl-4">
+                                    <span>- Ausencias ({result.absentDays} día{result.absentDays > 1 ? 's' : ''})</span>
+                                    <span>-${(result.gross - result.grossAfterAbsence).toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {/* Base para cálculo (solo si hay ausencias) */}
+                            {result.absentDays > 0 && (
+                                <div className="flex justify-between text-zinc-700 dark:text-zinc-300 border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-2 font-semibold">
+                                    <span>= Base para cálculo</span>
+                                    <span>${result.grossAfterAbsence.toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
+
+                            {/* Seguro Social */}
+                            <div className="flex justify-between text-red-600 dark:text-red-400">
+                                <span>Seguro Social (9.75%)</span>
+                                <span>-${result.socialSec.toFixed(2)}</span>
+                            </div>
+
+                            {/* Seguro Educativo */}
+                            <div className="flex justify-between text-red-600 dark:text-red-400">
+                                <span>Seguro Educativo (1.25%)</span>
+                                <span>-${result.eduIns.toFixed(2)}</span>
+                            </div>
+
+                            {/* ISR con tooltip */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setTooltip(tooltip === 'isr' ? null : 'isr')}
+                                    className="w-full flex justify-between text-red-700 dark:text-red-300 font-bold hover:bg-red-500/5 rounded-lg px-1 -mx-1 py-1 transition-colors text-left"
+                                >
+                                    <span className="flex items-center gap-1.5">
+                                        ISR ({result.isrRateUsed > 0 ? (result.isrRateUsed * 100).toFixed(0) : '-'}%)
+                                        <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
+                                    </span>
+                                    <span>-${result.incomeTax.toFixed(2)}</span>
+                                </button>
+                                {tooltip === 'isr' && result.annualISRBase > 0 && (
+                                    <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
+                                        <div className="flex justify-between">
+                                            <span>Salario anualizado</span>
+                                            <span>${(result.grossAfterAbsence * 12).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>- Exención</span>
+                                            <span>-$11,000.00</span>
+                                        </div>
+                                        <div className="flex justify-between font-semibold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1">
+                                            <span>= Base imponible</span>
+                                            <span>${result.annualISRBase.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>× Tasa {(result.isrRateUsed * 100).toFixed(0)}%</span>
+                                            <span>${result.annualISRTax.toFixed(2)}/año</span>
+                                        </div>
+                                        <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-red-600 dark:text-red-400">
+                                            <span>= ISR mensual</span>
+                                            <span>${result.incomeTax.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {tooltip === 'isr' && result.annualISRBase === 0 && (
+                                    <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs text-zinc-500">
+                                        Salario anual (&lt;$11,000) no paga ISR.
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
+
+                            {/* Bonos */}
+                            {result.bonus > 0 && (
+                                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                                    <span>+ Bonos</span>
+                                    <span>+${result.bonus.toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {/* Décimo con tooltip */}
                             {result.isDecimoIncluded && (
-                                <div className="flex justify-between text-yellow-500 font-bold bg-yellow-500/10 p-2 rounded-lg -mx-2">
-                                    <span className="flex items-center gap-2">🎁 Décimo Tercer Mes</span>
-                                    <span className="font-mono">${result.decimoGross.toFixed(2)}</span>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTooltip(tooltip === 'decimo' ? null : 'decimo')}
+                                        className="w-full flex justify-between text-yellow-600 dark:text-yellow-400 font-bold hover:bg-yellow-500/5 rounded-lg px-1 -mx-1 py-1 transition-colors text-left"
+                                    >
+                                        <span className="flex items-center gap-1.5">
+                                            + Décimo Tercer Mes 🎁
+                                            <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
+                                        </span>
+                                        <span>+${result.decimo.toFixed(2)}</span>
+                                    </button>
+                                    {tooltip === 'decimo' && (
+                                        <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
+                                            <div className="flex justify-between">
+                                                <span>Salario mensual ÷ 3</span>
+                                                <span>${result.decimoGross.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>- Seguro Social (9.75%)</span>
+                                                <span>-${(result.decimoGross * 0.0975).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-yellow-600 dark:text-yellow-400">
+                                                <span>= Décimo neto</span>
+                                                <span>${result.decimo.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             <div className="h-px bg-zinc-200 dark:bg-white/10 my-3"></div>
 
-                            <div className="flex justify-between text-red-500 dark:text-red-300">
-                                <span>Seguro Social (9.75%)</span>
-                                <span className="font-mono">-${result.socialSec.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-red-500 dark:text-red-300">
-                                <span>Seguro Educativo (1.25%)</span>
-                                <span className="font-mono">-${result.eduIns.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-                                <span>Impuesto S/R (ISR)</span>
-                                <span className="font-mono">-${result.incomeTax.toFixed(2)}</span>
+                            {/* Neto */}
+                            <div className="flex justify-between text-lg font-black text-emerald-700 dark:text-emerald-400">
+                                <span>= NETO RECIBIDO</span>
+                                <span>${result.net.toFixed(2)}</span>
                             </div>
                         </div>
 

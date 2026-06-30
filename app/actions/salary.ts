@@ -33,6 +33,10 @@ export async function createSalary(data: ProcessSalaryRequest) {
         let estimatedDecimoGross = 0;
         let estimatedDecimoNet = 0;
         let isDecimoMonth = false;
+        let grossAfterAbsence = data.grossVal;
+        let annualISRBase = 0;
+        let annualISRTax = 0;
+        let isrRateUsed = 0;
 
         if (data.isManualCalculation) {
             finalNetVal = data.grossVal + data.bonus;
@@ -46,10 +50,28 @@ export async function createSalary(data: ProcessSalaryRequest) {
                 taxStrategy
             );
 
+            grossAfterAbsence = calcResult.grossAfterAbsence;
+
+            // Calcular detalle del ISR
+            const monthlyGrossForCalc = data.frequency === 'biweekly' ? data.grossVal * 2 : data.grossVal;
+            const monthlyBase = data.frequency === 'biweekly' ? grossAfterAbsence * 2 : grossAfterAbsence;
+            const annualSalary = monthlyBase * 12;
+            const BRACKET_1_LIMIT = 11000;
+            const BRACKET_2_LIMIT = 50000;
+            if (annualSalary > BRACKET_1_LIMIT) {
+                annualISRBase = annualSalary - BRACKET_1_LIMIT;
+                if (annualSalary <= BRACKET_2_LIMIT) {
+                    annualISRTax = annualISRBase * 0.15;
+                    isrRateUsed = 0.15;
+                } else {
+                    annualISRTax = (50000 - 11000) * 0.15 + (annualSalary - BRACKET_2_LIMIT) * 0.25;
+                    isrRateUsed = 0.25;
+                }
+            }
+
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
             isDecimoMonth = [4, 8, 12].includes(selectedMonth);
 
-            const monthlyGrossForCalc = data.frequency === 'biweekly' ? data.grossVal * 2 : data.grossVal;
             estimatedDecimoGross = monthlyGrossForCalc / 3;
             const estimatedDecimoSS = estimatedDecimoGross * 0.0975;
             estimatedDecimoNet = estimatedDecimoGross - estimatedDecimoSS;
@@ -101,6 +123,11 @@ export async function createSalary(data: ProcessSalaryRequest) {
             eduIns: Number(newSalary.eduIns),
             incomeTax: Number(newSalary.incomeTax),
             bonus: Number(newSalary.bonus),
+            absentDays: data.absentDays,
+            grossAfterAbsence,
+            annualISRBase,
+            annualISRTax,
+            isrRateUsed,
             _uiResult: {
                 isDecimoIncluded: isDecimoMonth,
                 decimoGross: estimatedDecimoGross,
@@ -149,11 +176,18 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
         let eduIns = 0;
         let incomeTax = 0;
 
+        let grossAfterAbsence = data.grossVal;
+        let annualISRBase = 0;
+        let annualISRTax = 0;
+        let isrRateUsed = 0;
+
         if (data.isManualCalculation) {
             finalNetVal = data.grossVal + data.bonus;
         } else {
             const taxStrategy = new PanamaTaxStrategy();
             const calcResult = calculateSalary(data.grossVal, data.bonus, data.frequency, data.absentDays, taxStrategy);
+
+            grossAfterAbsence = calcResult.grossAfterAbsence;
 
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
             const isDecimoMonth = [4, 8, 12].includes(selectedMonth);
@@ -168,6 +202,22 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             finalSS = isDecimoMonth ? calcResult.socialSec + estimatedDecimoSS : calcResult.socialSec;
             eduIns = calcResult.eduIns;
             incomeTax = calcResult.incomeTax;
+
+            // Calcular detalle del ISR
+            const monthlyBase = data.frequency === 'biweekly' ? grossAfterAbsence * 2 : grossAfterAbsence;
+            const annualSalary = monthlyBase * 12;
+            const BRACKET_1_LIMIT = 11000;
+            const BRACKET_2_LIMIT = 50000;
+            if (annualSalary > BRACKET_1_LIMIT) {
+                annualISRBase = annualSalary - BRACKET_1_LIMIT;
+                if (annualSalary <= BRACKET_2_LIMIT) {
+                    annualISRTax = annualISRBase * 0.15;
+                    isrRateUsed = 0.15;
+                } else {
+                    annualISRTax = (50000 - 11000) * 0.15 + (annualSalary - BRACKET_2_LIMIT) * 0.25;
+                    isrRateUsed = 0.25;
+                }
+            }
         }
 
         const salaryData = {
