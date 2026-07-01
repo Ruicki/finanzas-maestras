@@ -115,8 +115,10 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                     ? `¡Cálculo guardado! (Incluye Décimo por ser mes ${selectedMonth} 🎁)`
                     : '¡Salario guardado correctamente!';
                 toast.success(successMsg);
-                if (onSave) onSave();
-                router.refresh();
+                setTimeout(() => {
+                    if (onSave) onSave();
+                    router.refresh();
+                }, 500);
             } else {
                 toast.info("Vista previa calculada (sin guardar)");
             }
