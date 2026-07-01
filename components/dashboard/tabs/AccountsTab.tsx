@@ -5,7 +5,7 @@ import { ProfileWithData } from '@/types';
 type Account = ProfileWithData['accounts'][number];
 
 import { deleteAccount } from '@/app/actions/budget';
-import { Plus, Wallet, Landmark, PiggyBank, Banknote, ArrowRightLeft, MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Wallet, Landmark, PiggyBank, Banknote, ArrowRightLeft, MoreVertical, Eye, Pencil, Trash2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountWizard from '@/components/accounts/AccountWizard';
 import TransferModal from '@/components/accounts/TransferModal';
@@ -203,7 +203,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                             ${acc.type === 'WALLET'  ? 'bg-gradient-to-br from-purple-600 to-indigo-800 text-white' : ''}
                             ${acc.type === 'SAVINGS' ? 'bg-gradient-to-br from-pink-500 to-rose-700 text-white' : ''}
                             ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
-                                ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800' : ''}
+                                ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
                         `}
                     >
                         {/* Decoración de fondo */}
@@ -234,8 +234,9 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                                     ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </p>
                                 {acc.lockDate && new Date(acc.lockDate) > new Date() && (
-                                    <p className="text-xs mt-2 opacity-70">
-                                        🔒 Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
+                                    <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
+                                        <Lock size={12} />
+                                        Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
                                     </p>
                                 )}
                             </div>

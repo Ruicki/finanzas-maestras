@@ -1,18 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { formatMoney } from '@/lib/utils';
-import { Category, Expense } from '@prisma/client';
-import { updateCategoryLimit, toggleCategoryRollover, updateCategoryRolloverBalance } from '@/app/actions/budget';
-import { toast } from 'sonner';
-import { Check, Edit2, RotateCcw, TrendingUp } from 'lucide-react';
-
-type ExtendedCategory = Category & {
-    monthlyLimit: number | null;
-    isRollover: boolean;
-    rolloverBalance: number;
-}
+import { TrendingUp, AlertTriangle, ArrowUpRight, ArrowDownRight, PiggyBank } from 'lucide-react';
 
 interface BudgetTableProps {
     categories: any[];
@@ -22,236 +12,158 @@ interface BudgetTableProps {
     currency: string;
 }
 
-export default function BudgetTable({ categories, expenses, currentMonth, currentYear, currency }: BudgetTableProps) {
+export default function BudgetTable({ categories, expenses, currentMonth, currentYear }: BudgetTableProps) {
 
-    // Helper to calculate spent amount per category for CURRENT month
-    const getSpent = (catId: number) => {
-        return expenses
+    // Calculate per-category spending for current month
+    const categoryStats = categories.map(cat => {
+        const spent = expenses
             .filter(e => {
-                const d = new Date(e.createdAt); // Should ideally use transaction date if different
-                return e.categoryId === catId && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                const d = new Date(e.createdAt);
+                return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             })
             .reduce((sum, e) => sum + Number(e.amount), 0);
-    };
+
+        const limit = Number(cat.monthlyLimit) || 0;
+        const rollover = cat.isRollover ? Number(cat.rolloverBalance) : 0;
+        const effectiveLimit = limit + rollover;
+        const remaining = effectiveLimit > 0 ? effectiveLimit - spent : null;
+        const isOver = effectiveLimit > 0 && spent > effectiveLimit;
+
+        return { ...cat, spent, limit, rollover, effectiveLimit, remaining, isOver };
+    });
+
+    // Summary calculations
+    const totalAssigned = categoryStats.reduce((sum, c) => sum + c.effectiveLimit, 0);
+    const totalSpent = categoryStats.reduce((sum, c) => sum + c.spent, 0);
+    const totalRollover = categoryStats.reduce((sum, c) => sum + c.rollover, 0);
+    const overallRemaining = totalAssigned - totalSpent;
+
+    // Top 3 spending categories
+    const topSpenders = [...categoryStats]
+        .filter(c => c.spent > 0)
+        .sort((a, b) => b.spent - a.spent)
+        .slice(0, 3);
+
+    // Categories over limit
+    const overLimit = categoryStats.filter(c => c.isOver);
+
+    // Categories with budget (for percentage)
+    const categoriesWithBudget = categoryStats.filter(c => c.effectiveLimit > 0);
 
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden animate-in fade-in duration-700">
-            <div className="px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                    <TrendingUp className="text-blue-500" size={24} />
-                    Control de Presupuesto
-                </h3>
+        <div className="space-y-6 animate-in fade-in duration-700">
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Total Assigned vs Spent */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Asignado vs Gastado</p>
+                    <div className="flex items-end gap-2 mb-3">
+                        <span className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalSpent)}</span>
+                        <span className="text-sm font-bold text-zinc-400 mb-0.5">/ {formatMoney(totalAssigned)}</span>
+                    </div>
+                    {totalAssigned > 0 && (
+                        <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${totalSpent > totalAssigned ? 'bg-red-500' : 'bg-blue-500'}`}
+                                style={{ width: `${Math.min((totalSpent / totalAssigned) * 100, 100)}%` }}
+                            />
+                        </div>
+                    )}
+                    {totalAssigned === 0 && (
+                        <p className="text-xs text-zinc-400 mt-1">Sin presupuestos definidos</p>
+                    )}
+                </div>
+
+                {/* Top Spenders */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Mayores Gastos</p>
+                    {topSpenders.length > 0 ? (
+                        <div className="space-y-2">
+                            {topSpenders.map((cat, i) => {
+                                const pct = totalSpent > 0 ? (cat.spent / totalSpent) * 100 : 0;
+                                return (
+                                    <div key={cat.id} className="flex items-center gap-3">
+                                        <span className="text-xs font-bold text-zinc-400 w-4">{i + 1}</span>
+                                        <div className={`w-2 h-2 rounded-full ${cat.color || 'bg-zinc-400'}`} />
+                                        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex-1 truncate">{cat.name}</span>
+                                        <span className="text-sm font-bold text-zinc-900 dark:text-white">{formatMoney(cat.spent)}</span>
+                                        <span className="text-[10px] font-bold text-zinc-400 w-10 text-right">{pct.toFixed(0)}%</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-zinc-400">Sin gastos este mes</p>
+                    )}
+                </div>
+
+                {/* Alerts & Rollover */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Alertas y Rollover</p>
+
+                    {overLimit.length > 0 ? (
+                        <div className="space-y-2 mb-3">
+                            {overLimit.map(cat => (
+                                <div key={cat.id} className="flex items-center gap-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg px-3 py-2">
+                                    <AlertTriangle size={14} className="text-red-500 shrink-0" />
+                                    <span className="text-xs font-bold text-red-700 dark:text-red-400 truncate flex-1">{cat.name}</span>
+                                    <span className="text-xs font-bold text-red-600 dark:text-red-400">+{formatMoney(cat.spent - cat.effectiveLimit)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-3">✓ Todas dentro del presupuesto</p>
+                    )}
+
+                    {totalRollover > 0 && (
+                        <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg px-3 py-2">
+                            <PiggyBank size={14} className="text-blue-500" />
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-400">Rollover total:</span>
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-300">+{formatMoney(totalRollover)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-zinc-50 dark:bg-zinc-900/50 text-xs uppercase tracking-wider text-zinc-500 font-bold border-b border-zinc-100 dark:border-zinc-800">
-                            <th className="px-6 py-4">Categoría</th>
-                            <th className="px-6 py-4 text-right">Límite Mensual</th>
-                            <th className="px-6 py-4 text-right">Gastado</th>
-                            <th className="px-6 py-4 text-right">Disponible</th>
-                            <th className="px-6 py-4 text-center">Rollover</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                        {categories.map(cat => (
-                            <BudgetRow
-                                key={cat.id}
-                                category={cat}
-                                spent={getSpent(cat.id)}
-                                currency={currency}
-                            />
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {/* Category Breakdown Table */}
+            {categoriesWithBudget.length > 0 && (
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+                        <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Detalle por Categoría</h4>
+                    </div>
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                        {categoriesWithBudget.sort((a, b) => b.spent - a.spent).map(cat => {
+                            const pct = cat.effectiveLimit > 0 ? Math.min((cat.spent / cat.effectiveLimit) * 100, 100) : 0;
+                            return (
+                                <div key={cat.id} className="px-6 py-3 flex items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${cat.color || 'bg-zinc-400'}`} />
+                                    <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 w-32 truncate">{cat.name}</span>
+                                    <div className="flex-1">
+                                        <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-500 ${cat.isOver ? 'bg-red-500' : 'bg-emerald-500'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-zinc-500 w-16 text-right">{pct.toFixed(0)}%</span>
+                                    <span className={`text-sm font-bold w-24 text-right ${cat.isOver ? 'text-red-500' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                                        {formatMoney(cat.spent)}
+                                    </span>
+                                    <span className="text-xs text-zinc-400 w-20 text-right">/ {formatMoney(cat.effectiveLimit)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {categories.length === 0 && (
-                <div className="p-12 text-center text-zinc-400">
+                <div className="text-center py-12 text-zinc-400">
                     No tienes categorías configuradas.
                 </div>
             )}
         </div>
-    );
-}
-
-// Sub-component for efficient rendering of rows
-function BudgetRow({ category, spent, currency }: { category: ExtendedCategory, spent: number, currency: string }) {
-    const router = useRouter();
-    const [isEditing, setIsEditing] = useState(false);
-    const [limit, setLimit] = useState(category.monthlyLimit?.toString() || '');
-    const [isLoading, setIsLoading] = useState(false);
-    // Rollover Edit State
-    const [isEditingRollover, setIsEditingRollover] = useState(false);
-    const [rolloverInput, setRolloverInput] = useState(category.rolloverBalance?.toString() || '');
-
-    const limitNum = Number(category.monthlyLimit) || 0;
-
-    // Rollover check
-    const isRollover = category.isRollover;
-    const rolloverBal = Number(category.rolloverBalance) || 0;
-
-    // Sync state with props
-    useEffect(() => {
-        setLimit(category.monthlyLimit?.toString() || '');
-        setRolloverInput(category.rolloverBalance?.toString() || '');
-    }, [category.monthlyLimit, category.rolloverBalance]);
-
-    // Available Logic: Limit + Rollover - Spent
-    // IMPORTANT: If no limit is set, "Available" doesn't make sense (Infinite). We treat Limit 0 as "No Budget".
-    const available = limitNum > 0 ? (limitNum + rolloverBal - spent) : 0;
-    const percent = limitNum > 0 ? Math.min((spent / (limitNum + rolloverBal)) * 100, 100) : 0;
-
-    async function handleSave() {
-        const val = parseFloat(limit) || 0;
-        if (val === limitNum) { setIsEditing(false); return; }
-
-        setIsLoading(true);
-        const res = await updateCategoryLimit(category.id, val);
-        setIsLoading(false);
-
-        if (res.success) {
-            toast.success("Presupuesto actualizado");
-            setIsEditing(false);
-            router.refresh(); // Ensure the UI updates with the new server data
-        } else {
-            toast.error("Error al actualizar");
-        }
-    }
-
-    async function handleSaveRollover() {
-        const val = parseFloat(rolloverInput) || 0;
-        if (val === rolloverBal) { setIsEditingRollover(false); return; }
-
-        const res = await updateCategoryRolloverBalance(category.id, val);
-
-        if (res.success) {
-            toast.success("Rollover actualizado");
-            setIsEditingRollover(false);
-            router.refresh();
-        } else {
-            toast.error("Error al actualizar rollover");
-        }
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSave();
-        } else if (e.key === 'Escape') {
-            setIsEditing(false);
-            setLimit(category.monthlyLimit?.toString() || '');
-        }
-    };
-
-    async function handleToggleRollover() {
-        const res = await toggleCategoryRollover(category.id, !isRollover);
-        if (res.success) {
-            toast.success(isRollover ? "Rollover desactivado" : "Rollover activado");
-            router.refresh();
-        }
-    }
-
-    return (
-        <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors group text-sm">
-            {/* Category Name */}
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-3">
-                    <span className={`w-3 h-3 rounded-full ${category.color || 'bg-zinc-400'}`} />
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-200">{category.name}</span>
-                </div>
-            </td>
-
-            {/* Monthly Limit (Inline Edit) */}
-            <td className="px-6 py-4 text-right">
-                {isEditing ? (
-                    <div className="flex items-center justify-end gap-2">
-                        <input
-                            type="number"
-                            value={limit}
-                            onChange={(e) => setLimit(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            className="w-24 h-8 text-right font-mono border rounded px-1 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700"
-                            autoFocus
-                            disabled={isLoading}
-                        />
-                        <button onClick={handleSave} disabled={isLoading} className="p-1.5 bg-green-100 text-green-600 rounded-md hover:bg-green-200">
-                            <Check size={14} />
-                        </button>
-                    </div>
-                ) : (
-                    <div
-                        onClick={() => { setLimit(limitNum.toString()); setIsEditing(true); }}
-                        className="cursor-pointer group/edit flex items-center justify-end gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 px-2 py-1 rounded-md transition-colors"
-                    >
-                        <span className={`font-mono font-medium ${limitNum === 0 ? 'text-zinc-300' : 'text-zinc-900 dark:text-white'}`}>
-                            {limitNum === 0 ? '--' : formatMoney(limitNum)}
-                        </span>
-                        <Edit2 size={12} className="opacity-0 group-hover/edit:opacity-50 text-zinc-400" />
-                    </div>
-                )}
-            </td>
-
-            {/* Spent */}
-            <td className="px-6 py-4 text-right font-mono text-zinc-600 dark:text-zinc-400">
-                {formatMoney(spent)}
-            </td>
-
-            {/* Available */}
-            <td className="px-6 py-4 text-right">
-                {limitNum > 0 ? (
-                    <div className="flex flex-col items-end">
-                        <span className={`font-bold font-mono ${available < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {formatMoney(available)}
-                        </span>
-                        {/* Progress Bar */}
-                        <div className="w-24 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-1 overflow-hidden">
-                            <div className={`h-full rounded-full ${available < 0 ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${percent}%` }} />
-                        </div>
-                    </div>
-                ) : (
-                    <span className="text-zinc-300">--</span>
-                )}
-            </td>
-
-            {/* Rollover Toggle & Edit */}
-            <td className="px-6 py-4 text-center">
-                <div className="flex flex-col items-center gap-1">
-                    <button
-                        onClick={handleToggleRollover}
-                        title={isRollover ? "Rollover Activo: El dinero no gastado pasa al siguiente mes" : "Activar Sinking Fund"}
-                        className={`p-2 rounded-full transition-all ${isRollover ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'text-zinc-300 hover:text-zinc-400'}`}
-                    >
-                        <RotateCcw size={18} className={isRollover ? "" : "opacity-20"} />
-                    </button>
-
-                    {isRollover && (
-                        isEditingRollover ? (
-                            <div className="flex items-center justify-center gap-1 mt-1 animate-in zoom-in-50">
-                                <input
-                                    type="number"
-                                    value={rolloverInput}
-                                    onChange={(e) => setRolloverInput(e.target.value)}
-                                    className="w-16 h-6 text-center text-xs font-bold border rounded bg-white dark:bg-zinc-800 border-blue-200 dark:border-blue-800 text-blue-600 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                                    autoFocus
-                                    onBlur={handleSaveRollover}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSaveRollover()}
-                                />
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() => setIsEditingRollover(true)}
-                                className="group/roll cursor-pointer flex items-center gap-1 mt-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-0.5 rounded-md transition-colors"
-                            >
-                                <span className={`text-xs font-bold ${rolloverBal > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400'}`}>
-                                    {rolloverBal > 0 ? `+${formatMoney(rolloverBal)}` : '$0'}
-                                </span>
-                                <Edit2 size={10} className="text-blue-400 opacity-0 group-hover/roll:opacity-100 transition-opacity" />
-                            </div>
-                        )
-                    )}
-                </div>
-            </td>
-        </tr>
     );
 }
