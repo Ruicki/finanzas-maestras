@@ -4,21 +4,23 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface MonthSelectorProps {
-    currentDate: Date;
+    currentDate: Date | null;
     onMonthChange: (newDate: Date) => void;
 }
 
 export default function MonthSelector({ currentDate, onMonthChange }: MonthSelectorProps) {
 
+    const safeDate = currentDate ?? new Date();
+
     const handlePrevMonth = () => {
-        const newDate = new Date(currentDate);
+        const newDate = new Date(safeDate);
         newDate.setDate(1); // Avoid rollover issues (Jan 31 -> Feb 28/29)
         newDate.setMonth(newDate.getMonth() - 1);
         onMonthChange(newDate);
     };
 
     const handleNextMonth = () => {
-        const newDate = new Date(currentDate);
+        const newDate = new Date(safeDate);
         newDate.setDate(1); // Avoid rollover issues
         newDate.setMonth(newDate.getMonth() + 1);
         onMonthChange(newDate);
@@ -26,7 +28,7 @@ export default function MonthSelector({ currentDate, onMonthChange }: MonthSelec
 
     const isCurrentMonth = () => {
         const now = new Date();
-        return currentDate.getMonth() === now.getMonth() && currentDate.getFullYear() === now.getFullYear();
+        return safeDate.getMonth() === now.getMonth() && safeDate.getFullYear() === now.getFullYear();
     };
 
     return (
@@ -41,7 +43,7 @@ export default function MonthSelector({ currentDate, onMonthChange }: MonthSelec
             <div className="flex items-center gap-2 px-2 min-w-[140px] justify-center">
                 <Calendar size={16} className="text-zinc-400" />
                 <span className="font-bold text-zinc-700 dark:text-zinc-200 capitalize">
-                    {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                    {safeDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                 </span>
             </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import { createSalary } from '@/app/actions/salary';
 import { Account } from '@prisma/client';
 import { toast } from "sonner";
@@ -29,9 +29,13 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
         bonus: 0,
         company: '',
         absentDays: 0,
-        paymentDate: new Date().toISOString().split('T')[0], // Por defecto hoy
+        paymentDate: '',
         accountId: ''
     });
+
+    useEffect(() => {
+        setForm(prev => ({ ...prev, paymentDate: new Date().toISOString().split('T')[0] }));
+    }, []);
 
     const [result, setResult] = useState<{
         gross: number;

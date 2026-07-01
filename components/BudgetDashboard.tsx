@@ -42,7 +42,11 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const [isPrivateMode, setIsPrivateMode] = useState(false);
 
     // Date State (New)
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setSelectedDate(new Date());
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
@@ -83,8 +87,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const updateTab = (tab: string) => setActiveTab(tab);
 
     // --- CÁLCULOS GLOBALES (Filtrados por FECHA) ---
-    const selectedMonth = selectedDate.getMonth();
-    const selectedYear = selectedDate.getFullYear();
+    const currentDate = selectedDate ?? new Date();
+    const selectedMonth = currentDate.getMonth();
+    const selectedYear = currentDate.getFullYear();
 
     // Helper: Filter by selected month
     // Helper: Filter by selected month using ISO String (UTC) to match database storage
@@ -174,7 +179,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
                         {/* Month Selector */}
                         <MonthSelector
-                            currentDate={selectedDate}
+                            currentDate={selectedDate ?? new Date()}
                             onMonthChange={setSelectedDate}
                         />
                     </div>
