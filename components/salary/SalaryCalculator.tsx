@@ -81,8 +81,8 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
         try {
             const response = await createSalary({
-                grossVal: form.grossVal,
-                bonus: form.bonus,
+                grossVal: Number(form.grossVal),
+                bonus: Number(form.bonus),
                 company: form.company,
                 frequency: frequency,
                 absentDays: form.absentDays,
@@ -93,8 +93,8 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
             });
 
             setResult({
-                gross: Number(response.grossVal),
-                grossAfterAbsence: Number(response.grossAfterAbsence ?? response.grossVal),
+                gross: form.grossVal,
+                grossAfterAbsence: Number(response.grossAfterAbsence ?? form.grossVal),
                 absentDays: Number(response.absentDays ?? 0),
                 socialSec: Number(response.socialSec),
                 eduIns: Number(response.eduIns),
@@ -105,7 +105,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 net: Number(response.netVal),
                 decimo: Number(response._uiResult.decimoNet),
                 decimoGross: Number(response._uiResult.decimoGross),
-                bonus: Number(response.bonus),
+                bonus: form.bonus,
                 isDecimoIncluded: response._uiResult.isDecimoIncluded
             });
 
