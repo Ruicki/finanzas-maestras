@@ -301,7 +301,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                             <div>
                                 <h3 className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">Tu Libertad Financiera</h3>
                                 <h2 className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-zinc-400">
-                                    {isDebtFree ? "¡Eres Libre!" : (isNaN(freedomDate.getTime()) ? "Calculando..." : freedomDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }))}
+                                    {isDebtFree ? "¡Eres Libre!" : (isNaN(freedomDate.getTime()) ? "Calculando..." : freedomDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }))}
                                 </h2>
                             </div>
                             <div className="bg-zinc-800 p-3 rounded-2xl">

@@ -23,6 +23,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [frequency, setFrequency] = useState<'monthly' | 'biweekly'>('monthly');
+    const [mounted, setMounted] = useState(false);
 
     const [form, setForm] = useState<FormData & { absentDays: number, paymentDate: string, accountId: string }>({
         grossVal: 0,
@@ -35,6 +36,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
     useEffect(() => {
         setForm(prev => ({ ...prev, paymentDate: new Date().toISOString().split('T')[0] }));
+        setMounted(true);
     }, []);
 
     const [result, setResult] = useState<{
@@ -55,9 +57,6 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
     } | null>(null);
 
     const [tooltip, setTooltip] = useState<'isr' | 'decimo' | null>(null);
-
-
-
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -93,22 +92,20 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 dryRun: !save
             });
 
-            if (save && onSave) onSave();
-
             setResult({
-                gross: response.grossVal,
-                grossAfterAbsence: response.grossAfterAbsence ?? response.grossVal,
-                absentDays: response.absentDays ?? 0,
-                socialSec: response.socialSec,
-                eduIns: response.eduIns,
-                incomeTax: response.incomeTax,
-                annualISRBase: response.annualISRBase ?? 0,
-                annualISRTax: response.annualISRTax ?? 0,
-                isrRateUsed: response.isrRateUsed ?? 0,
-                net: response.netVal,
-                decimo: response._uiResult.decimoNet,
-                decimoGross: response._uiResult.decimoGross,
-                bonus: response.bonus,
+                gross: Number(response.grossVal),
+                grossAfterAbsence: Number(response.grossAfterAbsence ?? response.grossVal),
+                absentDays: Number(response.absentDays ?? 0),
+                socialSec: Number(response.socialSec),
+                eduIns: Number(response.eduIns),
+                incomeTax: Number(response.incomeTax),
+                annualISRBase: Number(response.annualISRBase ?? 0),
+                annualISRTax: Number(response.annualISRTax ?? 0),
+                isrRateUsed: Number(response.isrRateUsed ?? 0),
+                net: Number(response.netVal),
+                decimo: Number(response._uiResult.decimoNet),
+                decimoGross: Number(response._uiResult.decimoGross),
+                bonus: Number(response.bonus),
                 isDecimoIncluded: response._uiResult.isDecimoIncluded
             });
 
@@ -118,6 +115,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                     ? `¡Cálculo guardado! (Incluye Décimo por ser mes ${selectedMonth} 🎁)`
                     : '¡Salario guardado correctamente!';
                 toast.success(successMsg);
+                if (onSave) onSave();
                 router.refresh();
             } else {
                 toast.info("Vista previa calculada (sin guardar)");
@@ -239,7 +237,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                         <input
                             type="date"
                             name="paymentDate"
-                            value={form.paymentDate}
+                            value={mounted ? form.paymentDate : ''}
                             onChange={handleChange}
                             className="w-full pl-12 pr-4 py-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-lg text-zinc-900 dark:text-gray-100 placeholder-zinc-400 dark:placeholder-zinc-500"
                         />
@@ -421,6 +419,14 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             )}
 
                             <div className="h-px bg-zinc-200 dark:bg-white/10 my-3"></div>
+
+                            {/* Total Deducciones */}
+                            <div className="flex justify-between text-red-800 dark:text-red-300 font-bold">
+                                <span>TOTAL DEDUCCIONES</span>
+                                <span>-${(result.socialSec + result.eduIns + result.incomeTax).toFixed(2)}</span>
+                            </div>
+
+                            <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
 
                             {/* Neto */}
                             <div className="flex justify-between text-lg font-black text-emerald-700 dark:text-emerald-400">
