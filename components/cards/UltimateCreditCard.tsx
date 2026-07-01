@@ -86,7 +86,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
             {/* 1. VISUAL CARD (Top) */}
             <div className="relative w-full aspect-[1.586/1] shrink-0 rounded-[1.3rem] overflow-hidden bg-zinc-950 text-white shadow-lg flex flex-col justify-between p-6 m-1">
                 <div className="absolute inset-0 bg-linear-to-br from-zinc-800 to-zinc-950" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+                <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")"}} />
 
                 <div className="relative z-10 flex justify-between items-start">
                     <span className="font-bold text-lg tracking-tight text-zinc-100 truncate pr-4">{card.name}</span>

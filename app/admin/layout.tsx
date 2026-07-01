@@ -69,7 +69,7 @@ export default async function AdminLayout({
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto bg-black relative">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+                <div className="absolute inset-0 opacity-20 pointer-events-none" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")"}}></div>
                 <div className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto">
                     {children}
                 </div>
