@@ -119,11 +119,6 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const currentMonthSalaries = activeProfile?.salaries?.filter((s) => isInSelectedMonth(s.createdAt)) || [];
     const baseIncome = currentMonthSalaries.reduce((sum, s) => sum + Number(s.netVal), 0);
 
-    {/* DEBUG */}
-    <div className="fixed bottom-4 left-4 z-50 bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-mono shadow-lg border-2 border-white">
-        Dashboard: salaries={activeProfile?.salaries?.length || 0} thisMonth={currentMonthSalaries.length}
-    </div>
-
     const additionalIncomes = activeProfile?.incomes || [];
     const monthlyAdditionalIncome = additionalIncomes.reduce((acc, inc) => {
         // ONE_TIME -> Only current month
@@ -151,6 +146,10 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     return (
         <div className={`w-full max-w-[1400px] mx-auto space-y-12 p-6 md:p-12 pb-32 ${isPrivateMode ? 'private-mode' : ''}`}>
+            {/* DEBUG BADGE */}
+            <div className="fixed bottom-4 left-4 z-50 bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-mono shadow-lg border-2 border-white">
+                Dashboard: salaries={activeProfile?.salaries?.length || 0} thisMonth={currentMonthSalaries.length}
+            </div>
             {/* IMPERSONATION BANNER */}
             {isImpersonating && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">

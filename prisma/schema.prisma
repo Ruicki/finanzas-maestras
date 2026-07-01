@@ -1,259 +1,186 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-// NOTE: SQLite has limited enum support in some contexts, switching to String for stability.
-// IncomeType: "EVENTUAL" | "ONE_TIME"
-// IncomeFrequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY"
-
 model AdditionalIncome {
-  id             Int     @id @default(autoincrement())
-  name           String // Ej: "Freelance", "Venta Garage"
-  amount         Decimal @db.Decimal(10, 2) // Monto del ingreso
-  type           String // "EVENTUAL" o "ONE_TIME"
-  frequency      String? // Solo si es EVENTUAL - "WEEKLY", "BIWEEKLY", "MONTHLY"
-  durationMonths Int? // Solo si es EVENTUAL
-  icon           String  @default("Wallet") // Identificador de icono
-
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-
-  accountId Int?
-  account   Account? @relation(fields: [accountId], references: [id])
-
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  name           String
+  amount         Decimal  @db.Decimal(10, 2)
+  type           String
+  frequency      String?
+  durationMonths Int?
+  profileId      Int
+  accountId      Int?
+  createdAt      DateTime @default(now())
+  icon           String   @default("Wallet")
+  account        Account? @relation(fields: [accountId], references: [id])
+  profile        Profile  @relation(fields: [profileId], references: [id])
 }
 
 model Salary {
-  id       Int   @id @default(autoincrement())
-  grossVal Decimal @db.Decimal(10, 2) // Salario Bruto ingresado
-  netVal   Decimal @db.Decimal(10, 2) // Salario Neto calculado
-
-  // Deducciones
-  taxes     Decimal @db.Decimal(10, 2) // Total impuestos
-  socialSec Decimal @db.Decimal(10, 2) // Seguro Social (9.75%)
-  eduIns    Decimal @db.Decimal(10, 2) // Seguro Educativo (1.25%)
-  incomeTax Decimal @db.Decimal(10, 2) // Impuesto Sobre la Renta (si aplica)
-
-  // Ingresos Extra
-  bonus Decimal @db.Decimal(10, 2) // Bonos o Décimo
-
-  // Deducciones por ausencia
-  absentDays Int @default(0) // Días faltados
-
-  createdAt DateTime @default(now())
-
-  // Metadatos
-  company String? // Nombre de la empresa (Opcional)
-
-  // Relación opcional con Perfil
-  profileId Int?
-  profile   Profile? @relation(fields: [profileId], references: [id])
-
-  accountId Int?
-  account   Account? @relation(fields: [accountId], references: [id])
+  id         Int      @id @default(autoincrement())
+  grossVal   Decimal  @db.Decimal(10, 2)
+  netVal     Decimal  @db.Decimal(10, 2)
+  taxes      Decimal  @db.Decimal(10, 2)
+  socialSec  Decimal  @db.Decimal(10, 2)
+  eduIns     Decimal  @db.Decimal(10, 2)
+  incomeTax  Decimal  @db.Decimal(10, 2)
+  bonus      Decimal  @db.Decimal(10, 2)
+  absentDays Int      @default(0)
+  createdAt  DateTime @default(now())
+  company    String?
+  profileId  Int?
+  accountId  Int?
+  account    Account? @relation(fields: [accountId], references: [id])
+  profile    Profile? @relation(fields: [profileId], references: [id])
 }
 
 model Profile {
-  id        Int      @id @default(autoincrement())
-  name      String // Ej: "Ricardo", "Casa"
-  email     String?  @unique // [NEW] Email for login
-  password  String?          // [NEW] Hashed password
-  accessCode String? @unique // [NEW] Code to claim this profile
-  createdAt DateTime @default(now())
-
-  expenses    Expense[]
-  goals       Goal[]
-  salaries    Salary[]
-  incomes     AdditionalIncome[]
-  creditCards CreditCard[]
-  loans       Loan[]
-  accounts    Account[]
-  categories  Category[]
-
-  role             String  @default("USER") // "ADMIN" | "USER"
-  customDeductions String? // JSON string for templates (Fase 3)
+  id               Int                @id @default(autoincrement())
+  name             String
+  createdAt        DateTime           @default(now())
+  role             String             @default("USER")
+  customDeductions String?
+  email            String?            @unique
+  password         String?
+  accessCode       String?            @unique
+  accounts         Account[]
+  incomes          AdditionalIncome[]
+  categories       Category[]
+  creditCards      CreditCard[]
+  expenses         Expense[]
+  goals            Goal[]
+  loans            Loan[]
+  salaries         Salary[]
 }
 
 model Expense {
-  id       Int    @id @default(autoincrement())
-  name     String // Ej: "Alquiler", "Netflix"
-  amount   Decimal @db.Decimal(10, 2)
-  category String // Deprecated: Kept for backward compatibility
-  
-  // New Relation
-  categoryId Int?
-  categoryRel Category? @relation(fields: [categoryId], references: [id])
-
-  // Para el calendario/recurrencia
-  dueDate     Int? // Día del mes de pago (Ej: 15)
-  isRecurring Boolean @default(true)
-  isOneTime   Boolean @default(false)
-
-  // Payment Details
-  paymentMethod String? // CASH | DEBIT | CREDIT
+  id            Int       @id @default(autoincrement())
+  name          String
+  amount        Decimal   @db.Decimal(10, 2)
+  category      String
+  categoryId    Int?
+  dueDate       Int?
+  isRecurring   Boolean   @default(true)
+  isOneTime     Boolean   @default(false)
+  paymentMethod String?
   linkedCardId  Int?
-  
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-
-  accountId Int?
-  account   Account? @relation(fields: [accountId], references: [id])
-
-  createdAt DateTime @default(now())
+  profileId     Int
+  accountId     Int?
+  createdAt     DateTime  @default(now())
+  account       Account?  @relation(fields: [accountId], references: [id])
+  categoryRel   Category? @relation(fields: [categoryId], references: [id])
+  profile       Profile   @relation(fields: [profileId], references: [id])
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   // Ej: "Comida", "Alquiler"
-  icon    String   // Identificador de icono (lucide-react)
-  color   String   // Clase de color Tailwind (text-blue-500)
-  type    String   // Macro-Tipo: "FIXED" | "VARIABLE" | "LUXURY" | "SAVING"
-  monthlyLimit Decimal? @db.Decimal(10, 2) // Tope mensual opcional
-  
-  // Phase 4: Sinking Funds
-  isRollover      Boolean  @default(false)      // Si es true, el sobrante se acumula
-  rolloverBalance Decimal  @db.Decimal(10, 2) @default(0) // Saldo acumulado de meses anteriores
-
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-  
-  expenses Expense[]
-  
-  createdAt DateTime @default(now())
+  id              Int       @id @default(autoincrement())
+  name            String
+  icon            String
+  color           String
+  type            String
+  monthlyLimit    Decimal?  @db.Decimal(10, 2)
+  profileId       Int
+  createdAt       DateTime  @default(now())
+  isRollover      Boolean   @default(false)
+  rolloverBalance Decimal   @default(0) @db.Decimal(10, 2)
+  profile         Profile   @relation(fields: [profileId], references: [id])
+  expenses        Expense[]
 }
 
-// GoalType: "FIXED" (Ahorro recurrente) | "VARIABLE" (Aportes libres)
-// GoalFrequency: "WEEKLY" | "BIWEEKLY" | "MONTHLY"
-// GoalPriority: "HIGH" | "MEDIUM" | "LOW"
-
 model Goal {
-  id            Int       @id @default(autoincrement())
-  name          String
-  targetAmount  Decimal   @db.Decimal(10, 2)
-  currentAmount Decimal   @db.Decimal(10, 2) @default(0)
-  deadline      DateTime?
-
-  // Phase 2: Intelligent Goals
-  type               String  @default("VARIABLE") // FIXED | VARIABLE
-  frequency          String? // WEEKLY | BIWEEKLY | MONTHLY
-  contributionAmount Decimal? @db.Decimal(10, 2) // Monto que se ahorra periódicamente (si es FIXED)
-  priority           String? @default("MEDIUM") // HIGH | MEDIUM | LOW
-  
-  // Link to account for auto-debits (FIXED Goals)
+  id                 Int       @id @default(autoincrement())
+  name               String
+  targetAmount       Decimal   @db.Decimal(10, 2)
+  currentAmount      Decimal   @default(0) @db.Decimal(10, 2)
+  deadline           DateTime?
+  type               String    @default("VARIABLE")
+  frequency          String?
+  contributionAmount Decimal?  @db.Decimal(10, 2)
+  priority           String?   @default("MEDIUM")
   sourceAccountId    Int?
-  // Relation is manual/optional in code or we can define it:
-  // sourceAccount      Account? @relation(fields: [sourceAccountId], references: [id])
-  // Let's keep it simple ID for now to avoid circular relation complexity in simple dashboard
-
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-
-  createdAt DateTime @default(now())
+  profileId          Int
+  createdAt          DateTime  @default(now())
+  profile            Profile   @relation(fields: [profileId], references: [id])
 }
 
 model CreditCard {
-  id      Int    @id @default(autoincrement())
-  name    String // Ej: "Mi Tarjeta CMF"
-  limit   Decimal @db.Decimal(10, 2) // Límite de crédito
-  balance Decimal @db.Decimal(10, 2) @default(0) // Deuda actual
-
-  cutoffDay  Int // Día de corte (1-31)
-  paymentDay Int // Día límite de pago (1-31)
-
-  // Banco emisor
-  bank String? // 'CMF', 'BAC', 'BANISTMO', 'BANCO_GENERAL', 'OTRO'
-
-  // Costos financieros
-  interestRate         Decimal? @db.Decimal(6, 2) // Tasa mensual nominal (%)
-  insuranceRate        Decimal? @db.Decimal(6, 2) @default(0.25) // Desgravamen mensual (%)
-  minPaymentPercentage Decimal? @db.Decimal(6, 2) @default(3.0) // % Pago Mínimo (capital)
-  lateFee              Decimal? @db.Decimal(10, 2) @default(25.0) // Cargo por mora ($)
-
-  // Anualidad
-  annualFee      Decimal? @db.Decimal(10, 2) // Membresía anual ($)
-  annualFeeMonth Int?     // Mes de cobro (1-12)
-
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-
-  createdAt DateTime @default(now())
+  id                   Int      @id @default(autoincrement())
+  name                 String
+  limit                Decimal  @db.Decimal(10, 2)
+  balance              Decimal  @default(0) @db.Decimal(10, 2)
+  cutoffDay            Int
+  paymentDay           Int
+  interestRate         Decimal? @db.Decimal(6, 2)
+  annualFee            Decimal? @db.Decimal(10, 2)
+  minPaymentPercentage Decimal? @default(3.0) @db.Decimal(6, 2)
+  insuranceRate        Decimal? @default(0.25) @db.Decimal(6, 2)
+  profileId            Int
+  createdAt            DateTime @default(now())
+  annualFeeMonth       Int?
+  bank                 String?
+  lateFee              Decimal? @default(25.0) @db.Decimal(10, 2)
+  profile              Profile  @relation(fields: [profileId], references: [id])
 }
 
-// Phase 6: Debts & Loans
 model Loan {
   id             Int      @id @default(autoincrement())
-  name           String   // Ej: "Préstamo Personal", "Hipoteca Casa"
-  lender         String   // Banco o Persona (Ej: "Banco General", "Tío Juan")
-  type           String   // "PERSONAL", "AUTO", "MORTGAGE", "OTHER"
-  
-  totalAmount    Decimal  @db.Decimal(12, 2) // Monto original (Capital)
-  currentBalance Decimal  @db.Decimal(12, 2)    // Saldo actual
-  
-  interestRate   Decimal?   @db.Decimal(6, 2) // Tasa anual (%) - Increased precision
-  termMonths     Int?     // Plazo en meses
-  monthlyPayment Decimal?   @db.Decimal(10, 2) // Letra mensual
-  paymentDay     Int?     // Día de pago
-  startDate      DateTime @default(now()) // Fecha de inicio del préstamo
-  
-  isAutomatic    Boolean  @default(false) // Si es descuento directo (afecta logica de sueldo neto vs disponible)
-
+  name           String
+  lender         String
+  type           String
+  totalAmount    Decimal  @db.Decimal(12, 2)
+  currentBalance Decimal  @db.Decimal(12, 2)
+  interestRate   Decimal? @db.Decimal(6, 2)
+  termMonths     Int?
+  monthlyPayment Decimal? @db.Decimal(10, 2)
+  paymentDay     Int?
+  isAutomatic    Boolean  @default(false)
   profileId      Int
-  profile        Profile  @relation(fields: [profileId], references: [id])
-
   createdAt      DateTime @default(now())
+  startDate      DateTime @default(now())
+  profile        Profile  @relation(fields: [profileId], references: [id])
 }
 
 model Account {
-  id       Int    @id @default(autoincrement())
-  name     String // Ej: "Banco General", "Caja Menuda"
-  type     String // "BANK", "CASH", "SAVINGS", "WALLET"
-  balance  Decimal  @db.Decimal(12, 2) @default(0)
-  currency String @default("USD")
-  isDefault Boolean @default(false) // [NEW] Para identificar cuenta Efectivo única
-  lockDate  DateTime? // [NEW] Fecha de bloqueo de fondos
-
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
-
-  expenses Expense[]
-  incomes  AdditionalIncome[]
-  salaries Salary[]
-  transfersFrom Transfer[] @relation("SourceAccount")
-  transfersTo   Transfer[] @relation("DestinationAccount")
-
-  createdAt DateTime @default(now())
+  id            Int                @id @default(autoincrement())
+  name          String
+  type          String
+  balance       Decimal            @default(0) @db.Decimal(12, 2)
+  currency      String             @default("USD")
+  profileId     Int
+  createdAt     DateTime           @default(now())
+  isDefault     Boolean            @default(false)
+  lockDate      DateTime?
+  profile       Profile            @relation(fields: [profileId], references: [id])
+  incomes       AdditionalIncome[]
+  expenses      Expense[]
+  salaries      Salary[]
+  transfersTo   Transfer[]         @relation("DestinationAccount")
+  transfersFrom Transfer[]         @relation("SourceAccount")
 }
 
 model Transfer {
-  id             Int      @id @default(autoincrement())
-  amount         Decimal  @db.Decimal(10, 2)
-  description    String?
-  date           DateTime @default(now())
-
+  id                   Int      @id @default(autoincrement())
+  amount               Decimal  @db.Decimal(10, 2)
+  description          String?
+  date                 DateTime @default(now())
   sourceAccountId      Int
-  sourceAccount        Account @relation("SourceAccount", fields: [sourceAccountId], references: [id])
-
   destinationAccountId Int
-  destinationAccount   Account @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
+  destinationAccount   Account  @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
+  sourceAccount        Account  @relation("SourceAccount", fields: [sourceAccountId], references: [id])
 }
 
-// Phase 7: Audit Logs
 model AuditLog {
   id        Int      @id @default(autoincrement())
-  action    String   // "CREATE_PROFILE", "DELETE_PROFILE", "IMPERSONATE", "RESET_DATA"
-  details   String?  // Detalles adicionales
-  actorId   Int?     // Quién hizo la acción
-  targetId  Int?     // A quién se le hizo
-  
+  action    String
+  details   String?
+  actorId   Int?
+  targetId  Int?
   createdAt DateTime @default(now())
 }
