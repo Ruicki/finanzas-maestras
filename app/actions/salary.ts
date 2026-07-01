@@ -18,6 +18,7 @@ interface ProcessSalaryRequest {
     profileId?: number;
     accountId?: number;
     isManualCalculation?: boolean;
+    dryRun?: boolean;
 }
 
 export async function createSalary(data: ProcessSalaryRequest) {
@@ -96,6 +97,31 @@ export async function createSalary(data: ProcessSalaryRequest) {
             profileId: data.profileId,
             accountId: data.accountId,
         };
+
+        if (data.dryRun) {
+            return {
+                id: 0,
+                createdAt: new Date(),
+                ...salaryData,
+                grossVal: Number(salaryData.grossVal),
+                netVal: Number(salaryData.netVal),
+                taxes: Number(salaryData.taxes),
+                socialSec: Number(salaryData.socialSec),
+                eduIns: Number(salaryData.eduIns),
+                incomeTax: Number(salaryData.incomeTax),
+                bonus: Number(salaryData.bonus),
+                absentDays: data.absentDays,
+                grossAfterAbsence,
+                annualISRBase,
+                annualISRTax,
+                isrRateUsed,
+                _uiResult: {
+                    isDecimoIncluded: isDecimoMonth,
+                    decimoGross: estimatedDecimoGross,
+                    decimoNet: estimatedDecimoNet
+                }
+            };
+        }
 
         const newSalary = await prisma.$transaction(async (tx) => {
             const salary = await SalaryRepository.create(tx, salaryData);

@@ -87,7 +87,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const updateTab = (tab: string) => setActiveTab(tab);
 
     // --- CÁLCULOS GLOBALES (Filtrados por FECHA) ---
-    const currentDate = selectedDate ?? new Date();
+    const currentDate = selectedDate ?? new Date(2000, 0, 1);
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
@@ -180,7 +180,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
                         {/* Month Selector */}
                         <MonthSelector
-                            currentDate={selectedDate ?? new Date()}
+                            currentDate={selectedDate}
                             onMonthChange={setSelectedDate}
                         />
                     </div>

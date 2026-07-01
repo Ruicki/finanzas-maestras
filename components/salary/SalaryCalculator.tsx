@@ -67,9 +67,14 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
         }));
     };
 
-    const handleCalculate = async () => {
+    const handleCalculate = async (save: boolean = false) => {
         if (form.grossVal <= 0 && form.bonus <= 0) {
             toast.warning("Por favor ingresa un salario o un bono para calcular.");
+            return;
+        }
+
+        if (save && !form.accountId) {
+            toast.warning("Selecciona una cuenta de depósito para guardar.");
             return;
         }
 
@@ -84,10 +89,11 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 absentDays: form.absentDays,
                 paymentDate: form.paymentDate,
                 profileId: profileId,
-                accountId: form.accountId ? parseInt(form.accountId) : undefined
+                accountId: form.accountId ? parseInt(form.accountId) : undefined,
+                dryRun: !save
             });
 
-            if (onSave) onSave();
+            if (save && onSave) onSave();
 
             setResult({
                 gross: response.grossVal,
@@ -107,12 +113,15 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
             });
 
             const selectedMonth = parseInt(form.paymentDate.split('-')[1]);
-            const successMsg = response._uiResult.isDecimoIncluded
-                ? `¡Cálculo guardado! (Incluye Décimo por ser mes ${selectedMonth} 🎁)`
-                : '¡Salario guardado correctamente!';
-
-            toast.success(successMsg);
-            router.refresh();
+            if (save) {
+                const successMsg = response._uiResult.isDecimoIncluded
+                    ? `¡Cálculo guardado! (Incluye Décimo por ser mes ${selectedMonth} 🎁)`
+                    : '¡Salario guardado correctamente!';
+                toast.success(successMsg);
+                router.refresh();
+            } else {
+                toast.info("Vista previa calculada (sin guardar)");
+            }
 
         } catch (error) {
             console.error(error);
@@ -239,7 +248,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
                 <div className="relative group/input">
                     <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-zinc-500 dark:text-zinc-400 group-hover/input:text-cyan-500 transition-colors">
-                        Cuenta de Depósito (Opcional)
+                        Cuenta de Depósito <span className="text-red-400 normal-case">*Requerida para guardar</span>
                     </label>
                     <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 font-semibold text-lg">🏦</span>
@@ -257,19 +266,33 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                     </div>
                 </div>
 
-                {/* BOTÓN CON ESTADO DE CARGA */}
-                <button
-                    onClick={handleCalculate}
-                    disabled={loading}
-                    className="w-full py-3 mt-6 bg-linear-to-r from-red-600 via-orange-600 to-yellow-300 hover:from-red-600 hover:via-orange-400 hover:to-yellow-200 text-white font-bold text-sm rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:grayscale shadow-md ring-1"
-                >
-                    {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                            <svg className="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Calculando...
-                        </span>
-                    ) : 'Calcular Deducciones'}
-                </button>
+                {/* BOTONES */}
+                <div className="flex gap-3 mt-6">
+                    <button
+                        onClick={() => handleCalculate(false)}
+                        disabled={loading}
+                        className="flex-1 py-3 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-200 font-bold text-sm rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:grayscale"
+                    >
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Calculando...
+                            </span>
+                        ) : 'Simular'}
+                    </button>
+                    <button
+                        onClick={() => handleCalculate(true)}
+                        disabled={loading}
+                        className="flex-1 py-3 bg-linear-to-r from-red-600 via-orange-600 to-yellow-300 hover:from-red-600 hover:via-orange-400 hover:to-yellow-200 text-white font-bold text-sm rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:grayscale shadow-md ring-1"
+                    >
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Guardando...
+                            </span>
+                        ) : 'Guardar'}
+                    </button>
+                </div>
 
                 {/* RESULTADO */}
                 {result && (
