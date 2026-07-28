@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BANK_PRESETS, BANK_OPTIONS } from '@/lib/credit-card-presets';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface CreditCardWizardProps {
     profileId: number;
@@ -179,10 +180,9 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Límite de crédito</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                            <input
-                                type="number"
+                            <SmartMoneyInput
                                 value={limit}
-                                onChange={(e) => setLimit(e.target.value)}
+                                onMoneyChange={setLimit}
                                 placeholder={getPreset() ? '500.00' : '0.00'}
                                 className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             />
@@ -193,10 +193,9 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Saldo actual (deuda anterior)</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                            <input
-                                type="number"
+                            <SmartMoneyInput
                                 value={balance}
-                                onChange={(e) => setBalance(e.target.value)}
+                                onMoneyChange={setBalance}
                                 placeholder={getPreset() ? '172.50' : '0.00'}
                                 className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             />
@@ -281,10 +280,9 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Monto anual</label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                                    <input
-                                        type="number"
+                                    <SmartMoneyInput
                                         value={annualFee}
-                                        onChange={(e) => setAnnualFee(e.target.value)}
+                                        onMoneyChange={setAnnualFee}
                                         placeholder={getPreset()?.annualFee ? getPreset()!.annualFee.toString() : '40.00'}
                                         className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                                     />

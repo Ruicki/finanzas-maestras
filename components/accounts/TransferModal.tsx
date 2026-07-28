@@ -6,6 +6,7 @@ import { Account } from '@prisma/client';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { ArrowRightLeft, CreditCard, ChevronRight, X, ArrowDown } from "lucide-react";
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface TransferModalProps {
     accounts: any[];
@@ -117,10 +118,9 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                         <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Monto a Transferir</label>
                         <div className="relative mt-2">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-xl">$</span>
-                            <input
-                                type="number"
+                            <SmartMoneyInput
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onMoneyChange={setAmount}
                                 className="w-full bg-transparent border-b-2 border-zinc-200 dark:border-zinc-700 p-4 pl-10 text-3xl font-black text-zinc-900 dark:text-white outline-none focus:border-indigo-500 transition-colors placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
                                 placeholder="0.00"
                             />

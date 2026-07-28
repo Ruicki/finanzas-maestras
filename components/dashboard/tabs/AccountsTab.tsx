@@ -128,7 +128,74 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
         }
     };
 
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    // Agrupar por propósito
+    const spendingAccounts = accounts.filter(acc => acc.purpose !== 'SAVINGS');
+    const savingsAccounts = accounts.filter(acc => acc.purpose === 'SAVINGS');
+
+    const totalSpending = spendingAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalBalance = totalSpending + totalSavings;
+
+    const renderAccountCard = (acc: Account) => (
+        <div
+            key={acc.id}
+            onClick={() => openModal(acc, 'movements')}
+            className={`
+                relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg
+                hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1
+                ${acc.type === 'BANK'
+                    ? 'bg-gradient-to-br from-[#d1ecf1] to-[#a8d4ec] dark:from-[#1591DC] dark:to-[#2C5EAD] text-[#2C5EAD] dark:text-white'
+                    : ''}
+                ${acc.type === 'CASH'
+                    ? 'bg-gradient-to-br from-[#d4edda] to-[#b0d9ba] dark:from-[#519A66] dark:to-[#237227] text-[#237227] dark:text-white'
+                    : ''}
+                ${acc.type === 'WALLET'
+                    ? 'bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8] dark:from-[#0B0909] dark:to-[#1a1a1a] text-[#0B0909] dark:text-[#FFBF00]'
+                    : ''}
+                ${acc.type === 'SAVINGS'
+                    ? 'bg-gradient-to-br from-[#ffe4f1] to-[#ffd6ea] dark:from-[#FF62BB] dark:to-[#FF97D0] text-[#d44d94] dark:text-white'
+                    : ''}
+                ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
+                    ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
+            `}
+        >
+            {/* Decoración de fondo */}
+            <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/20 dark:bg-white/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-black/5 dark:bg-black/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col justify-between h-full min-h-[160px]">
+                {/* Fila superior: ícono + menú */}
+                <div className="flex justify-between items-start">
+                    <div className="p-3 rounded-2xl bg-black/10 dark:bg-white/20 backdrop-blur-md">
+                        {getIcon(acc.type)}
+                    </div>
+                    <AccountMenu
+                        account={acc}
+                        onView={() => openModal(acc, 'movements')}
+                        onEdit={() => openModal(acc, 'settings')}
+                        onDelete={() => handleDelete(acc.id)}
+                    />
+                </div>
+
+                {/* Contenido */}
+                <div className="mt-6">
+                    <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">
+                        {getTypeName(acc.type)}
+                    </p>
+                    <h3 className="text-xl font-bold truncate mb-2">{acc.name}</h3>
+                    <p className="text-3xl font-black tracking-tight">
+                        ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </p>
+                    {acc.lockDate && new Date(acc.lockDate) > new Date() && (
+                        <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
+                            <Lock size={12} />
+                            Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pt-6">
@@ -189,80 +256,54 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                 />
             )}
 
-            {/* ── Grid de tarjetas ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {accounts.map(acc => (
-                    <div
-                        key={acc.id}
-                        onClick={() => openModal(acc, 'movements')}
-                        className={`
-                            relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg
-                            hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1
-                            ${acc.type === 'BANK'    ? 'bg-gradient-to-br from-zinc-900 to-zinc-700 text-white' : ''}
-                            ${acc.type === 'CASH'    ? 'bg-gradient-to-br from-emerald-500 to-teal-700 text-white' : ''}
-                            ${acc.type === 'WALLET'  ? 'bg-gradient-to-br from-purple-600 to-indigo-800 text-white' : ''}
-                            ${acc.type === 'SAVINGS' ? 'bg-gradient-to-br from-pink-500 to-rose-700 text-white' : ''}
-                            ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
-                                ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
-                        `}
+            {/* ── Sección: Cuentas (SPENDING) ── */}
+            {spendingAccounts.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">Cuentas</h3>
+                        <span className="text-sm font-bold text-zinc-400">
+                            ${totalSpending.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {spendingAccounts.map(renderAccountCard)}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Sección: Ahorros (SAVINGS) ── */}
+            {savingsAccounts.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">Ahorros</h3>
+                        <span className="text-sm font-bold text-zinc-400">
+                            ${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {savingsAccounts.map(renderAccountCard)}
+                    </div>
+                </div>
+            )}
+
+            {/* Estado vacío */}
+            {accounts.length === 0 && !isCreating && (
+                <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
+                    <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                        <Landmark className="w-10 h-10 text-zinc-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>
+                    <p className="text-zinc-500 max-w-sm mx-auto mb-6">
+                        Agrega tu primera cuenta bancaria o de efectivo para empezar a llevar el control.
+                    </p>
+                    <button
+                        onClick={() => setIsCreating(true)}
+                        className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
                     >
-                        {/* Decoración de fondo */}
-                        <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-black/10 rounded-full blur-3xl pointer-events-none" />
-
-                        <div className="relative z-10 flex flex-col justify-between h-full min-h-[160px]">
-                            {/* Fila superior: ícono + menú */}
-                            <div className="flex justify-between items-start">
-                                <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-md">
-                                    {getIcon(acc.type)}
-                                </div>
-                                <AccountMenu
-                                    account={acc}
-                                    onView={() => openModal(acc, 'movements')}
-                                    onEdit={() => openModal(acc, 'settings')}
-                                    onDelete={() => handleDelete(acc.id)}
-                                />
-                            </div>
-
-                            {/* Contenido */}
-                            <div className="mt-6">
-                                <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">
-                                    {getTypeName(acc.type)}
-                                </p>
-                                <h3 className="text-xl font-bold truncate mb-2">{acc.name}</h3>
-                                <p className="text-3xl font-black tracking-tight">
-                                    ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </p>
-                                {acc.lockDate && new Date(acc.lockDate) > new Date() && (
-                                    <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
-                                        <Lock size={12} />
-                                        Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-
-                {/* Estado vacío */}
-                {accounts.length === 0 && !isCreating && (
-                    <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
-                        <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                            <Landmark className="w-10 h-10 text-zinc-300" />
-                        </div>
-                        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>
-                        <p className="text-zinc-500 max-w-sm mx-auto mb-6">
-                            Agrega tu primera cuenta bancaria o de efectivo para empezar a llevar el control.
-                        </p>
-                        <button
-                            onClick={() => setIsCreating(true)}
-                            className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
-                        >
-                            Crear Cuenta
-                        </button>
-                    </div>
-                )}
-            </div>
+                        Crear Cuenta
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

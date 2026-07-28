@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Account } from '@prisma/client';
-import { createIncome } from '@/app/actions/budget';
+import { createIncome, updateIncome } from '@/app/actions/budget';
 import { createSalary } from '@/app/actions/salary';
 import { DollarSign, Building2, Wallet, Save } from 'lucide-react';
 import SalaryCalculator from '@/components/salary/SalaryCalculator';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { parseDateNoon } from '@/lib/utils';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { CategoryIcon, AVAILABLE_ICONS } from '@/components/shared/CategoryIcon';
 
 interface IncomeWizardProps {
@@ -21,18 +23,49 @@ interface IncomeWizardProps {
 
 type IncomeType = 'SALARY' | 'DEPOSIT' | 'CASH' | null;
 
-export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }: IncomeWizardProps) {
-    const [step, setStep] = useState<number>(1);
+export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, initialData, isEditing = false }: IncomeWizardProps) {
+    const [step, setStep] = useState<number>(isEditing ? 2 : 1);
     const [type, setType] = useState<IncomeType>(null);
 
-    // NUEVO: Sub-modo Salario
+    // Sub-modo Salario
     const [salaryMode, setSalaryMode] = useState<'MANUAL' | 'CALCULATOR'>('MANUAL');
 
-    // Estado Común para Inputs
+    // Estado del Formulario
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
     const [selectedIcon, setSelectedIcon] = useState('Wallet');
+    const [date, setDate] = useState<string>(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    });
+
+    // Cargar datos iniciales al editar
+    useEffect(() => {
+        if (isEditing && initialData) {
+            setAmount(initialData.amount?.toString() || '');
+            setDescription(initialData.name || '');
+            setSelectedAccountId(initialData.accountId || null);
+            setSelectedIcon(initialData.icon || 'Wallet');
+            setDate(initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+
+            // Detectar tipo basado en los datos
+            if (initialData.type === 'SALARY' || initialData.name?.toLowerCase().includes('salario')) {
+                setType('SALARY');
+                setSalaryMode('MANUAL');
+            } else if (initialData.accountId) {
+                // Verificar si la cuenta es CASH
+                const acc = accounts.find(a => a.id === initialData.accountId);
+                if (acc?.type === 'CASH') {
+                    setType('CASH');
+                } else {
+                    setType('DEPOSIT');
+                }
+            } else {
+                setType('CASH');
+            }
+        }
+    }, [isEditing, initialData, accounts]);
 
     useScrollLock(true);
 
@@ -40,14 +73,12 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
     const handleTypeSelect = (selectedType: IncomeType) => {
         setType(selectedType);
 
-        // Auto-seleccionar cuenta de EFECTIVO si existe y el tipo es CASH
         if (selectedType === 'CASH') {
             const cashAcc = accounts.find(a => a.type === 'CASH');
             if (cashAcc) setSelectedAccountId(cashAcc.id);
         }
 
-        // Establecer Iconos por Defecto
-        if (selectedType === 'SALARY') setSelectedIcon('Building'); // O Maletín
+        if (selectedType === 'SALARY') setSelectedIcon('Building');
         if (selectedType === 'DEPOSIT') setSelectedIcon('CreditCard');
         if (selectedType === 'CASH') setSelectedIcon('Wallet');
 
@@ -61,45 +92,57 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
             return;
         }
 
-        // Validación: Cuenta de destino obligatoria
         if (!selectedAccountId) {
             toast.error("Selecciona una cuenta de destino");
             return;
         }
 
-        // Validación para Descripción solo si NO es Salario Manual (ya que lo ponemos por defecto)
         if (type !== 'SALARY' && !description.trim()) {
             toast.error("Falta descripción");
             return;
         }
 
         try {
-            if (type === 'SALARY' && salaryMode === 'MANUAL') {
-                // Guardar explícitamente en tabla SALARY para consistencia
+            if (isEditing && initialData?.id) {
+                // EDITAR: llamar updateIncome
+                await updateIncome(initialData.id, {
+                    name: description || 'Ingreso',
+                    amount: val,
+                    type: 'ONE_TIME',
+                    profileId,
+                    accountId: selectedAccountId || undefined,
+                    icon: selectedIcon,
+                    date: parseDateNoon(date),
+                });
+                toast.success("Ingreso actualizado");
+            } else if (type === 'SALARY' && salaryMode === 'MANUAL') {
+                // CREAR SALARIO MANUAL
                 await createSalary({
                     grossVal: val,
                     bonus: 0,
                     frequency: 'monthly',
-                    paymentDate: new Date().toISOString().split('T')[0],
+                    paymentDate: date,
                     absentDays: 0,
                     company: description || "Salario Manual",
                     profileId,
                     accountId: selectedAccountId || undefined,
-                    isManualCalculation: true // bypass engine
+                    isManualCalculation: true
                 });
+                toast.success("Salario registrado");
             } else {
-                // Ingreso Normal (Depósito / Efectivo)
+                // CREAR INGRESO NUEVO
                 await createIncome({
                     name: description,
                     amount: val,
                     type: 'ONE_TIME',
                     profileId,
                     accountId: selectedAccountId || undefined,
-                    icon: selectedIcon
+                    icon: selectedIcon,
+                    date: parseDateNoon(date),
                 });
+                toast.success("Ingreso registrado");
             }
 
-            toast.success("Ingreso registrado correctamente");
             onSuccess();
         } catch (error) {
             console.error(error);
@@ -158,25 +201,26 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
 
         return (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                {/* Header Mejorado - Layout Flex para evitar solapamientos */}
+                {/* Header */}
                 <div className="flex items-center justify-between mb-8 pt-6 md:pt-0">
-                    <button
-                        onClick={() => setStep(1)}
-                        className="p-3 -ml-3 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all flex items-center gap-2 group shrink-0"
-                    >
-                        <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                        <span className="font-bold text-sm hidden md:inline">Volver</span>
-                    </button>
+                    {!isEditing && (
+                        <button
+                            onClick={() => setStep(1)}
+                            className="p-3 -ml-3 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all flex items-center gap-2 group shrink-0"
+                        >
+                            <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                            <span className="font-bold text-sm hidden md:inline">Volver</span>
+                        </button>
+                    )}
 
                     <h2 className="text-xl md:text-2xl font-black text-center text-zinc-900 dark:text-white uppercase tracking-tight flex-1 px-2 leading-tight">
-                        {type === 'SALARY' ? 'Registrar Salario' : type === 'DEPOSIT' ? 'Registrar Depósito' : 'Registrar Efectivo'}
+                        {isEditing ? 'Editar Ingreso' : type === 'SALARY' ? 'Registrar Salario' : type === 'DEPOSIT' ? 'Registrar Depósito' : 'Registrar Efectivo'}
                     </h2>
 
-                    {/* Espaciador invisible para balancear el centrado del título */}
                     <div className="w-10 md:w-20 shrink-0"></div>
                 </div>
 
-                {type === 'SALARY' && (
+                {type === 'SALARY' && !isEditing && (
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <button
                             onClick={() => setSalaryMode('MANUAL')}
@@ -208,8 +252,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                     </div>
                 )}
 
-                {type === 'SALARY' && salaryMode === 'CALCULATOR' ? (
-                    // CALCULADORA DE SALARIO INTEGRADA
+                {type === 'SALARY' && salaryMode === 'CALCULATOR' && !isEditing ? (
                     <div className="animate-in fade-in zoom-in-95 duration-300">
                         <SalaryCalculator
                             profileId={profileId}
@@ -219,9 +262,8 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                         />
                     </div>
                 ) : (
-                    // FORMULARIO MANUAL (Compartido por Salario Manual, Depósito, Efectivo)
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                        {type === 'SALARY' && (
+                        {type === 'SALARY' && !isEditing && (
                             <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 p-4 rounded-2xl flex items-start gap-3">
                                 <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600 dark:text-emerald-400 shrink-0">
                                     <DollarSign className="w-5 h-5" />
@@ -234,18 +276,17 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                         )}
 
                         <div className="space-y-4">
-                            {/* INPUT DE MONTO GRANDE */}
+                            {/* INPUT DE MONTO */}
                             <div className="text-center space-y-4">
                                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400">
                                     Monto {type === 'SALARY' ? 'Neto Recibido' : 'a Ingresar'}
                                 </label>
                                 <div className="relative inline-block w-full max-w-[280px]">
-                                    <input
-                                        type="number"
+                                    <SmartMoneyInput
                                         value={amount}
-                                        onChange={e => setAmount(e.target.value)}
-                                        className="w-full bg-transparent text-center text-6xl md:text-7xl font-black tracking-tighter outline-none placeholder-zinc-200 dark:placeholder-zinc-800 focus:placeholder-zinc-100 transition-all border-b-2 border-transparent focus:border-zinc-200 dark:focus:border-zinc-800 pb-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        placeholder="0"
+                                        onMoneyChange={setAmount}
+                                        className="w-full bg-transparent text-center text-6xl md:text-7xl font-black tracking-tighter outline-none placeholder-zinc-200 dark:placeholder-zinc-800 focus:placeholder-zinc-100 transition-all border-b-2 border-transparent focus:border-zinc-200 dark:focus:border-zinc-800 pb-2"
+                                        placeholder="0.00"
                                     />
                                     <span className="absolute -left-6 top-1/2 -translate-y-1/2 text-3xl font-bold text-zinc-300 select-none">$</span>
                                 </div>
@@ -264,6 +305,18 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                                 </div>
 
                                 <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Fecha</label>
+                                    <input
+                                        type="date"
+                                        value={date}
+                                        onChange={e => setDate(e.target.value)}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-zinc-200 dark:ring-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
                                     <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Destino</label>
                                     <div className="relative">
                                         <select
@@ -273,6 +326,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                                         >
                                             <option value="" disabled>Seleccionar...</option>
                                             {accounts.filter(acc => {
+                                                if (acc.purpose === 'SAVINGS') return false;
                                                 if (type === 'DEPOSIT') return acc.type !== 'CASH';
                                                 if (type === 'CASH') return acc.type === 'CASH';
                                                 return true;
@@ -287,7 +341,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                                 </div>
                             </div>
 
-                            {/* SECCIÓN SELECTOR DE ICONOS */}
+                            {/* SELECTOR DE ICONOS */}
                             <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl p-4">
                                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-3 pl-1">Icono del Ingreso</label>
                                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
@@ -315,15 +369,13 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess }
                                 }`}
                         >
                             <Save className="w-6 h-6" />
-                            {type === 'SALARY' ? 'Registrar Salario' : 'Guardar Ingreso'}
+                            {isEditing ? 'Guardar Cambios' : type === 'SALARY' ? 'Registrar Salario' : 'Guardar Ingreso'}
                         </button>
                     </div>
                 )}
             </div>
         );
     };
-    // ... rest of return
-
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">

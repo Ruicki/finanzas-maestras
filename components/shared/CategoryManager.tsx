@@ -115,7 +115,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                             </div>
                                             <div>
                                                 <p className="font-bold text-zinc-900 dark:text-white">{cat.name}</p>
-                                                <p className="text-xs font-bold text-zinc-400 uppercase">{cat.type}</p>
+                                                <p className="text-xs font-bold text-zinc-400 uppercase">{cat.type === 'FIXED' ? 'Fijo' : cat.type === 'VARIABLE' ? 'Variable' : cat.type === 'LUXURY' ? 'Lujo' : cat.type === 'SAVING' ? 'Ahorro' : cat.type}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">

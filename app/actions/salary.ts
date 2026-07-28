@@ -82,6 +82,15 @@ export async function createSalary(data: ProcessSalaryRequest) {
             finalSS = isDecimoMonth ? calcResult.socialSec + estimatedDecimoSS : calcResult.socialSec;
             eduIns = calcResult.eduIns;
             incomeTax = calcResult.incomeTax;
+
+            // Normalize: engine returns monthly values; for biweekly, divide by 2
+            if (data.frequency === 'biweekly') {
+                finalTaxes = finalTaxes / 2;
+                finalSS = finalSS / 2;
+                eduIns = eduIns / 2;
+                incomeTax = incomeTax / 2;
+                finalNetVal = (grossAfterAbsence + data.bonus) - finalTaxes;
+            }
         }
 
         const salaryData = {
@@ -228,6 +237,15 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             finalSS = isDecimoMonth ? calcResult.socialSec + estimatedDecimoSS : calcResult.socialSec;
             eduIns = calcResult.eduIns;
             incomeTax = calcResult.incomeTax;
+
+            // Normalize: engine returns monthly values; for biweekly, divide by 2
+            if (data.frequency === 'biweekly') {
+                finalTaxes = finalTaxes / 2;
+                finalSS = finalSS / 2;
+                eduIns = eduIns / 2;
+                incomeTax = incomeTax / 2;
+                finalNetVal = (grossAfterAbsence + data.bonus) - finalTaxes;
+            }
 
             // Calcular detalle del ISR
             const monthlyBase = data.frequency === 'biweekly' ? grossAfterAbsence * 2 : grossAfterAbsence;

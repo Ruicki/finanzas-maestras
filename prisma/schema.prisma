@@ -9,18 +9,19 @@ datasource db {
 }
 
 model AdditionalIncome {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   name           String
-  amount         Decimal  @db.Decimal(10, 2)
+  amount         Decimal   @db.Decimal(10, 2)
   type           String
   frequency      String?
   durationMonths Int?
   profileId      Int
   accountId      Int?
-  createdAt      DateTime @default(now())
-  icon           String   @default("Wallet")
-  account        Account? @relation(fields: [accountId], references: [id])
-  profile        Profile  @relation(fields: [profileId], references: [id])
+  createdAt      DateTime  @default(now())
+  date           DateTime?
+  icon           String    @default("Wallet")
+  account        Account?  @relation(fields: [accountId], references: [id])
+  profile        Profile   @relation(fields: [profileId], references: [id])
 }
 
 model Salary {
@@ -105,6 +106,7 @@ model Goal {
   contributionAmount Decimal?  @db.Decimal(10, 2)
   priority           String?   @default("MEDIUM")
   sourceAccountId    Int?
+  destinationAccountId Int?
   profileId          Int
   createdAt          DateTime  @default(now())
   profile            Profile   @relation(fields: [profileId], references: [id])
@@ -151,6 +153,7 @@ model Account {
   id            Int                @id @default(autoincrement())
   name          String
   type          String
+  purpose       String             @default("SPENDING")
   balance       Decimal            @default(0) @db.Decimal(12, 2)
   currency      String             @default("USD")
   profileId     Int

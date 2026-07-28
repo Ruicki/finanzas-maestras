@@ -5,6 +5,7 @@ import { calculateMinimumPayment } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
 import { X, CreditCard, Check } from 'lucide-react';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface PaymentModalProps {
     card: {
@@ -165,14 +166,11 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                                 <div className="mt-2">
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                                        <input
-                                            type="number"
+                                        <SmartMoneyInput
                                             value={customAmount}
-                                            onChange={(e) => setCustomAmount(e.target.value)}
+                                            onMoneyChange={setCustomAmount}
                                             onClick={(e) => { e.stopPropagation(); setPaymentType('CUSTOM'); }}
                                             placeholder="0.00"
-                                            min="25"
-                                            max={card.balance}
                                             className="w-full pl-8 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                                         />
                                     </div>

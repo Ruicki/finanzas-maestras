@@ -5,6 +5,7 @@ import { createAccount } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { Landmark, Wallet, Banknote, PiggyBank, ArrowRight, X } from "lucide-react";
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface AccountWizardProps {
     profileId: number;
@@ -16,17 +17,20 @@ interface AccountWizardProps {
         type: string;
         balance: number;
         lockDate?: Date | null;
+        purpose?: string;
     };
     isEditing?: boolean;
 }
 
 type AccountType = 'BANK' | 'CASH' | 'WALLET' | 'SAVINGS';
+type AccountPurpose = 'SPENDING' | 'SAVINGS';
 
 import { updateAccount } from '@/app/actions/budget';
 
 export default function AccountWizard({ profileId, onClose, onSuccess, initialData, isEditing = false }: AccountWizardProps) {
     const [step, setStep] = useState(isEditing ? 2 : 1);
     const [type, setType] = useState<AccountType | null>((initialData?.type as AccountType) || null);
+    const [purpose, setPurpose] = useState<AccountPurpose>((initialData?.purpose as AccountPurpose) || 'SPENDING');
     const [name, setName] = useState(initialData?.name || '');
     const [balance, setBalance] = useState(initialData?.balance?.toString() || '');
     const [lockDate, setLockDate] = useState(initialData?.lockDate ? new Date(initialData.lockDate).toISOString().split('T')[0] : '');
@@ -38,8 +42,16 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
         setType(selectedType);
         if (selectedType === 'CASH') {
             setName('Efectivo');
+            setPurpose('SPENDING');
+        } else if (selectedType === 'WALLET') {
+            setName('');
+            setPurpose('SPENDING');
+        } else if (selectedType === 'SAVINGS') {
+            setName('');
+            setPurpose('SAVINGS');
         } else {
             setName('');
+            setPurpose('SPENDING');
         }
         setStep(2);
     };
@@ -60,11 +72,12 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
                     name,
                     type,
                     balance: parseFloat(balance),
-                    lockDate: lockDate ? new Date(lockDate) : undefined
+                    lockDate: lockDate ? new Date(lockDate) : undefined,
+                    purpose,
                 });
                 toast.success("¡Cuenta actualizada!");
             } else {
-                await createAccount(name, type, parseFloat(balance), profileId, lockDate ? new Date(lockDate) : undefined);
+                await createAccount(name, type, parseFloat(balance), profileId, lockDate ? new Date(lockDate) : undefined, purpose);
                 toast.success("¡Cuenta creada!");
             }
             onSuccess();
@@ -131,22 +144,45 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
                                 />
                                 {type === 'CASH' && <p className="text-xs text-amber-500">El nombre es fijo para cuentas de efectivo.</p>}
                             </div>
+
+                            {/* PURPOSE SELECTOR - Only for BANK type */}
+                            {type === 'BANK' && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Propósito de la cuenta</label>
+                                    <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+                                        <button
+                                            onClick={() => setPurpose('SPENDING')}
+                                            className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${purpose === 'SPENDING' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
+                                        >
+                                            Uso diario
+                                        </button>
+                                        <button
+                                            onClick={() => setPurpose('SAVINGS')}
+                                            className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${purpose === 'SAVINGS' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
+                                        >
+                                            Ahorro
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-zinc-400">
+                                        {purpose === 'SPENDING' ? 'Cuenta para gastos diarios e ingresos' : 'Cuenta para ahorrar dinero'}
+                                    </p>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Saldo Inicial</label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                                    <input
-                                        type="number"
+                                    <SmartMoneyInput
                                         value={balance}
-                                        onChange={(e) => setBalance(e.target.value)}
+                                        onMoneyChange={setBalance}
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 pl-8 text-lg font-bold outline-none focus:border-indigo-500 transition-colors"
                                         placeholder="0.00"
                                     />
                                 </div>
                             </div>
 
-                            {/* LOCK DATE FIELD FOR SAVINGS */}
-                            {type === 'SAVINGS' && (
+                            {/* LOCK DATE FIELD FOR SAVINGS PURPOSE */}
+                            {purpose === 'SAVINGS' && (
                                 <div className="space-y-2 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-xl border border-pink-100 dark:border-pink-900/30">
                                     <label className="text-sm font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider flex items-center gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>

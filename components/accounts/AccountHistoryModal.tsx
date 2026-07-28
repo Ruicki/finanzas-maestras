@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface AccountHistoryModalProps {
     account: any;
@@ -145,11 +146,16 @@ export default function AccountHistoryModal({
                     <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
                     <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">
-                                {account.type === 'BANK' ? 'Banco' :
-                                 account.type === 'CASH' ? 'Efectivo' :
-                                 account.type === 'WALLET' ? 'Billetera' : 'Ahorro'}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className="text-xs font-bold uppercase tracking-widest opacity-70">
+                                    {account.type === 'BANK' ? 'Banco' :
+                                     account.type === 'CASH' ? 'Efectivo' :
+                                     account.type === 'WALLET' ? 'Billetera' : 'Ahorro'}
+                                </p>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${(account as any).purpose === 'SAVINGS' ? 'bg-pink-500/30 text-pink-100' : 'bg-white/20 text-white'}`}>
+                                    {(account as any).purpose === 'SAVINGS' ? 'Ahorro' : 'Uso diario'}
+                                </span>
+                            </div>
                             <h2 className="text-2xl font-black mb-1">{account.name}</h2>
                             <p className="text-3xl font-black">
                                 ${Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -218,10 +224,9 @@ export default function AccountHistoryModal({
                                         <div className="flex flex-col sm:flex-row gap-2 mb-3">
                                             <div className="relative flex-1">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">$</span>
-                                                <input
-                                                    type="number"
+                                                <SmartMoneyInput
                                                     value={newBalance}
-                                                    onChange={e => setNewBalance(e.target.value)}
+                                                    onMoneyChange={setNewBalance}
                                                     className="w-full bg-white dark:bg-zinc-800 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2.5 pl-7 font-bold outline-none focus:ring-2 ring-amber-400"
                                                     placeholder="Saldo real"
                                                 />
@@ -345,10 +350,9 @@ export default function AccountHistoryModal({
                                 </label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-lg">$</span>
-                                    <input
-                                        type="number"
+                                    <SmartMoneyInput
                                         value={newBalance}
-                                        onChange={e => setNewBalance(e.target.value)}
+                                        onMoneyChange={setNewBalance}
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 pl-8 text-lg font-bold outline-none focus:border-indigo-500 transition-colors"
                                         placeholder="0.00"
                                     />
@@ -379,8 +383,8 @@ export default function AccountHistoryModal({
                                 })()}
                             </div>
 
-                            {/* Fecha de bloqueo — solo SAVINGS */}
-                            {account.type === 'SAVINGS' && (
+                            {/* Fecha de bloqueo — solo cuentas de ahorro */}
+                            {(account as any).purpose === 'SAVINGS' && (
                                 <div className="space-y-1.5 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-2xl border border-pink-100 dark:border-pink-900/30">
                                     <label className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider">
                                         🔒 Bloquear retiros hasta

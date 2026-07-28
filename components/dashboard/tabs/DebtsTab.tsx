@@ -293,19 +293,19 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {/* HERITAGE & FREEDOM HEADER */}
             <div className="flex flex-col xl:flex-row gap-6">
                 {/* GLOBAL FREEDOM WIDGET */}
-                <div className="flex-1 bg-zinc-900 text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
+                <div className="flex-1 bg-white dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#519A66]/10 dark:bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-[#519A66]/15 dark:group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">Tu Libertad Financiera</h3>
-                                <h2 className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-zinc-400">
+                                <h2 className="text-4xl font-black text-zinc-900 dark:text-transparent dark:bg-clip-text dark:bg-linear-to-r dark:from-white dark:to-zinc-400">
                                     {isDebtFree ? "¡Eres Libre!" : (isNaN(freedomDate.getTime()) ? "Calculando..." : freedomDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }))}
                                 </h2>
                             </div>
-                            <div className="bg-zinc-800 p-3 rounded-2xl">
-                                <Flag className={isDebtFree ? "text-emerald-400" : "text-purple-400"} />
+                            <div className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl">
+                                <Flag className={isDebtFree ? "text-[#519A66] dark:text-emerald-400" : "text-purple-500 dark:text-purple-400"} />
                             </div>
                         </div>
 
@@ -617,7 +617,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                 >
                                     <option value="">Seleccionar Cuenta...</option>
                                     <option value="">-- Pago Externo / Otro --</option>
-                                    {accounts.map(acc => (
+                                    {accounts.filter(acc => (acc as any).purpose !== 'SAVINGS').map(acc => (
                                         <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>
                                     ))}
                                 </select>

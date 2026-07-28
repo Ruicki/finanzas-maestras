@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { Pencil, Trash2, X, PiggyBank, Calculator, Plus, Eye, EyeOff, Calendar } from 'lucide-react';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface GoalsTabProps {
     goals: Goal[];
@@ -34,7 +35,8 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         frequency: 'MONTHLY',
         contributionAmount: '',
         priority: 'MEDIUM',
-        sourceAccountId: ''
+        sourceAccountId: '',
+        destinationAccountId: ''
     });
 
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
@@ -49,7 +51,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         setEditingGoalId(null);
         setForm({
             name: '', targetAmount: '', deadline: '', type: 'VARIABLE',
-            frequency: 'MONTHLY', contributionAmount: '', priority: 'MEDIUM', sourceAccountId: ''
+            frequency: 'MONTHLY', contributionAmount: '', priority: 'MEDIUM', sourceAccountId: '', destinationAccountId: ''
         });
         setIsModalOpen(true);
     }
@@ -64,7 +66,8 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             frequency: goal.frequency || 'MONTHLY',
             contributionAmount: goal.contributionAmount?.toString() || '',
             priority: goal.priority || 'MEDIUM',
-            sourceAccountId: goal.sourceAccountId?.toString() || ''
+            sourceAccountId: goal.sourceAccountId?.toString() || '',
+            destinationAccountId: (goal as any).destinationAccountId?.toString() || ''
         });
         setIsModalOpen(true);
     }
@@ -89,7 +92,8 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                 frequency: form.type === 'FIXED' ? form.frequency : undefined,
                 contributionAmount: form.type === 'FIXED' ? parseFloat(form.contributionAmount || '0') : undefined,
                 priority: form.priority,
-                sourceAccountId: form.sourceAccountId ? parseInt(form.sourceAccountId) : undefined
+                sourceAccountId: form.sourceAccountId ? parseInt(form.sourceAccountId) : undefined,
+                destinationAccountId: form.destinationAccountId ? parseInt(form.destinationAccountId) : undefined
             };
 
             if (editingGoalId) {
@@ -238,11 +242,10 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
                                     <div className="flex items-center gap-2 mb-4 bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700">
                                         <span className="text-zinc-400 font-bold pl-2">$</span>
-                                        <input
-                                            type="number"
+                                        <SmartMoneyInput
                                             autoFocus
                                             value={transactionAmount}
-                                            onChange={e => setTransactionAmount(e.target.value)}
+                                            onMoneyChange={setTransactionAmount}
                                             className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white"
                                             placeholder="0.00"
                                         />
@@ -447,14 +450,14 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-6">
             {/* ENCABEZADO DE ACCIÓN */}
-            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-pink-500 to-rose-600 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
+            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-[#FF62BB] to-[#FF97D0] dark:from-[#3a1528] dark:to-[#2a1020] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-pink-200 dark:border-pink-900/40">
                 <div className="relative z-10 text-center md:text-left">
                     <h2 className="text-3xl font-black mb-2">Tus Metas</h2>
-                    <p className="text-pink-100 font-medium">Visualiza, planea y alcanza tus sueños.</p>
+                    <p className="text-pink-100 dark:text-pink-300/60 font-medium">Visualiza, planea y alcanza tus sueños.</p>
                 </div>
                 <button
                     onClick={openNewGoalModal}
-                    className="relative z-10 mt-6 md:mt-0 bg-white text-pink-600 hover:bg-pink-50 px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95"
+                    className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-[#FF62BB] text-[#FF62BB] dark:text-white hover:bg-pink-50 dark:hover:bg-[#FF97D0] px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95"
                 >
                     <Plus size={24} />
                     Nueva Meta
@@ -562,7 +565,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Monto Objetivo</label>
-                                    <input type="number" value={form.targetAmount} onChange={e => setForm({ ...form, targetAmount: e.target.value })} className="w-full bg-zinc-50 dark:bg-zinc-900 border-transparent focus:border-pink-500 focus:bg-white dark:focus:bg-zinc-950 rounded-2xl px-5 py-4 font-bold text-lg outline-none transition-all" placeholder="0.00" />
+                                    <SmartMoneyInput value={form.targetAmount} onMoneyChange={(val) => setForm({ ...form, targetAmount: val })} className="w-full bg-zinc-50 dark:bg-zinc-900 border-transparent focus:border-pink-500 focus:bg-white dark:focus:bg-zinc-950 rounded-2xl px-5 py-4 font-bold text-lg outline-none transition-all" placeholder="0.00" />
                                 </div>
                             </div>
 
@@ -657,7 +660,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-zinc-500 ml-2">Cuota ($)</label>
-                                            <input type="number" value={form.contributionAmount} onChange={e => setForm({ ...form, contributionAmount: e.target.value })} className="w-full mt-2 bg-white dark:bg-zinc-900 border-none rounded-xl p-3 font-bold text-sm outline-none" placeholder="100" />
+                                            <SmartMoneyInput value={form.contributionAmount} onMoneyChange={(val) => setForm({ ...form, contributionAmount: val })} className="w-full mt-2 bg-white dark:bg-zinc-900 border-none rounded-xl p-3 font-bold text-sm outline-none" placeholder="100" />
                                         </div>
                                     </div>
                                     <div>
@@ -666,6 +669,14 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                             <option value="">Seleccionar Cuenta...</option>
                                             {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta de Ahorro Destino</label>
+                                        <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-2 bg-white dark:bg-zinc-900 border-none rounded-xl p-3 font-bold text-sm outline-none">
+                                            <option value="">Sin cuenta destino</option>
+                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
+                                        </select>
+                                        <p className="text-[10px] text-zinc-400 mt-1 ml-2">Dónde se guardará el dinero ahorrado</p>
                                     </div>
                                 </div>
                             )}

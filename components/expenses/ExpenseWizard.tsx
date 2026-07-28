@@ -16,7 +16,9 @@ import {
     HelpCircle
 } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { parseDateNoon } from '@/lib/utils';
 
 type Account = ProfileWithData['accounts'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
@@ -135,7 +137,7 @@ export default function ExpenseWizard({
             category: selectedCat?.name || "Gasto",
             categoryId: categoryId,
             profileId,
-            dueDate: isRecurring ? new Date(date).getDate() : undefined,
+            dueDate: isRecurring ? parseDateNoon(date).getDate() : undefined,
             isRecurring,
             isOneTime: !isRecurring,
             paymentMethod,
@@ -167,7 +169,7 @@ export default function ExpenseWizard({
             <h2 className="text-2xl font-black text-center mb-2 text-zinc-900 dark:text-white">¿Qué estás pagando?</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto p-1">
-                {categories.map(cat => (
+                {categories.filter(cat => cat.type !== 'SAVING').map(cat => (
                     <button
                         key={cat.id}
                         onClick={() => handleCategorySelect(cat.id)}
@@ -217,13 +219,12 @@ export default function ExpenseWizard({
             <div className="text-center space-y-4">
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400">Monto del Gasto</label>
                 <div className="relative inline-block w-full max-w-[280px]">
-                    <input
-                        type="number"
+                    <SmartMoneyInput
                         value={amount}
-                        onChange={e => setAmount(e.target.value)}
+                        onMoneyChange={setAmount}
                         autoFocus
-                        className="w-full bg-transparent text-center text-5xl md:text-7xl font-black tracking-tighter outline-none placeholder-zinc-200 dark:placeholder-zinc-800 focus:placeholder-zinc-100 transition-all border-b-2 border-transparent focus:border-zinc-200 dark:focus:border-zinc-800 pb-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-zinc-900 dark:text-white"
-                        placeholder="0"
+                        className="w-full bg-transparent text-center text-5xl md:text-7xl font-black tracking-tighter outline-none placeholder-zinc-200 dark:placeholder-zinc-800 focus:placeholder-zinc-100 transition-all border-b-2 border-transparent focus:border-zinc-200 dark:focus:border-zinc-800 pb-2 text-zinc-900 dark:text-white"
+                        placeholder="0.00"
                     />
                     <span className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 text-2xl md:text-3xl font-bold text-zinc-300 select-none">$</span>
                 </div>
@@ -277,7 +278,7 @@ export default function ExpenseWizard({
                                     className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-emerald-500/50 appearance-none text-zinc-800 dark:text-zinc-200 transition-all"
                                 >
                                     <option value="" disabled>Seleccionar Cuenta...</option>
-                                    {accounts.map(acc => (
+                                    {accounts.filter(acc => acc.purpose !== 'SAVINGS').map(acc => (
                                         <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance.toFixed(2)})</option>
                                     ))}
                                 </select>

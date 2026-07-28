@@ -5,6 +5,7 @@ import { createSalary } from '@/app/actions/salary';
 import { Account } from '@prisma/client';
 import { toast } from "sonner";
 import { useRouter } from 'next/navigation';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface FormData {
     grossVal: number;
@@ -180,11 +181,9 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                     </label>
                     <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 font-semibold text-lg">$</span>
-                        <input
-                            type="number"
-                            name="grossVal"
+                        <SmartMoneyInput
                             value={form.grossVal || ''}
-                            onChange={handleChange}
+                            onMoneyChange={(val) => setForm(prev => ({ ...prev, grossVal: parseFloat(val) || 0 }))}
                             className="w-full pl-12 pr-4 py-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-lg text-zinc-900 dark:text-gray-100 placeholder-zinc-400 dark:placeholder-zinc-500"
                             placeholder="0.00"
                         />
@@ -199,11 +198,9 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                         </label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 font-semibold text-lg">$</span>
-                            <input
-                                type="number"
-                                name="bonus"
+                            <SmartMoneyInput
                                 value={form.bonus || ''}
-                                onChange={handleChange}
+                                onMoneyChange={(val) => setForm(prev => ({ ...prev, bonus: parseFloat(val) || 0 }))}
                                 className="w-full pl-12 pr-4 py-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 transition-all outline-none font-medium text-lg text-zinc-900 dark:text-gray-100 placeholder-zinc-400 dark:placeholder-zinc-500"
                                 placeholder="0.00"
                             />
@@ -259,7 +256,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             className="w-full pl-12 pr-4 py-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-lg text-zinc-900 dark:text-gray-100"
                         >
                             <option value="">-- No vincular a cuenta --</option>
-                            {accounts?.map(acc => (
+                            {accounts?.filter(acc => acc.purpose !== 'SAVINGS').map(acc => (
                                 <option key={acc.id} value={acc.id}>{acc.name} (${Number(acc.balance)})</option>
                             ))}
                         </select>

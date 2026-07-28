@@ -2,6 +2,7 @@ import BudgetDashboard from "@/components/BudgetDashboard";
 import LandingPage from "@/components/LandingPage";
 import { getSession, getImpersonatedId } from "./actions/auth";
 import { getProfileById, createAccount } from "./actions/budget";
+import { initializeDefaultCategories } from "./actions/categories";
 import { ProfileWithData } from "@/types";
 
 export default async function Home() {
@@ -25,11 +26,26 @@ export default async function Home() {
   }
 
   // Auto-Reparación: Asegurar que la cuenta 'Efectivo' siempre exista
-  const hasCashAccount = profile.accounts.some((a: { name: string }) => a.name === 'Efectivo');
-  if (!hasCashAccount) {
-    await createAccount("Efectivo", "CASH", 0, profile.id);
-    // Re-fetch profile safely
-    profile = await getProfileById(profile.id);
+  try {
+    const hasCashAccount = profile.accounts.some((a: { name: string }) => a.name === 'Efectivo');
+    if (!hasCashAccount) {
+      await createAccount("Efectivo", "CASH", 0, profile.id);
+      profile = await getProfileById(profile.id);
+    }
+  } catch (e) {
+    console.error("Auto-repair account failed:", e);
+  }
+
+  if (!profile) return <LandingPage />;
+
+  // Auto-Reparación: Asegurar que existan categorías predeterminadas
+  try {
+    if (profile.categories.length === 0) {
+      await initializeDefaultCategories(profile.id);
+      profile = await getProfileById(profile.id);
+    }
+  } catch (e) {
+    console.error("Auto-repair categories failed:", e);
   }
 
   if (!profile) return <LandingPage />;

@@ -13,10 +13,11 @@ export async function createAccount(
     balance: number,
     profileId: number,
     lockDate?: Date,
+    purpose: string = 'SPENDING',
 ) {
     if (balance < 0) throw new Error('El saldo no puede ser negativo');
     const account = await prisma.account.create({
-        data: { name, type, balance, profileId, lockDate },
+        data: { name, type, balance, profileId, lockDate, purpose },
     });
     revalidatePath('/budget');
     return { ...account, balance: toNum(account.balance) };
@@ -24,7 +25,7 @@ export async function createAccount(
 
 export async function updateAccount(
     id: number,
-    data: { name?: string; type?: string; balance?: number; lockDate?: Date },
+    data: { name?: string; type?: string; balance?: number; lockDate?: Date; purpose?: string },
 ) {
     if (data.balance !== undefined && data.balance < 0)
         throw new Error('El saldo no puede ser negativo');
@@ -35,6 +36,7 @@ export async function updateAccount(
             type: data.type,
             balance: data.balance,
             lockDate: data.lockDate,
+            purpose: data.purpose,
         },
     });
     revalidatePath('/budget');

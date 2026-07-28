@@ -4,6 +4,7 @@ import { updateCategoryLimit } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { Edit2, Check, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface BudgetCardProps {
     category: any;
@@ -93,10 +94,9 @@ export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardP
                                 <div className="flex items-center gap-2 animate-in zoom-in-95">
                                     <div className="relative flex-1">
                                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                                        <input
-                                            type="number"
+                                        <SmartMoneyInput
                                             value={limitInput}
-                                            onChange={(e) => setLimitInput(e.target.value)}
+                                            onMoneyChange={setLimitInput}
                                             className="w-full pl-5 pr-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
                                             autoFocus
                                             onKeyDown={(e) => e.key === 'Enter' && handleSaveLimit()}

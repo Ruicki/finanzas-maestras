@@ -63,7 +63,7 @@ export async function getProfileById(id: number) {
     const profile = await prisma.profile.findUnique({
         where: { id },
         include: {
-            expenses: true,
+            expenses: { include: { categoryRel: true } },
             goals: true,
             accounts: true,
             incomes: true,
@@ -139,6 +139,11 @@ export async function createProfile(name: string) {
 
 export async function deleteProfile(id: number) {
     await prisma.$transaction(async (tx) => {
+        // Nullificar FKs primero
+        await tx.expense.updateMany({ where: { profileId: id }, data: { accountId: null, categoryId: null, linkedCardId: null } });
+        await tx.additionalIncome.updateMany({ where: { profileId: id }, data: { accountId: null } });
+        await tx.salary.updateMany({ where: { profileId: id }, data: { accountId: null } });
+
         await tx.expense.deleteMany({ where: { profileId: id } });
         await tx.additionalIncome.deleteMany({ where: { profileId: id } });
         await tx.salary.deleteMany({ where: { profileId: id } });
@@ -172,24 +177,34 @@ export async function deleteProfile(id: number) {
 }
 
 export async function resetProfileData(id: number) {
-    await prisma.$transaction(async (tx) => {
-        await tx.expense.deleteMany({ where: { profileId: id } });
-        await tx.additionalIncome.deleteMany({ where: { profileId: id } });
-        await tx.salary.deleteMany({ where: { profileId: id } });
-        await tx.transfer.deleteMany({
-            where: {
-                OR: [
-                    { sourceAccount: { profileId: id } },
-                    { destinationAccount: { profileId: id } },
-                ],
-            },
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 1. Nullificar FKs antes de borrar
+            await tx.expense.updateMany({ where: { profileId: id }, data: { accountId: null, categoryId: null, linkedCardId: null } });
+            await tx.additionalIncome.updateMany({ where: { profileId: id }, data: { accountId: null } });
+            await tx.salary.updateMany({ where: { profileId: id }, data: { accountId: null } });
+
+            // 2. Borrar registros dependientes
+            await tx.expense.deleteMany({ where: { profileId: id } });
+            await tx.additionalIncome.deleteMany({ where: { profileId: id } });
+            await tx.salary.deleteMany({ where: { profileId: id } });
+            await tx.transfer.deleteMany({
+                where: {
+                    OR: [
+                        { sourceAccount: { profileId: id } },
+                        { destinationAccount: { profileId: id } },
+                    ],
+                },
+            });
+            await tx.goal.deleteMany({ where: { profileId: id } });
+            await tx.loan.deleteMany({ where: { profileId: id } });
+            await tx.creditCard.deleteMany({ where: { profileId: id } });
+            await tx.account.deleteMany({ where: { profileId: id } });
+            await tx.category.deleteMany({ where: { profileId: id } });
         });
-        await tx.goal.deleteMany({ where: { profileId: id } });
-        await tx.loan.deleteMany({ where: { profileId: id } });
-        await tx.creditCard.deleteMany({ where: { profileId: id } });
-        await tx.account.deleteMany({ where: { profileId: id } });
-        await tx.category.deleteMany({ where: { profileId: id } });
-    });
-    await logAction('RESET_DATA_FULL', `Hard Reset de datos para perfil ${id}`, id);
-    revalidatePath('/budget');
+        revalidatePath('/budget');
+    } catch (error) {
+        console.error('Error resetting profile data:', error);
+        throw new Error('Error al resetear los datos del perfil');
+    }
 }

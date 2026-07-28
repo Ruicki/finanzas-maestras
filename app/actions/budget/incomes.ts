@@ -15,6 +15,7 @@ export interface CreateIncomeInput {
     profileId: number;
     accountId?: number;
     icon?: string;
+    date?: Date;
 }
 
 export async function createIncome(data: CreateIncomeInput) {
@@ -29,6 +30,7 @@ export async function createIncome(data: CreateIncomeInput) {
                 profileId: data.profileId,
                 accountId: data.accountId,
                 icon: data.icon,
+                date: data.date || new Date(),
             },
         });
 
@@ -76,6 +78,7 @@ export async function updateIncome(id: number, data: Partial<CreateIncomeInput>)
                 frequency: data.frequency,
                 accountId: newAccountId,
                 icon: data.icon,
+                date: data.date,
             },
         });
     });

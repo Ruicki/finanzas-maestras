@@ -17,6 +17,7 @@ export interface CreateGoalInput {
     contributionAmount?: number;
     priority?: string;
     sourceAccountId?: number;
+    destinationAccountId?: number;
 }
 
 function serializeGoal(goal: any) {
@@ -41,6 +42,7 @@ export async function createGoal(data: CreateGoalInput) {
             contributionAmount: data.contributionAmount,
             priority: data.priority,
             sourceAccountId: data.sourceAccountId,
+            destinationAccountId: data.destinationAccountId,
         },
     });
     revalidatePath('/budget');
@@ -59,6 +61,7 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
             contributionAmount: data.contributionAmount,
             priority: data.priority,
             sourceAccountId: data.sourceAccountId,
+            destinationAccountId: data.destinationAccountId,
         },
     });
     revalidatePath('/budget');
@@ -79,18 +82,18 @@ export async function deleteGoalWithReclaim(
         if (!goal) throw new Error('Meta no encontrada');
 
         if (Number(goal.currentAmount) > 0) {
+            // Si hay cuenta de ahorro destino, descontar de ahí
+            if (goal.destinationAccountId) {
+                await tx.account.update({
+                    where: { id: goal.destinationAccountId },
+                    data: { balance: { decrement: goal.currentAmount } },
+                });
+            }
+
+            // Devolver a la cuenta destino
             await tx.account.update({
                 where: { id: targetAccountId },
                 data: { balance: { increment: goal.currentAmount } },
-            });
-            await tx.additionalIncome.create({
-                data: {
-                    name: `Retiro por Cierre de Meta: ${goal.name}`,
-                    amount: goal.currentAmount,
-                    type: 'ONE_TIME',
-                    profileId: goal.profileId,
-                    accountId: targetAccountId,
-                },
             });
         }
 
@@ -114,28 +117,27 @@ export async function handleGoalTransaction(
             const sourceAccountId = accountId || goal.sourceAccountId;
             if (!sourceAccountId) throw new Error('Se requiere una cuenta de origen.');
 
-            const account = await tx.account.findUnique({ where: { id: sourceAccountId } });
-            if (!account) throw new Error('Cuenta no encontrada.');
-            if (Number(account.balance) < amount) throw new Error('Fondos insuficientes.');
-            if (account.lockDate && new Date(account.lockDate) > new Date()) {
-                throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            const sourceAccount = await tx.account.findUnique({ where: { id: sourceAccountId } });
+            if (!sourceAccount) throw new Error('Cuenta origen no encontrada.');
+            if (Number(sourceAccount.balance) < amount) throw new Error('Fondos insuficientes.');
+            if (sourceAccount.lockDate && new Date(sourceAccount.lockDate) > new Date()) {
+                throw new Error(`Cuenta bloqueada hasta ${sourceAccount.lockDate.toLocaleDateString()}`);
             }
 
+            // Descontar de cuenta origen
             await tx.account.update({
                 where: { id: sourceAccountId },
                 data: { balance: { decrement: amount } },
             });
-            await tx.expense.create({
-                data: {
-                    name: `Aporte Meta: ${goal.name}`,
-                    amount,
-                    category: 'Ahorro',
-                    profileId: goal.profileId,
-                    isRecurring: false,
-                    isOneTime: true,
-                    accountId: sourceAccountId,
-                },
-            });
+
+            // Transferir a cuenta destino (si existe)
+            const destAccountId = goal.destinationAccountId;
+            if (destAccountId) {
+                await tx.account.update({
+                    where: { id: destAccountId },
+                    data: { balance: { increment: amount } },
+                });
+            }
         } else {
             if (Number(goal.currentAmount) < amount)
                 throw new Error('No puedes retirar más de lo ahorrado.');
@@ -143,18 +145,22 @@ export async function handleGoalTransaction(
             const destAccountId = accountId;
             if (!destAccountId) throw new Error('Debes seleccionar una cuenta de destino.');
 
+            // Si hay cuenta destino en la meta, descontar de ahí
+            if (goal.destinationAccountId) {
+                const savingsAccount = await tx.account.findUnique({ where: { id: goal.destinationAccountId } });
+                if (!savingsAccount) throw new Error('Cuenta de ahorro no encontrada.');
+                if (Number(savingsAccount.balance) < amount) throw new Error('Fondos insuficientes en la cuenta de ahorro.');
+
+                await tx.account.update({
+                    where: { id: goal.destinationAccountId },
+                    data: { balance: { decrement: amount } },
+                });
+            }
+
+            // Devolver a cuenta destino
             await tx.account.update({
                 where: { id: destAccountId },
                 data: { balance: { increment: amount } },
-            });
-            await tx.additionalIncome.create({
-                data: {
-                    name: `Retiro Meta: ${goal.name}`,
-                    amount,
-                    type: 'ONE_TIME',
-                    profileId: goal.profileId,
-                    accountId: destAccountId,
-                },
             });
         }
 

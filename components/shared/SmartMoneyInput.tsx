@@ -1,39 +1,61 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 
 interface SmartMoneyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     onMoneyChange: (value: string) => void;
     value: string | number;
 }
 
+/**
+ * Input de dinero con formato de derecha a izquierda (RTL decimal).
+ * Al escribir "123" muestra "$1.23", al escribir "1234" muestra "$12.34".
+ * Siempre mantiene 2 decimales.
+ */
 export const SmartMoneyInput = ({ onMoneyChange, value, className, ...props }: SmartMoneyInputProps) => {
-    // Convierte el valor actual string/number a formato visual
-    // Si viene 12.34 se muestra como 12.34
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Obtenemos solo los dígitos del nuevo valor
-        const rawValue = e.target.value.replace(/\D/g, '');
+    const displayValue = typeof value === 'number'
+        ? value.toFixed(2)
+        : (value || '0.00');
 
-        // Si no hay dígitos, es 0
-        if (!rawValue) {
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value.replace(/\D/g, '');
+
+        if (!raw) {
             onMoneyChange('0.00');
             return;
         }
 
-        // Convertimos a número y dividimos por 100 para desplazar el punto decimal
-        const numericValue = parseInt(rawValue, 10) / 100;
+        // RTL: cada dígito nuevo desplaza los existentes a la izquierda del punto
+        const numericValue = parseInt(raw, 10) / 100;
+
+        // Limitar a 999999.99
+        if (numericValue > 999999.99) {
+            onMoneyChange('999999.99');
+            return;
+        }
 
         onMoneyChange(numericValue.toFixed(2));
-    };
+    }, [onMoneyChange]);
+
+    const handleFocus = useCallback(() => {
+        // Seleccionar todo al hacer focus para fácil reemplazo
+        setTimeout(() => {
+            inputRef.current?.select();
+        }, 0);
+    }, []);
 
     return (
         <input
             {...props}
-            type="text" // Usamos text para controlar el formateo nosotros mismos
+            ref={inputRef}
+            type="text"
             inputMode="numeric"
-            value={typeof value === 'number' ? value.toFixed(2) : value}
+            autoComplete="off"
+            value={displayValue}
             onChange={handleChange}
+            onFocus={handleFocus}
             className={className}
         />
     );

@@ -171,7 +171,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         insuranceRate: Number(payingCard.insuranceRate) || 0.25,
                         minPaymentPercentage: Number(payingCard.minPaymentPercentage) || 3.0,
                     }}
-                    accounts={accounts.map(a => ({
+                    accounts={accounts.filter(a => (a as any).purpose !== 'SAVINGS').map(a => ({
                         id: a.id,
                         name: a.name,
                         balance: Number(a.balance),

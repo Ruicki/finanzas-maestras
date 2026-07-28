@@ -6,7 +6,6 @@ import { getProfiles } from '@/app/actions/budget';
 import { logout, stopImpersonation } from '@/app/actions/auth';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
-import { NetWorthCard } from "@/components/shared/NetWorthCard";
 import { ProfileWithData } from '@/types';
 import { Settings, LogOut, Briefcase, Eye, EyeOff, Wallet, TrendingUp, Landmark, DollarSign, Target, CreditCard as CardIcon } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -106,11 +105,24 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     // Filtered Lists
     const expensesList = activeProfile?.expenses?.filter((e) => e.category !== 'Deuda' && isInSelectedMonth(e.createdAt)) || [];
-    const debtsList = activeProfile?.expenses?.filter((e) => e.category === 'Deuda' && isInSelectedMonth(e.createdAt)) || [];
 
     // Monthly Totals (Filtered)
     const totalExpenses = expensesList.reduce((sum, exp) => sum + Number(exp.amount), 0);
-    const totalDebtPayments = debtsList.reduce((sum, exp) => sum + Number(exp.amount), 0);
+
+    // Debt Payments: use actual credit card minimums + loan payments (not expense category)
+    const totalCCPayments = (activeProfile?.creditCards || []).reduce((sum, cc) => {
+        const balance = Number(cc.balance);
+        if (balance <= 0) return sum;
+        const rate = Number(cc.interestRate || 0);
+        const insurance = Number(cc.insuranceRate || 0.25);
+        const minPct = Number(cc.minPaymentPercentage || 3);
+        const interest = balance * (rate / 100);
+        const ins = balance * (insurance / 100);
+        const capital = balance * (minPct / 100);
+        return sum + interest + ins + capital;
+    }, 0);
+    const totalLoanPayments = (activeProfile?.loans || []).reduce((sum, loan) => sum + Number(loan.monthlyPayment || 0), 0);
+    const totalDebtPayments = totalCCPayments + totalLoanPayments;
 
     // Savings (Global Accumulation usually, but we could show monthly variation if we tracked history. Showing Total Current Saved for now)
     const totalGoalsSaved = activeProfile?.goals?.reduce((sum, g) => sum + Number(g.currentAmount), 0) || 0;
@@ -136,14 +148,16 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const totalMonthlyIncome = baseIncome + monthlyAdditionalIncome;
 
     // --- GLOBAL SNAPSHOTS (All Time) ---
-    const balance = activeProfile?.accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+    // Balance: only SPENDING accounts (operational money)
+    const balance = activeProfile?.accounts?.filter(acc => acc.purpose !== 'SAVINGS').reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+    // Total assets: all accounts (for net worth)
+    const totalAssets = activeProfile?.accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
 
     // Net Worth Calc
     const totalLoans = activeProfile?.loans?.reduce((sum, loan) => sum + Number(loan.currentBalance), 0) || 0;
     const totalCreditDebt = (activeProfile?.creditCards?.reduce((sum, card) => sum + Number(card.balance), 0) || 0) + totalLoans;
-    // Net Worth = Assets (Cash + Savings) - Liabilities (Debt)
-    // Note: If you have assets not in savings/cash (like house/car), they aren't here yet.
-    const netWorth = balance + totalGoalsSaved - totalCreditDebt;
+    // Net Worth = Assets (All accounts + Goals) - Liabilities (Debt)
+    const netWorth = totalAssets + totalGoalsSaved - totalCreditDebt;
 
     return (
         <div className={`w-full max-w-[1400px] mx-auto space-y-12 p-6 md:p-12 pb-32 ${isPrivateMode ? 'private-mode' : ''}`}>
@@ -250,37 +264,45 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                     {/* KPI CARDS */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* 1. Cash Available */}
-                        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-green-500 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-white dark:bg-[#0d1b2a] border border-zinc-200 dark:border-[#1591DC]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <Wallet className="w-20 h-20 text-emerald-500" />
+                                <Wallet className="w-20 h-20 text-[#1591DC]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Dinero disponible</p>
-                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-zinc-900 dark:text-white' : 'text-red-500'}`}>
+                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
                                 ${balance.toFixed(2)}
                             </p>
                         </div>
 
                         {/* 2. Net Worth */}
-                        {/* 2. Net Worth */}
-                        <NetWorthCard
-                            accounts={activeProfile.accounts || []}
-                            creditCards={activeProfile.creditCards || []}
-                            loans={activeProfile.loans || []}
-                        />
+                        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <TrendingUp className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
+                            </div>
+                            <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Patrimonio Neto</p>
+                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-[#519A66] dark:text-[#6dc28a]' : 'text-red-500'}`}>
+                                ${netWorth.toFixed(2)}
+                            </p>
+                            <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
+                                <span className="text-[#519A66]">Ingresos ${totalMonthlyIncome.toFixed(0)}</span>
+                                <span className="text-zinc-300 dark:text-zinc-600">vs</span>
+                                <span className="text-red-400">Gastos ${totalExpenses.toFixed(0)}</span>
+                            </div>
+                        </div>
 
                         {/* 3. Monthly Income (Filtered) */}
-                        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-white dark:bg-[#0f2318] border border-zinc-200 dark:border-[#519A66]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <DollarSign className="w-20 h-20 text-blue-500" />
+                                <DollarSign className="w-20 h-20 text-[#519A66]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Ingresos (Mes)</p>
-                            <p className="text-3xl md:text-4xl font-black text-blue-500 relative z-10 blur-sensitive">
+                            <p className="text-3xl md:text-4xl font-black text-[#519A66] dark:text-[#6dc28a] relative z-10 blur-sensitive">
                                 +${totalMonthlyIncome.toFixed(2)}
                             </p>
                         </div>
 
-                        {/* 4. Total Debt (Snapshot or Filtered? Debt Total is usually snapshot) */}
-                        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        {/* 4. Total Debt */}
+                        <div className="bg-white dark:bg-[#2a0f14] border border-zinc-200 dark:border-red-500/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <TrendingUp className="w-20 h-20 text-red-500" />
                             </div>

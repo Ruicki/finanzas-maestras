@@ -17,8 +17,18 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     if (income === 0) return null;
 
     // --- RULE 1: 50/30/20 ---
-    const needs = expenses.filter(e => e.categoryRel?.type === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
-    const wants = expenses.filter(e => ['VARIABLE', 'LUXURY'].includes(e.categoryRel?.type)).reduce((sum, e) => sum + Number(e.amount), 0);
+    // Get category type from relation or fallback to expense name patterns
+    const getType = (e: any): string => {
+        if (e.categoryRel?.type) return e.categoryRel.type;
+        // Fallback: infer from category name
+        const name = (e.category || e.name || '').toLowerCase();
+        if (['alquiler', 'arriendo', 'servicio', 'servicios', 'internet', 'teléfono', 'teléfono celular', 'seguro', 'educación', 'colegio', 'matrícula', 'hipoteca', 'préstamo', 'loan'].some(k => name.includes(k))) return 'FIXED';
+        if (['ahorro', 'inversión', 'inversion', 'fondo', 'meta'].some(k => name.includes(k))) return 'SAVING';
+        return 'VARIABLE';
+    };
+
+    const needs = expenses.filter(e => getType(e) === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
+    const wants = expenses.filter(e => ['VARIABLE', 'LUXURY'].includes(getType(e))).reduce((sum, e) => sum + Number(e.amount), 0);
     // Standard: Savings = Income - Needs - Wants (what's left over)
     const savings = Math.max(0, income - needs - wants);
 
@@ -40,7 +50,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     const dtiBg = dtiStatus === 'healthy' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' : dtiStatus === 'warning' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20';
 
     // --- RULE 3: EMERGENCY FUND ---
-    const monthlyFixedExpenses = expenses.filter(e => e.categoryRel?.type === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
+    const monthlyFixedExpenses = expenses.filter(e => getType(e) === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
     const monthlyBurn = monthlyFixedExpenses > 0 ? monthlyFixedExpenses : (needs + wants);
     const monthsCovered = monthlyBurn > 0 ? (totalCash / monthlyBurn) : 0;
     const monthsMissing = Math.max(0, 6 - monthsCovered);
