@@ -149,9 +149,15 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     // --- GLOBAL SNAPSHOTS (All Time) ---
     // Balance: only SPENDING accounts (operational money)
-    const balance = activeProfile?.accounts?.filter(acc => acc.purpose !== 'SAVINGS').reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+    const spendingAccounts = activeProfile?.accounts?.filter(acc => acc.purpose !== 'SAVINGS') || [];
+    const balance = spendingAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
     // Total assets: all accounts (for net worth)
     const totalAssets = activeProfile?.accounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) || 0;
+
+    // Spending breakdown by type
+    const bankBalance = spendingAccounts.filter(a => a.type === 'BANK').reduce((s, a) => s + Number(a.balance), 0);
+    const cashBalance = spendingAccounts.filter(a => a.type === 'CASH').reduce((s, a) => s + Number(a.balance), 0);
+    const walletBalance = spendingAccounts.filter(a => a.type === 'WALLET').reduce((s, a) => s + Number(a.balance), 0);
 
     // Net Worth Calc
     const totalLoans = activeProfile?.loans?.reduce((sum, loan) => sum + Number(loan.currentBalance), 0) || 0;
@@ -272,6 +278,11 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
                                 ${balance.toFixed(2)}
                             </p>
+                            <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
+                                {bankBalance > 0 && <span className="text-[#1591DC]">Banco ${bankBalance.toFixed(0)}</span>}
+                                {cashBalance > 0 && <span className="text-[#519A66]">Efectivo ${cashBalance.toFixed(0)}</span>}
+                                {walletBalance > 0 && <span className="text-zinc-600 dark:text-zinc-400">Billetera ${walletBalance.toFixed(0)}</span>}
+                            </div>
                         </div>
 
                         {/* 2. Net Worth */}
