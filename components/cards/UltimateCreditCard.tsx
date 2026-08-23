@@ -18,15 +18,18 @@ interface UltimateCreditCardProps {
 export default function UltimateCreditCard({ card, onPay, onDelete, cardholderName = 'USUARIO', onEdit }: UltimateCreditCardProps) {
     const [recalculating, setRecalculating] = useState(false);
 
-    // Basic Calculations
-    const utilization = (Number(card.balance) / Number(card.limit)) * 100;
-    const available = Number(card.limit) - Number(card.balance);
-    const health = calculateCreditHealth(utilization);
-
-    // Smart Estimates (Panama real-world calculations)
+    // Panama credit cards include desgravamen (insurance) in the bank's balance
     const hasRate = Number(card.interestRate) > 0;
     const effectiveRate = hasRate ? Number(card.interestRate) : 2.0;
     const insuranceRate = Number(card.insuranceRate) || 0.25;
+    const desgravamen = Number(card.balance) * (insuranceRate / 100);
+
+    // Available = Limit - Balance - Desgravamen (matches bank's calculation)
+    const utilization = (Number(card.balance) / Number(card.limit)) * 100;
+    const available = Number(card.limit) - Number(card.balance) - desgravamen;
+    const health = calculateCreditHealth(utilization);
+
+    // Smart Estimates (Panama real-world calculations)
 
     const charges = calculateMonthlyCharges(
         Number(card.balance),
