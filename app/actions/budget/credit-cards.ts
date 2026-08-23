@@ -79,6 +79,50 @@ export async function deleteCreditCard(id: number) {
     revalidatePath('/budget');
 }
 
+export async function recalculateCardBalance(cardId: number) {
+    const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
+    if (!card) throw new Error('Tarjeta no encontrada');
+
+    // Sum of all expenses linked to this card (purchases + charges)
+    const linkedExpenses = await prisma.expense.aggregate({
+        _sum: { amount: true },
+        where: { linkedCardId: cardId },
+    });
+
+    // Sum of all payments made to this card (expenses with "Pago:" prefix, no linkedCardId)
+    const payments = await prisma.expense.aggregate({
+        _sum: { amount: true },
+        where: {
+            profileId: card.profileId,
+            name: { startsWith: 'Pago:' },
+            linkedCardId: null,
+            category: 'Pagos Tarjeta',
+        },
+    });
+
+    const totalLinked = toNum(linkedExpenses._sum.amount);
+    const totalPayments = toNum(payments._sum.amount);
+    const correctBalance = totalLinked - totalPayments;
+    const roundedBalance = Math.round(correctBalance * 100) / 100;
+    const oldBalance = toNum(card.balance);
+
+    await prisma.creditCard.update({
+        where: { id: cardId },
+        data: { balance: roundedBalance },
+    });
+
+    logger.info(`Recalculated card ${cardId}: ${oldBalance} → ${roundedBalance} (linked: ${totalLinked}, payments: ${totalPayments})`);
+    revalidatePath('/budget');
+
+    return {
+        oldBalance,
+        newBalance: roundedBalance,
+        totalLinked,
+        totalPayments,
+        difference: roundedBalance - oldBalance,
+    };
+}
+
 export async function payCreditCard(cardId: number, amount: number, accountId: number) {
     if (amount <= 0) throw new Error('Monto debe ser positivo');
 
