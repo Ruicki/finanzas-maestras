@@ -293,7 +293,7 @@ export default function ExpenseWizard({
                                 >
                                     <option value="" disabled>Seleccionar Tarjeta...</option>
                                     {creditCards.map(card => (
-                                        <option key={card.id} value={card.id}>{card.name} (Disp: ${(card.limit - card.balance).toFixed(2)})</option>
+                                        <option key={card.id} value={card.id}>{card.name} (Disp: ${(card.limit - card.balance - (card.balance * ((card.insuranceRate || 0.25) / 100))).toFixed(2)})</option>
                                     ))}
                                 </select>
                             </div>
