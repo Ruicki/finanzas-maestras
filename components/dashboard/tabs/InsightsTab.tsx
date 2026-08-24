@@ -103,15 +103,15 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* A. Gráfico de Flujo (Grande) */}
-                <div className="lg:col-span-2 relative h-80 w-full bg-linear-to-b from-zinc-900 to-zinc-950 rounded-[2.5rem] overflow-hidden shadow-2xl border border-zinc-800 group">
+                <div className="lg:col-span-2 relative h-80 w-full bg-linear-to-b from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-[2.5rem] overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 group">
                     <div className="absolute top-6 left-8 z-10">
                         <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
-                            <TrendingUp size={14} className="text-zinc-600" />
+                            <TrendingUp size={14} className="text-zinc-400 dark:text-zinc-600" />
                             Evolución de Gasto Mensual
                         </p>
-                        <h3 className="text-3xl font-black text-white flex items-center gap-2">
+                        <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                             {currency}{totalExpense.toLocaleString()}
-                            <span className="text-sm font-medium text-zinc-500 bg-zinc-800/50 px-2 py-1 rounded-lg">Acumulado</span>
+                            <span className="text-sm font-medium text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded-lg">Acumulado</span>
                         </h3>
                     </div>
 
@@ -124,17 +124,17 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" className="dark:stroke-[#333]" vertical={false} />
                                 <Tooltip
                                     cursor={{ stroke: '#6366f1', strokeWidth: 1 }}
                                     content={({ active, payload }) => {
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div className="bg-zinc-900 border border-zinc-700 p-4 rounded-2xl shadow-xl">
-                                                    <p className="text-zinc-400 text-xs mb-1 font-bold uppercase">Día {data.day}</p>
-                                                    <p className="text-indigo-400 text-xl font-black">{currency}{data.cumulative.toLocaleString()}</p>
-                                                    <p className="text-zinc-500 text-xs mt-1">Gasto del día: +{currency}{data.expense.toLocaleString()}</p>
+                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl shadow-xl">
+                                                    <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-1 font-bold uppercase">Día {data.day}</p>
+                                                    <p className="text-indigo-500 dark:text-indigo-400 text-xl font-black">{currency}{data.cumulative.toLocaleString()}</p>
+                                                    <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-1">Gasto del día: +{currency}{data.expense.toLocaleString()}</p>
                                                 </div>
                                             );
                                         }

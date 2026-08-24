@@ -10,6 +10,8 @@ interface SubscriptionCalendarProps {
 export default function SubscriptionCalendar({ subscriptions }: SubscriptionCalendarProps) {
     if (subscriptions.length === 0) return null;
 
+    const today = new Date().getDate();
+
     // Group subscriptions by day
     const subsByDay: Record<number, any[]> = {};
     subscriptions.forEach(sub => {
@@ -44,23 +46,28 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
                     <div key={d} className="text-center text-[9px] font-bold text-zinc-400 py-1">{d}</div>
                 ))}
 
-                {/* Calendar days (show 1-28 for visual clarity) */}
-                {Array.from({ length: 28 }, (_, i) => i + 1).map(day => {
+                {/* Calendar days (1-31) */}
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
                     const hasSubs = subsByDay[day];
                     const dayTotal = totalPerDay[day] || 0;
                     const barHeight = hasSubs ? (dayTotal / maxDailyTotal) * 100 : 0;
+                    const isToday = day === today;
 
                     return (
                         <div
                             key={day}
                             className={`relative rounded-lg p-1 min-h-[44px] flex flex-col items-center justify-end transition-all ${
                                 hasSubs
-                                    ? 'bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30'
-                                    : 'bg-zinc-50 dark:bg-zinc-800/50'
+                                    ? isToday
+                                        ? 'bg-indigo-100 dark:bg-indigo-500/20 border-2 border-indigo-400 dark:border-indigo-500/50'
+                                        : 'bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30'
+                                    : isToday
+                                        ? 'bg-zinc-100 dark:bg-zinc-700/50 border border-zinc-300 dark:border-zinc-600'
+                                        : 'bg-zinc-50 dark:bg-zinc-800/50'
                             }`}
                             title={hasSubs ? `${day}: ${subsByDay[day].map(s => s.name).join(', ')} - ${formatMoney(dayTotal)}` : `Día ${day}`}
                         >
-                            <span className={`text-[10px] font-bold mb-0.5 ${hasSubs ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-400'}`}>
+                            <span className={`text-[10px] font-bold mb-0.5 ${hasSubs ? 'text-indigo-600 dark:text-indigo-400' : isToday ? 'text-zinc-900 dark:text-white' : 'text-zinc-400'}`}>
                                 {day}
                             </span>
                             {hasSubs && (

@@ -16,7 +16,7 @@ import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { updateCategoryLimit } from '@/app/actions/categories';
-import { Pencil, Search, Plus, Trash2, CreditCard as CardIcon, DollarSign, Wallet } from 'lucide-react';
+import { Pencil, Search, Plus, Trash2, CreditCard as CardIcon, DollarSign, Wallet, ArrowUpDown, Filter } from 'lucide-react';
 
 interface ExpensesTabProps {
     expenses: ExpenseWithCategory[];
@@ -33,13 +33,16 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
     const [showCategoryManager, setShowCategoryManager] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [expenseToEdit, setExpenseToEdit] = useState<ExpenseWithCategory | null>(null);
+    const [sortBy, setSortBy] = useState<'date' | 'amount' | 'name'>('date');
+    const [filterCategory, setFilterCategory] = useState<string>('ALL');
 
-    // Filtrar deudas y aplicar búsqueda
+    // Filtrar deudas, categoría y aplicar búsqueda
     const expensesList = expenses.filter(e => {
         const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             e.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (e.amount.toString().includes(searchQuery));
-        return matchesSearch;
+        const matchesCategory = filterCategory === 'ALL' || e.category === filterCategory;
+        return matchesSearch && matchesCategory;
     });
 
     const totalExpenses = expensesList.reduce((sum, exp) => sum + exp.amount, 0);
@@ -125,7 +128,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             </div>
 
 
-            {/* --- CONTROLES: BÚSQUEDA --- */}
+            {/* --- CONTROLES: BÚSQUEDA, ORDENAMIENTO, FILTRO --- */}
             <div className="sticky top-4 z-20 bg-white/80 dark:bg-black/80 backdrop-blur-xl p-2 rounded-4xl border border-zinc-200 dark:border-zinc-800 shadow-xl flex flex-col md:flex-row gap-2 md:items-center justify-between">
                 {/* Barra de Búsqueda */}
                 <div className="relative flex-1 group">
@@ -138,12 +141,48 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                         className="w-full bg-zinc-100 dark:bg-zinc-900/50 border-none rounded-2xl h-12 pl-12 pr-4 font-bold text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                     />
                 </div>
+
+                {/* Filtro categoría */}
+                <div className="relative">
+                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                    <select
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                    >
+                        <option value="ALL">Todas</option>
+                        {categories.map(cat => (
+                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Ordenamiento */}
+                <div className="relative">
+                    <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                    >
+                        <option value="date">Más reciente</option>
+                        <option value="amount">Mayor monto</option>
+                        <option value="name">Nombre</option>
+                    </select>
+                </div>
             </div>
 
             {/* --- LISTA DE GASTOS --- */}
             <div className="space-y-6 pb-20 w-full max-w-full overflow-x-hidden">
                 {(() => {
-                    const grouped = expensesList.reduce<Record<string, ExpenseWithCategory[]>>((groups, exp) => {
+                    // Sort expenses first
+                    const sorted = [...expensesList].sort((a, b) => {
+                        if (sortBy === 'date') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                        if (sortBy === 'amount') return b.amount - a.amount;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    const grouped = sorted.reduce<Record<string, ExpenseWithCategory[]>>((groups, exp) => {
                         const date = new Date(exp.createdAt).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
                         if (!groups[date]) groups[date] = [];
                         groups[date].push(exp);

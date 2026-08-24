@@ -7,7 +7,7 @@ import { logout, stopImpersonation } from '@/app/actions/auth';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
 import { ProfileWithData } from '@/types';
-import { Settings, LogOut, Briefcase, Eye, EyeOff, Wallet, TrendingUp, Landmark, DollarSign, Target, CreditCard as CardIcon } from 'lucide-react';
+import { Settings, LogOut, Briefcase, Eye, EyeOff, Wallet, TrendingUp, Landmark, DollarSign, Target, CreditCard as CardIcon, PieChart } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 
@@ -357,6 +357,11 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <TrendingUp size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Presupuesto</span>
                             </button>
+                            {/* Insights */}
+                            <button onClick={() => updateTab('insights')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'insights' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
+                                <PieChart size={18} />
+                                <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Insights</span>
+                            </button>
                         </div>
                     </div>
 
@@ -426,6 +431,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             <BudgetsTab
                                 categories={activeProfile.categories || []}
                                 expenses={expensesList}
+                                creditCards={activeProfile.creditCards || []}
+                                accounts={activeProfile.accounts || []}
+                                profileId={activeProfile.id}
                                 totalIncome={totalMonthlyIncome}
                                 totalDebtPayments={totalDebtPayments}
                                 totalSavings={totalGoalsSaved}
@@ -435,11 +443,24 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 onUpdate={refreshData}
                             />
                         )}
+
+                        {activeTab === 'insights' && (
+                            <InsightsTab
+                                expenses={expensesList}
+                                categories={activeProfile.categories || []}
+                                incomes={additionalIncomes}
+                                salaries={allSalaries}
+                            />
+                        )}
                     </div>
                 </>
             ) : (
-                <div className="text-center py-20">
-                    <h2 className="text-2xl font-bold">Cargando perfil...</h2>
+                <div className="text-center py-20 space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-zinc-100 dark:bg-zinc-800 rounded-full animate-pulse" />
+                    <div className="space-y-2">
+                        <div className="h-6 w-48 mx-auto bg-zinc-100 dark:bg-zinc-800 rounded-lg animate-pulse" />
+                        <div className="h-4 w-32 mx-auto bg-zinc-100 dark:bg-zinc-800 rounded-lg animate-pulse" />
+                    </div>
                 </div>
             )}
         </div>

@@ -5,7 +5,7 @@ import { ProfileWithData } from '@/types';
 import { deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingDown, CreditCard, Percent } from 'lucide-react';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
 import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import PaymentModal from '@/components/shared/PaymentModal';
@@ -41,6 +41,12 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
 
     const finalSortedCards = [...sortedActiveCards, ...inactiveCards];
 
+    // KPI calculations
+    const totalDebt = creditCards.reduce((sum, c) => sum + Number(c.balance), 0);
+    const totalLimit = creditCards.reduce((sum, c) => sum + Number(c.limit), 0);
+    const totalAvailable = totalLimit - totalDebt;
+    const avgUtilization = totalLimit > 0 ? (totalDebt / totalLimit) * 100 : 0;
+
     async function handleDelete(id: number) {
         confirmDelete(async () => {
             try {
@@ -61,6 +67,38 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <TrendingDown size={14} className="text-red-500" />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Deuda Total</span>
+                    </div>
+                    <p className="text-xl font-black text-red-500">${totalDebt.toFixed(2)}</p>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <CreditCard size={14} className="text-[#1591DC]" />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Disponible</span>
+                    </div>
+                    <p className="text-xl font-black text-[#1591DC]">${totalAvailable.toFixed(2)}</p>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Percent size={14} className="text-amber-500" />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Utilización</span>
+                    </div>
+                    <p className={`text-xl font-black ${avgUtilization > 75 ? 'text-red-500' : avgUtilization > 30 ? 'text-amber-500' : 'text-emerald-500'}`}>{avgUtilization.toFixed(0)}%</p>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <CreditCard size={14} className="text-zinc-400" />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Tarjetas</span>
+                    </div>
+                    <p className="text-xl font-black text-zinc-900 dark:text-white">{creditCards.length}</p>
+                </div>
+            </div>
+
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-2">
                 <div>
