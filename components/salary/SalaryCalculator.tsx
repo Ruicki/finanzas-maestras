@@ -26,13 +26,14 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
     const [frequency, setFrequency] = useState<'monthly' | 'biweekly'>('monthly');
     const [mounted, setMounted] = useState(false);
 
-    const [form, setForm] = useState<FormData & { absentDays: number, paymentDate: string, accountId: string }>({
+    const [form, setForm] = useState<FormData & { absentDays: number, paymentDate: string, accountId: string, includeDecimo: boolean }>({
         grossVal: 0,
         bonus: 0,
         company: '',
         absentDays: 0,
         paymentDate: '',
-        accountId: ''
+        accountId: '',
+        includeDecimo: false
     });
 
     useEffect(() => {
@@ -90,7 +91,8 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 paymentDate: form.paymentDate,
                 profileId: profileId,
                 accountId: form.accountId ? parseInt(form.accountId) : undefined,
-                dryRun: !save
+                dryRun: !save,
+                includeDecimo: form.includeDecimo
             });
 
             setResult({
@@ -110,10 +112,9 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 isDecimoIncluded: response._uiResult.isDecimoIncluded
             });
 
-            const selectedMonth = parseInt(form.paymentDate.split('-')[1]);
             if (save) {
                 const successMsg = response._uiResult.isDecimoIncluded
-                    ? `¡Cálculo guardado! (Incluye Décimo por ser mes ${selectedMonth} 🎁)`
+                    ? '¡Cálculo guardado! (Incluye Décimo 🎁)'
                     : '¡Salario guardado correctamente!';
                 toast.success(successMsg);
                 setTimeout(() => {
@@ -224,6 +225,21 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* DÉCIMO CHECKBOX */}
+                <div className="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl">
+                    <input
+                        type="checkbox"
+                        id="includeDecimo"
+                        checked={form.includeDecimo}
+                        onChange={(e) => setForm(prev => ({ ...prev, includeDecimo: e.target.checked }))}
+                        className="w-5 h-5 rounded border-yellow-300 text-yellow-500 focus:ring-yellow-500"
+                    />
+                    <label htmlFor="includeDecimo" className="text-sm font-bold text-yellow-700 dark:text-yellow-300 cursor-pointer">
+                        Incluir Décimo Tercer Mes 🎁
+                    </label>
+                    <span className="text-[10px] text-yellow-600 dark:text-yellow-400">(Solo en meses de pago: Abr, Ago, Dic)</span>
                 </div>
 
                 {/* ENTRADA FECHA DE PAGO */}
@@ -370,7 +386,8 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                 )}
                                 {tooltip === 'isr' && result.annualISRBase === 0 && (
                                     <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs text-zinc-500">
-                                        Salario anual (&lt;$11,000) no paga ISR.
+                                        <p className="font-bold mb-1">No aplica ISR</p>
+                                        <p>Salario anual ({frequency === 'biweekly' ? `${(result.grossAfterAbsence * 26).toFixed(0)}` : `${(result.grossAfterAbsence * 12).toFixed(0)}`}) está bajo la exención de $11,000.</p>
                                     </div>
                                 )}
                             </div>
