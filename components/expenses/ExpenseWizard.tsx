@@ -61,6 +61,7 @@ export default function ExpenseWizard({
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     });
     const [isRecurring, setIsRecurring] = useState(false);
+    const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
 
     // Load Initial Data
     useEffect(() => {
@@ -70,6 +71,7 @@ export default function ExpenseWizard({
             setCategoryId(initialData.categoryId || null);
             setDate(initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
             setIsRecurring(initialData.isRecurring || false);
+            setRecurrenceType(initialData.recurrenceType || 'MONTHLY');
 
             if (initialData.linkedCardId) {
                 setPaymentMethod('CREDIT');
@@ -140,6 +142,7 @@ export default function ExpenseWizard({
             dueDate: isRecurring ? parseDateNoon(date).getDate() : undefined,
             isRecurring,
             isOneTime: !isRecurring,
+            recurrenceType: isRecurring ? recurrenceType : 'MONTHLY',
             paymentMethod,
             accountId: paymentMethod === 'CASH' ? Number(accountId) : undefined,
             linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : undefined,
@@ -320,7 +323,7 @@ export default function ExpenseWizard({
                 <div className="flex items-center justify-between bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
                     <div className="flex flex-col">
                         <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Gasto recurrente</span>
-                        <span className="text-xs text-zinc-400">Se repite cada mes automáticamente</span>
+                        <span className="text-xs text-zinc-400">Se repite automáticamente</span>
                     </div>
                     <button
                         onClick={() => setIsRecurring(!isRecurring)}
@@ -329,6 +332,32 @@ export default function ExpenseWizard({
                         <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${isRecurring ? 'left-7' : 'left-1'}`} />
                     </button>
                 </div>
+
+                {isRecurring && (
+                    <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
+                        <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200 block mb-3">Frecuencia</span>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { value: 'MONTHLY', label: 'Mensual' },
+                                { value: 'QUARTERLY', label: 'Trimestral' },
+                                { value: 'SEMIANNUAL', label: 'Semestral' },
+                                { value: 'ANNUAL', label: 'Anual' },
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => setRecurrenceType(opt.value)}
+                                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                                        recurrenceType === opt.value
+                                            ? 'bg-purple-500 text-white shadow-sm'
+                                            : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="pt-2 flex justify-end">
