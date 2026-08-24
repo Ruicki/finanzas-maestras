@@ -65,12 +65,21 @@ export function calculateCreditHealth(utilization: number): { status: 'Excellent
     return { status: 'Critical', color: 'text-red-500' };
 }
 
-export function calculateMinimumPayment(balance: number, monthlyRate: number, insuranceRate: number = 0.25, percentage: number = 3.0): number {
+export function calculateMinimumPayment(
+    balance: number,
+    monthlyRate: number,
+    insuranceRate: number = 0.25,
+    percentage: number = 3.0,
+    itbmsRate: number = 0.07,
+    minFloor: number = 0,
+): number {
     if (balance <= 0) return 0;
     const interest = calculateProjectedInterest(balance, monthlyRate);
     const insurance = balance * (insuranceRate / 100);
     const capital = balance * (percentage / 100);
-    const total = interest + insurance + capital;
+    const itbms = interest * itbmsRate;
+    let total = interest + insurance + capital + itbms;
+    if (minFloor > 0 && total < minFloor) total = minFloor;
     return Math.round(total * 100) / 100;
 }
 

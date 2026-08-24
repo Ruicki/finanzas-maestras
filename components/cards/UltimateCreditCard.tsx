@@ -40,7 +40,9 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
         Number(card.balance),
         effectiveRate,
         insuranceRate,
-        Number(card.minPaymentPercentage) || 3.0
+        Number(card.minPaymentPercentage) || 3.0,
+        Number(card.itbmsRate) || 0.07,
+        Number(card.minPaymentFloor) || 0
     );
 
     // Cutoff alert

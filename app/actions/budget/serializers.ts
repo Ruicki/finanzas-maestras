@@ -26,5 +26,7 @@ export function serializeCreditCard(card: any) {
         annualFee: toNumOrNull(card.annualFee),
         minPaymentPercentage: toNumOrNull(card.minPaymentPercentage),
         insuranceRate: toNumOrNull(card.insuranceRate),
+        itbmsRate: toNumOrNull(card.itbmsRate),
+        minPaymentFloor: toNumOrNull(card.minPaymentFloor),
     };
 }

@@ -123,6 +123,8 @@ model CreditCard {
   annualFee            Decimal? @db.Decimal(10, 2)
   minPaymentPercentage Decimal? @default(3.0) @db.Decimal(6, 2)
   insuranceRate        Decimal? @default(0.25) @db.Decimal(6, 2)
+  itbmsRate            Decimal? @default(0.07) @db.Decimal(4, 2)
+  minPaymentFloor      Decimal? @default(0) @db.Decimal(10, 2)
   profileId            Int
   createdAt            DateTime @default(now())
   annualFeeMonth       Int?

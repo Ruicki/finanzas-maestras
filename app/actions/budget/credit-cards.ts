@@ -16,6 +16,8 @@ export interface CreateCreditCardInput {
     interestRate?: number;
     insuranceRate?: number;
     minPaymentPercentage?: number;
+    itbmsRate?: number;
+    minPaymentFloor?: number;
     annualFee?: number;
     annualFeeMonth?: number;
     bank?: string;
@@ -32,6 +34,8 @@ export async function createCreditCard(data: CreateCreditCardInput) {
             profileId: data.profileId,
             interestRate: data.interestRate,
             insuranceRate: data.insuranceRate,
+            itbmsRate: data.itbmsRate,
+            minPaymentFloor: data.minPaymentFloor,
             annualFee: data.annualFee,
             annualFeeMonth: data.annualFeeMonth,
             bank: data.bank,
@@ -56,6 +60,8 @@ export async function updateCreditCardDetails(
             interestRate: data.interestRate,
             insuranceRate: data.insuranceRate,
             minPaymentPercentage: data.minPaymentPercentage,
+            itbmsRate: data.itbmsRate,
+            minPaymentFloor: data.minPaymentFloor,
             annualFee: data.annualFee,
             annualFeeMonth: data.annualFeeMonth,
             bank: data.bank,

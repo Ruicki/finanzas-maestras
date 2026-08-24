@@ -15,6 +15,8 @@ interface PaymentModalProps {
         interestRate: number;
         insuranceRate: number;
         minPaymentPercentage: number;
+        itbmsRate: number;
+        minPaymentFloor: number;
     };
     accounts: Array<{
         id: number;
@@ -37,7 +39,9 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
         card.balance,
         card.interestRate,
         card.insuranceRate,
-        card.minPaymentPercentage || 3.0
+        card.minPaymentPercentage || 3.0,
+        card.itbmsRate || 0.07,
+        card.minPaymentFloor || 0
     );
 
     const getAmount = () => {
@@ -87,15 +91,17 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                 </div>
 
                 {/* Balance info */}
-                <div className="px-6 pt-4 pb-2">
+                <div className="px-6 pt-4 pb-2 shrink-0">
                     <div className="flex justify-between items-baseline">
                         <span className="text-xs text-zinc-500">Saldo actual</span>
                         <span className="text-xl font-bold text-zinc-900 dark:text-white">{formatMoney(card.balance)}</span>
                     </div>
                 </div>
 
-                {/* Payment options */}
-                <div className="p-6 space-y-3">
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto min-h-0 px-6">
+                    {/* Payment options */}
+                    <div className="space-y-3 py-2">
                     {/* Pago Mínimo */}
                     <button
                         onClick={() => setPaymentType('MINIMUM')}
@@ -181,28 +187,29 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                     </button>
                 </div>
 
-                {/* Account selector */}
-                <div className="px-6 pb-4">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Cuenta de origen</label>
-                    <select
-                        value={selectedAccountId ?? ''}
-                        onChange={(e) => setSelectedAccountId(Number(e.target.value) || null)}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
-                    >
-                        <option value="">Seleccionar cuenta...</option>
-                        {accounts.map(acc => (
-                            <option key={acc.id} value={acc.id}>
-                                {acc.name} ({formatMoney(acc.balance)})
-                            </option>
-                        ))}
-                    </select>
-                    {selectedAccount && !hasEnoughFunds && (
-                        <p className="text-xs text-red-500 mt-1">Fondos insuficientes</p>
-                    )}
+                    {/* Account selector */}
+                    <div className="pb-4 pt-2">
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Cuenta de origen</label>
+                        <select
+                            value={selectedAccountId ?? ''}
+                            onChange={(e) => setSelectedAccountId(Number(e.target.value) || null)}
+                            className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                        >
+                            <option value="">Seleccionar cuenta...</option>
+                            {accounts.map(acc => (
+                                <option key={acc.id} value={acc.id}>
+                                    {acc.name} ({formatMoney(acc.balance)})
+                                </option>
+                            ))}
+                        </select>
+                        {selectedAccount && !hasEnoughFunds && (
+                            <p className="text-xs text-red-500 mt-1">Fondos insuficientes</p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Actions */}
-                <div className="p-6 pt-2 flex gap-3">
+                <div className="p-6 pt-2 flex gap-3 shrink-0">
                     <button
                         onClick={onClose}
                         className="flex-1 py-3 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
