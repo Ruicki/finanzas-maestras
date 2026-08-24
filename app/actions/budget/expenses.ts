@@ -15,6 +15,7 @@ export interface CreateExpenseInput {
     dueDate?: number;
     isRecurring?: boolean;
     isOneTime?: boolean;
+    recurrenceType?: string;
     paymentMethod?: string;
     linkedCardId?: number;
     accountId?: number;
@@ -40,6 +41,7 @@ export async function createExpense(data: CreateExpenseInput) {
                 dueDate: data.dueDate,
                 isRecurring: data.isRecurring ?? true,
                 isOneTime: data.isOneTime ?? false,
+                recurrenceType: data.recurrenceType ?? 'MONTHLY',
                 paymentMethod: data.paymentMethod,
                 linkedCardId: data.linkedCardId,
                 accountId: data.accountId,
@@ -117,6 +119,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     dueDate: data.dueDate,
                     isRecurring: data.isRecurring,
                     isOneTime: data.isOneTime,
+                    recurrenceType: data.recurrenceType,
                     paymentMethod: data.paymentMethod,
                     linkedCardId: newCardId,
                     accountId: newAccountId,

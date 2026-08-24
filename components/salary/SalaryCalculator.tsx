@@ -26,14 +26,13 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
     const [frequency, setFrequency] = useState<'monthly' | 'biweekly'>('monthly');
     const [mounted, setMounted] = useState(false);
 
-    const [form, setForm] = useState<FormData & { absentDays: number, paymentDate: string, accountId: string, includeDecimo: boolean }>({
+    const [form, setForm] = useState<FormData & { absentDays: number, paymentDate: string, accountId: string }>({
         grossVal: 0,
         bonus: 0,
         company: '',
         absentDays: 0,
         paymentDate: '',
-        accountId: '',
-        includeDecimo: false
+        accountId: ''
     });
 
     useEffect(() => {
@@ -91,8 +90,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                 paymentDate: form.paymentDate,
                 profileId: profileId,
                 accountId: form.accountId ? parseInt(form.accountId) : undefined,
-                dryRun: !save,
-                includeDecimo: form.includeDecimo
+                dryRun: !save
             });
 
             setResult({
@@ -114,7 +112,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
 
             if (save) {
                 const successMsg = response._uiResult.isDecimoIncluded
-                    ? '¡Cálculo guardado! (Incluye Décimo 🎁)'
+                    ? '¡Salario guardado! (Incluye Décimo - mes de pago 🎁)'
                     : '¡Salario guardado correctamente!';
                 toast.success(successMsg);
                 setTimeout(() => {
@@ -227,21 +225,6 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                     </div>
                 </div>
 
-                {/* DÉCIMO CHECKBOX */}
-                <div className="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl">
-                    <input
-                        type="checkbox"
-                        id="includeDecimo"
-                        checked={form.includeDecimo}
-                        onChange={(e) => setForm(prev => ({ ...prev, includeDecimo: e.target.checked }))}
-                        className="w-5 h-5 rounded border-yellow-300 text-yellow-500 focus:ring-yellow-500"
-                    />
-                    <label htmlFor="includeDecimo" className="text-sm font-bold text-yellow-700 dark:text-yellow-300 cursor-pointer">
-                        Incluir Décimo Tercer Mes 🎁
-                    </label>
-                    <span className="text-[10px] text-yellow-600 dark:text-yellow-400">(Solo en meses de pago: Abr, Ago, Dic)</span>
-                </div>
-
                 {/* ENTRADA FECHA DE PAGO */}
                 <div className="relative group/input">
                     <label className="block text-sm font-bold uppercase tracking-wider mb-2 text-zinc-500 dark:text-zinc-400 group-hover/input:text-cyan-500 transition-colors">
@@ -348,49 +331,49 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                 <span>-${result.eduIns.toFixed(2)}</span>
                             </div>
 
-                            {/* ISR con tooltip */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setTooltip(tooltip === 'isr' ? null : 'isr')}
-                                    className="w-full flex justify-between text-red-700 dark:text-red-300 font-bold hover:bg-red-500/5 rounded-lg px-1 -mx-1 py-1 transition-colors text-left"
-                                >
-                                    <span className="flex items-center gap-1.5">
-                                        ISR ({result.isrRateUsed > 0 ? (result.isrRateUsed * 100).toFixed(0) : '-'}%)
-                                        <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
-                                    </span>
-                                    <span>-${result.incomeTax.toFixed(2)}</span>
-                                </button>
-                                {tooltip === 'isr' && result.annualISRBase > 0 && (
-                                    <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
-                                        <div className="flex justify-between">
-                                            <span>Salario anualizado</span>
-                                            <span>${(result.grossAfterAbsence * 12).toFixed(2)}</span>
+                            {/* ISR - solo aparece si aplica */}
+                            {result.incomeTax > 0 && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setTooltip(tooltip === 'isr' ? null : 'isr')}
+                                        className="w-full flex justify-between text-red-700 dark:text-red-300 font-bold hover:bg-red-500/5 rounded-lg px-1 -mx-1 py-1 transition-colors text-left"
+                                    >
+                                        <span className="flex items-center gap-1.5">
+                                            ISR ({(result.isrRateUsed * 100).toFixed(0)}%)
+                                            <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
+                                        </span>
+                                        <span>-${result.incomeTax.toFixed(2)}</span>
+                                    </button>
+                                    {tooltip === 'isr' && (
+                                        <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
+                                            <div className="flex justify-between">
+                                                <span>Salario mensual</span>
+                                                <span>${result.grossAfterAbsence.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>× 13 (con décimo)</span>
+                                                <span>${(result.grossAfterAbsence * 13).toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>- Exención</span>
+                                                <span>-$11,000.00</span>
+                                            </div>
+                                            <div className="flex justify-between font-semibold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1">
+                                                <span>= Base imponible</span>
+                                                <span>${result.annualISRBase.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>× Tasa {(result.isrRateUsed * 100).toFixed(0)}%</span>
+                                                <span>${result.annualISRTax.toFixed(2)}/año</span>
+                                            </div>
+                                            <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-red-600 dark:text-red-400">
+                                                <span>= ISR mensual</span>
+                                                <span>${result.incomeTax.toFixed(2)}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span>- Exención</span>
-                                            <span>-$11,000.00</span>
-                                        </div>
-                                        <div className="flex justify-between font-semibold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1">
-                                            <span>= Base imponible</span>
-                                            <span>${result.annualISRBase.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>× Tasa {(result.isrRateUsed * 100).toFixed(0)}%</span>
-                                            <span>${result.annualISRTax.toFixed(2)}/año</span>
-                                        </div>
-                                        <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-red-600 dark:text-red-400">
-                                            <span>= ISR mensual</span>
-                                            <span>${result.incomeTax.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {tooltip === 'isr' && result.annualISRBase === 0 && (
-                                    <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs text-zinc-500">
-                                        <p className="font-bold mb-1">No aplica ISR</p>
-                                        <p>Salario anual ({frequency === 'biweekly' ? `${(result.grossAfterAbsence * 26).toFixed(0)}` : `${(result.grossAfterAbsence * 12).toFixed(0)}`}) está bajo la exención de $11,000.</p>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
 

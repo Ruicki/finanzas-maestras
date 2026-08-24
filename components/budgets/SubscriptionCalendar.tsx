@@ -7,12 +7,28 @@ interface SubscriptionCalendarProps {
     subscriptions: any[];
 }
 
+const RECURRENCE_LABELS: Record<string, string> = {
+    MONTHLY: 'Mensual',
+    QUARTERLY: 'Trimestral',
+    SEMIANNUAL: 'Semestral',
+    ANNUAL: 'Anual',
+};
+
+function normalizeToMonthly(amount: number, type?: string | null): number {
+    switch (type) {
+        case 'ANNUAL': return amount / 12;
+        case 'SEMIANNUAL': return amount / 6;
+        case 'QUARTERLY': return amount / 3;
+        default: return amount;
+    }
+}
+
 export default function SubscriptionCalendar({ subscriptions }: SubscriptionCalendarProps) {
     if (subscriptions.length === 0) return null;
 
     const today = new Date().getDate();
 
-    // Group subscriptions by day
+    // Group subscriptions by day (normalize amounts to monthly)
     const subsByDay: Record<number, any[]> = {};
     subscriptions.forEach(sub => {
         const day = sub.dueDate || 1;
@@ -20,10 +36,10 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
         subsByDay[day].push(sub);
     });
 
-    // Total per day
+    // Total per day (normalized to monthly)
     const totalPerDay: Record<number, number> = {};
     Object.entries(subsByDay).forEach(([day, subs]) => {
-        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + Number(sub.amount), 0);
+        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + normalizeToMonthly(Number(sub.amount), sub.recurrenceType), 0);
     });
 
     // Days with subscriptions
@@ -65,7 +81,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
                                         ? 'bg-zinc-100 dark:bg-zinc-700/50 border border-zinc-300 dark:border-zinc-600'
                                         : 'bg-zinc-50 dark:bg-zinc-800/50'
                             }`}
-                            title={hasSubs ? `${day}: ${subsByDay[day].map(s => s.name).join(', ')} - ${formatMoney(dayTotal)}` : `Día ${day}`}
+                            title={hasSubs ? `${day}: ${subsByDay[day].map(s => `${s.name} (${RECURRENCE_LABELS[s.recurrenceType] || 'Mensual'})`).join(', ')} - ${formatMoney(dayTotal)}/mes` : `Día ${day}`}
                         >
                             <span className={`text-[10px] font-bold mb-0.5 ${hasSubs ? 'text-indigo-600 dark:text-indigo-400' : isToday ? 'text-zinc-900 dark:text-white' : 'text-zinc-400'}`}>
                                 {day}

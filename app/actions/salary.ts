@@ -17,49 +17,42 @@ interface ProcessSalaryRequest {
     accountId?: number;
     isManualCalculation?: boolean;
     dryRun?: boolean;
-    includeDecimo?: boolean;
 }
 
 // Panama tax rates
 const SOCIAL_SEC_RATE = 0.0975;
 const EDU_INS_RATE = 0.0125;
+const SOCIAL_SEC_DECIMO_RATE = 0.0725; // Reduced rate for décimo
 const ISR_EXEMPTION = 11000;
 const ISR_BRACKET_2_LIMIT = 50000;
 const ISR_RATE_15 = 0.15;
 const ISR_RATE_25 = 0.25;
 
-function calculatePeriodTaxes(grossPeriod: number, frequency: 'monthly' | 'biweekly') {
-    // SS and Educativo are always calculated on the period amount
-    const socialSec = grossPeriod * SOCIAL_SEC_RATE;
-    const eduIns = grossPeriod * EDU_INS_RATE;
-
-    // ISR: annualize based on frequency
-    const periodsPerYear = frequency === 'biweekly' ? 26 : 12;
-    const annualSalary = grossPeriod * periodsPerYear;
+/**
+ * Calculates ISR using Panama's official method:
+ * 1. Project annual income = monthly_gross × 13 (12 months + décimo)
+ * 2. Apply brackets to annual figure
+ * 3. Divide by 12 for monthly withholding
+ * For biweekly: monthly = grossVal × 2
+ */
+function calculateISR(monthlyGross: number) {
+    // Project annual income including décimo (×13)
+    const annualIncome = monthlyGross * 13;
 
     let annualTax = 0;
-    if (annualSalary > ISR_EXEMPTION && annualSalary <= ISR_BRACKET_2_LIMIT) {
-        annualTax = (annualSalary - ISR_EXEMPTION) * ISR_RATE_15;
-    } else if (annualSalary > ISR_BRACKET_2_LIMIT) {
-        annualTax = (ISR_BRACKET_2_LIMIT - ISR_EXEMPTION) * ISR_RATE_15 + (annualSalary - ISR_BRACKET_2_LIMIT) * ISR_RATE_25;
+    if (annualIncome <= ISR_EXEMPTION) {
+        annualTax = 0;
+    } else if (annualIncome <= ISR_BRACKET_2_LIMIT) {
+        annualTax = (annualIncome - ISR_EXEMPTION) * ISR_RATE_15;
+    } else {
+        annualTax = (ISR_BRACKET_2_LIMIT - ISR_EXEMPTION) * ISR_RATE_15
+            + (annualIncome - ISR_BRACKET_2_LIMIT) * ISR_RATE_25;
     }
 
-    // ISR per period
-    const incomeTax = annualTax / periodsPerYear;
+    // Monthly ISR withholding
+    const monthlyISR = annualTax / 12;
 
-    // Determine ISR rate used
-    let isrRateUsed = 0;
-    if (annualSalary > ISR_BRACKET_2_LIMIT) isrRateUsed = ISR_RATE_25;
-    else if (annualSalary > ISR_EXEMPTION) isrRateUsed = ISR_RATE_15;
-
-    return { socialSec, eduIns, incomeTax, isrRateUsed, annualSalary, annualTax };
-}
-
-function calculateDecimo(grossMonthly: number) {
-    const decimoGross = grossMonthly / 3;
-    const decimoSS = decimoGross * SOCIAL_SEC_RATE;
-    const decimoNet = decimoGross - decimoSS;
-    return { decimoGross, decimoNet, decimoSS };
+    return { monthlyISR, annualIncome, annualTax };
 }
 
 export async function createSalary(data: ProcessSalaryRequest) {
@@ -91,32 +84,43 @@ export async function createSalary(data: ProcessSalaryRequest) {
             const absenceDeduction = dailyRate * data.absentDays;
             grossAfterAbsence = Math.max(0, data.grossVal - absenceDeduction);
 
-            // Calculate taxes directly on the period amount
-            const taxes = calculatePeriodTaxes(grossAfterAbsence, data.frequency);
+            // SS and Educativo are calculated on the period amount
+            finalSS = grossAfterAbsence * SOCIAL_SEC_RATE;
+            finalEduIns = grossAfterAbsence * EDU_INS_RATE;
 
-            finalSS = taxes.socialSec;
-            finalEduIns = taxes.eduIns;
-            finalIncomeTax = taxes.incomeTax;
-            finalTaxes = finalSS + finalEduIns + finalIncomeTax;
-            isrRateUsed = taxes.isrRateUsed;
+            // ISR: project monthly × 13, apply brackets, /12
+            const monthlyGross = data.frequency === 'biweekly'
+                ? grossAfterAbsence * 2
+                : grossAfterAbsence;
 
-            // ISR detail for UI
-            annualISRBase = Math.max(0, taxes.annualSalary - ISR_EXEMPTION);
-            annualISRTax = taxes.annualTax;
+            const isr = calculateISR(monthlyGross);
+            finalIncomeTax = isr.monthlyISR;
+            annualISRBase = Math.max(0, isr.annualIncome - ISR_EXEMPTION);
+            annualISRTax = isr.annualTax;
 
-            // Décimo: only if user explicitly requests it
-            if (data.includeDecimo) {
-                const grossMonthly = data.frequency === 'biweekly' ? data.grossVal * 2 : data.grossVal;
-                const decimo = calculateDecimo(grossMonthly);
-                decimoGross = decimo.decimoGross;
-                decimoNet = decimo.decimoNet;
-                isDecimoIncluded = true;
-
-                // Décimo has its own SS deduction
-                finalSS += decimoNet > 0 ? decimo.decimoSS : 0;
-                finalTaxes += decimoNet > 0 ? decimo.decimoSS : 0;
+            if (annualISRBase > 0) {
+                isrRateUsed = isr.annualIncome > ISR_BRACKET_2_LIMIT ? ISR_RATE_25 : ISR_RATE_15;
             }
 
+            // Décimo: automatic in months 4 (Apr), 8 (Aug), 12 (Dec)
+            const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth);
+
+            if (isDecimoIncluded) {
+                // Décimo = 1/3 of monthly gross (before absences for calculation)
+                const grossMonthlyForDecimo = data.frequency === 'biweekly'
+                    ? data.grossVal * 2
+                    : data.grossVal;
+
+                decimoGross = grossMonthlyForDecimo / 3;
+                // Décimo has reduced SS rate (7.25%), no eduIns
+                const decimoSS = decimoGross * SOCIAL_SEC_DECIMO_RATE;
+                decimoNet = decimoGross - decimoSS;
+
+                finalSS += decimoSS;
+            }
+
+            finalTaxes = finalSS + finalEduIns + finalIncomeTax;
             finalNetVal = (grossAfterAbsence + data.bonus + (isDecimoIncluded ? decimoNet : 0)) - finalTaxes;
         }
 
@@ -254,27 +258,37 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             const absenceDeduction = dailyRate * data.absentDays;
             grossAfterAbsence = Math.max(0, data.grossVal - absenceDeduction);
 
-            const taxes = calculatePeriodTaxes(grossAfterAbsence, data.frequency);
+            finalSS = grossAfterAbsence * SOCIAL_SEC_RATE;
+            finalEduIns = grossAfterAbsence * EDU_INS_RATE;
 
-            finalSS = taxes.socialSec;
-            finalEduIns = taxes.eduIns;
-            finalIncomeTax = taxes.incomeTax;
-            finalTaxes = finalSS + finalEduIns + finalIncomeTax;
-            isrRateUsed = taxes.isrRateUsed;
+            const monthlyGross = data.frequency === 'biweekly'
+                ? grossAfterAbsence * 2
+                : grossAfterAbsence;
 
-            annualISRBase = Math.max(0, taxes.annualSalary - ISR_EXEMPTION);
-            annualISRTax = taxes.annualTax;
+            const isr = calculateISR(monthlyGross);
+            finalIncomeTax = isr.monthlyISR;
+            annualISRBase = Math.max(0, isr.annualIncome - ISR_EXEMPTION);
+            annualISRTax = isr.annualTax;
 
-            if (data.includeDecimo) {
-                const grossMonthly = data.frequency === 'biweekly' ? data.grossVal * 2 : data.grossVal;
-                const decimo = calculateDecimo(grossMonthly);
-                decimoGross = decimo.decimoGross;
-                decimoNet = decimo.decimoNet;
-                isDecimoIncluded = true;
-                finalSS += decimoNet > 0 ? decimo.decimoSS : 0;
-                finalTaxes += decimoNet > 0 ? decimo.decimoSS : 0;
+            if (annualISRBase > 0) {
+                isrRateUsed = isr.annualIncome > ISR_BRACKET_2_LIMIT ? ISR_RATE_25 : ISR_RATE_15;
             }
 
+            const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth);
+
+            if (isDecimoIncluded) {
+                const grossMonthlyForDecimo = data.frequency === 'biweekly'
+                    ? data.grossVal * 2
+                    : data.grossVal;
+
+                decimoGross = grossMonthlyForDecimo / 3;
+                const decimoSS = decimoGross * SOCIAL_SEC_DECIMO_RATE;
+                decimoNet = decimoGross - decimoSS;
+                finalSS += decimoSS;
+            }
+
+            finalTaxes = finalSS + finalEduIns + finalIncomeTax;
             finalNetVal = (grossAfterAbsence + data.bonus + (isDecimoIncluded ? decimoNet : 0)) - finalTaxes;
         }
 

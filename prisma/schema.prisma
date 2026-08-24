@@ -62,22 +62,23 @@ model Profile {
 }
 
 model Expense {
-  id            Int       @id @default(autoincrement())
-  name          String
-  amount        Decimal   @db.Decimal(10, 2)
-  category      String
-  categoryId    Int?
-  dueDate       Int?
-  isRecurring   Boolean   @default(true)
-  isOneTime     Boolean   @default(false)
-  paymentMethod String?
-  linkedCardId  Int?
-  profileId     Int
-  accountId     Int?
-  createdAt     DateTime  @default(now())
-  account       Account?  @relation(fields: [accountId], references: [id])
-  categoryRel   Category? @relation(fields: [categoryId], references: [id])
-  profile       Profile   @relation(fields: [profileId], references: [id])
+  id              Int       @id @default(autoincrement())
+  name            String
+  amount          Decimal   @db.Decimal(10, 2)
+  category        String
+  categoryId      Int?
+  dueDate         Int?
+  isRecurring     Boolean   @default(true)
+  isOneTime       Boolean   @default(false)
+  recurrenceType  String?   @default("MONTHLY")
+  paymentMethod   String?
+  linkedCardId    Int?
+  profileId       Int
+  accountId       Int?
+  createdAt       DateTime  @default(now())
+  account         Account?  @relation(fields: [accountId], references: [id])
+  categoryRel     Category? @relation(fields: [categoryId], references: [id])
+  profile         Profile   @relation(fields: [profileId], references: [id])
 }
 
 model Category {
