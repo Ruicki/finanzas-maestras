@@ -97,6 +97,18 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
             {/* RULES GRID */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
+                {/* HEALTH SCORE */}
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col items-center justify-center text-center">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Score Financiero</p>
+                    <div className={`text-5xl font-black mb-1 ${score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                        {score}
+                    </div>
+                    <p className="text-xs text-zinc-400">/100</p>
+                    <div className={`mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${score >= 80 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : score >= 50 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'}`}>
+                        {score >= 80 ? '✓ Excelente' : score >= 50 ? '⚠ Regular' : '✕ Necesita mejorar'}
+                    </div>
+                </div>
+
                 {/* RULE 1: 50/30/20 — BIGGER CHART */}
                 <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                     <div className="flex justify-between items-start mb-4">

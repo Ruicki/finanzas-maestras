@@ -7,13 +7,19 @@ import SubscriptionCalendar from '@/components/budgets/SubscriptionCalendar';
 import { formatMoney } from '@/lib/utils';
 import { Category, Expense } from '@prisma/client';
 import { Plus, Calendar, TrendingDown, CreditCard } from 'lucide-react';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { deleteExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 
+import ExpenseWizard from '@/components/expenses/ExpenseWizard';
+
 interface BudgetsTabProps {
     categories: any[];
     expenses: any[];
+    creditCards?: any[];
+    accounts?: any[];
+    profileId?: number;
     currency?: string;
     totalIncome: number;
     totalDebtPayments: number;
@@ -24,8 +30,9 @@ interface BudgetsTabProps {
     onUpdate?: () => void;
 }
 
-export default function BudgetsTab({ categories, expenses, currency = 'USD', totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
+export default function BudgetsTab({ categories, expenses, creditCards = [], accounts = [], profileId, currency = 'USD', totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [expandedSub, setExpandedSub] = useState<string | null>(null);
+    const [showWizard, setShowWizard] = useState(false);
 
     // Subscriptions sorted by due date
     const subscriptions = expenses
@@ -185,7 +192,7 @@ export default function BudgetsTab({ categories, expenses, currency = 'USD', tot
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catColor?.replace('text-', 'bg-').replace('500', '100') || 'bg-zinc-100'} ${catColor || 'text-zinc-500'}`}>
-                                                    <span className="text-sm">{exp.categoryRel?.icon || '🔄'}</span>
+                                                    <CategoryIcon iconName={catIcon} size={18} />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[140px]">{exp.name}</h4>
@@ -223,7 +230,7 @@ export default function BudgetsTab({ categories, expenses, currency = 'USD', tot
 
                             {/* Add Subscription Button */}
                             <button
-                                onClick={() => {/* TODO: open expense wizard with isRecurring */}}
+                                onClick={() => setShowWizard(true)}
                                 className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl flex flex-col items-center justify-center min-h-[140px] text-zinc-400 hover:text-indigo-500 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all group"
                             >
                                 <Plus size={28} className="mb-2 group-hover:scale-110 transition-transform" />
@@ -235,10 +242,22 @@ export default function BudgetsTab({ categories, expenses, currency = 'USD', tot
                     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
                         <CreditCard size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
                         <p className="text-sm font-bold text-zinc-500 mb-1">No tienes suscripciones</p>
-                        <p className="text-xs text-zinc-400">Registra tus gastos recurrentes para controlar tu "costo de vida" base.</p>
+                        <p className="text-xs text-zinc-400">Registra tus gastos recurrentes para controlar tu &quot;costo de vida&quot; base.</p>
                     </div>
                 )}
             </div>
+
+            {showWizard && profileId && (
+                <ExpenseWizard
+                    profileId={profileId}
+                    categories={categories}
+                    creditCards={creditCards}
+                    accounts={accounts}
+                    initialData={{ isRecurring: true }}
+                    onSuccess={() => { setShowWizard(false); onUpdate?.(); }}
+                    onClose={() => setShowWizard(false)}
+                />
+            )}
         </div>
     );
 }

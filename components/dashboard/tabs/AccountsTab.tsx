@@ -5,6 +5,7 @@ import { ProfileWithData } from '@/types';
 type Account = ProfileWithData['accounts'][number];
 
 import { deleteAccount } from '@/app/actions/budget';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { Plus, Wallet, Landmark, PiggyBank, Banknote, ArrowRightLeft, MoreVertical, Eye, Pencil, Trash2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountWizard from '@/components/accounts/AccountWizard';
@@ -98,14 +99,11 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('¿Seguro que deseas eliminar esta cuenta?')) return;
-        try {
+        confirmDelete(async () => {
             await deleteAccount(id);
             toast.success('Cuenta eliminada');
             onUpdate();
-        } catch (error: any) {
-            toast.error(error?.message || 'Error al eliminar');
-        }
+        }, 'Eliminar cuenta', '¿Seguro que deseas eliminar esta cuenta?');
     };
 
     const getIcon = (type: string) => {

@@ -246,7 +246,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
     // --- MANEJADORES: PAGAR ---
     async function handlePay() {
-        if (!paymentModal || (!paymentAmount && !['QuickPay'].includes(''))) {
+        if (!paymentModal || !paymentAmount) {
             toast.warning("Ingresa un monto");
             return;
         }
@@ -382,9 +382,9 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                 <h3 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 opacity-50">
                     <CardIcon /> Tarjetas de Crédito
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75 hover:opacity-100 transition-opacity">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {creditCards.map(card => (
-                        <div key={card.id} className="scale-90 origin-top-left">
+                        <div key={card.id}>
                             <UltimateCreditCard
                                 card={card}
                                 cardholderName={profileName}

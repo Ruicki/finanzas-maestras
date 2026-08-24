@@ -227,6 +227,23 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             🎉 ¡Meta Cumplida! Reclamar
                         </button>
                     )}
+                    {/* FECHA ESTIMADA */}
+                    {percentage < 100 && goal.deadline && (
+                        <div className="mt-3 flex items-center justify-between text-[10px] font-bold text-zinc-400">
+                            <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            {(() => {
+                                const remaining = goal.targetAmount - goal.currentAmount;
+                                const deadlineDate = new Date(goal.deadline);
+                                const now = new Date();
+                                const daysLeft = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                                if (daysLeft > 0 && remaining > 0) {
+                                    const dailyNeeded = remaining / daysLeft;
+                                    return <span className="text-zinc-500">${dailyNeeded.toFixed(2)}/día necesario</span>;
+                                }
+                                return <span className="text-red-500">Sin tiempo restante</span>;
+                            })()}
+                        </div>
+                    )}
                 </div>
 
                 {/* ÁREA DE ACCIONES EXPANDIBLE (Ocultar si está completa para enfocar en Reclamar) */}
