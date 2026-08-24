@@ -655,6 +655,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                         interestRate: Number(payingCard.interestRate) || 0,
                         insuranceRate: Number(payingCard.insuranceRate) || 0.25,
                         minPaymentPercentage: Number(payingCard.minPaymentPercentage) || 3.0,
+                        itbmsRate: Number(payingCard.itbmsRate) || 0.07,
+                        minPaymentFloor: Number(payingCard.minPaymentFloor) || 0,
                     }}
                     accounts={accounts.map(a => ({
                         id: a.id,

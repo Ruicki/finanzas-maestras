@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
     calculateSalary,
     calculateCreditHealth,
@@ -91,14 +92,15 @@ describe('calculateProjectedInterest', () => {
 // ─── calculateMinimumPayment ────────────────────────────────────────
 
 describe('calculateMinimumPayment', () => {
-    it('calculates minimum payment: interest + insurance + 3% capital', () => {
-        // Balance: $1000, Rate: 6.25%, Insurance: 0.25%, MinPayment%: 3%
+    it('calculates minimum payment: interest + insurance + ITBMS + 3% capital', () => {
+        // Balance: $1000, Rate: 6.25%, Insurance: 0.25%, MinPayment%: 3%, ITBMS: 7%
         // Interest: 1000 * 6.25% = 62.50
         // Insurance: 1000 * 0.25% = 2.50
         // Capital: 1000 * 3% = 30.00
-        // Total: 95.00
-        const result = calculateMinimumPayment(1000, 6.25, 0.25, 3.0);
-        expect(result).toBeCloseTo(95.00, 2);
+        // ITBMS: 62.50 * 7% = 4.375
+        // Total: 99.375
+        const result = calculateMinimumPayment(1000, 6.25, 0.25, 3.0, 0.07);
+        expect(result).toBeCloseTo(99.38, 2);
     });
 
     it('returns 0 for zero balance', () => {
@@ -111,22 +113,23 @@ describe('calculateMinimumPayment', () => {
 
     it('uses default insurance rate (0.25%) when not provided', () => {
         const result = calculateMinimumPayment(1000, 6.25);
-        // Interest: 62.50, Insurance: 2.50 (default), Capital: 30.00
-        expect(result).toBeCloseTo(95.00, 2);
+        // Interest: 62.50, Insurance: 2.50 (default), Capital: 30.00, ITBMS: 4.375
+        expect(result).toBeCloseTo(99.38, 2);
     });
 
     it('uses default minPaymentPercentage (3%) when not provided', () => {
         const result = calculateMinimumPayment(1000, 6.25, 0.25);
-        expect(result).toBeCloseTo(95.00, 2);
+        expect(result).toBeCloseTo(99.38, 2);
     });
 
     it('CMF real scenario: $500 balance, 6.25% rate', () => {
         // Interest: 500 * 6.25% = 31.25
         // Insurance: 500 * 0.25% = 1.25
         // Capital: 500 * 3% = 15.00
-        // Total: 47.50
-        const result = calculateMinimumPayment(500, 6.25, 0.25, 3.0);
-        expect(result).toBeCloseTo(47.50, 2);
+        // ITBMS: 31.25 * 7% = 2.1875
+        // Total: 49.6875
+        const result = calculateMinimumPayment(500, 6.25, 0.25, 3.0, 0.07);
+        expect(result).toBeCloseTo(49.69, 2);
     });
 });
 

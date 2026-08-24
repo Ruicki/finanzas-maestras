@@ -20,6 +20,7 @@ interface CreditCardWizardProps {
         cutoffDay: number;
         paymentDay: number;
         interestRate: number;
+        insuranceRate?: number;
         annualFee?: number;
         annualFeeMonth?: number | null;
     };
@@ -42,6 +43,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     const [hasAnnualFee, setHasAnnualFee] = useState(!!editingCard?.annualFee);
     const [annualFee, setAnnualFee] = useState(editingCard?.annualFee?.toString() || '');
     const [annualFeeMonth, setAnnualFeeMonth] = useState(editingCard?.annualFeeMonth?.toString() || '');
+    const [insuranceRate, setInsuranceRate] = useState(editingCard?.insuranceRate?.toString() || '0.25');
 
     useScrollLock(true);
 
@@ -52,6 +54,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
             setInterestRate(preset.interestRate.toString());
             setAnnualFee(preset.annualFee.toString());
             setHasAnnualFee(preset.annualFee > 0);
+            setInsuranceRate(preset.insuranceRate.toString());
         }
     }, [bank]);
 
@@ -71,7 +74,9 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 limit: parseFloat(limit) || 0,
                 initialBalance: parseFloat(balance) || 0,
                 interestRate: parseFloat(interestRate) || 0,
-                insuranceRate: getPreset()?.insuranceRate || 0.25,
+                insuranceRate: getPreset()?.insuranceRate || parseFloat(insuranceRate) || 0.25,
+                itbmsRate: getPreset()?.itbmsRate ?? 0.07,
+                minPaymentFloor: getPreset()?.minPaymentFloor ?? 0,
                 cutoffDay: parseInt(cutoffDay) || 1,
                 paymentDay: parseInt(paymentDay) || 1,
                 annualFee: hasAnnualFee ? (parseFloat(annualFee) || 0) : 0,
@@ -217,6 +222,22 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">%</span>
                         </div>
                         <p className="text-xs text-zinc-500 mt-1">En tu estado de cuenta: &quot;Tasa de interés nominal mensual&quot;</p>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Tasa desgravamen mensual</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={insuranceRate}
+                                onChange={(e) => setInsuranceRate(e.target.value)}
+                                placeholder={getPreset()?.insuranceRate.toString() || '0.25'}
+                                step="0.001"
+                                className="w-full pl-4 pr-8 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">%</span>
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1">Seguro de desgravamen (一般的 0.2% - 0.33%)</p>
                     </div>
 
                     {/* Fechas */}
