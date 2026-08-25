@@ -46,3 +46,16 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #3f3f46; /* zinc-700 */
 }
+
+/* Private mode: ocultar montos */
+.private-mode .blur-sensitive,
+.private-mode [class*="blur-sensitive"] {
+  filter: blur(8px);
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+.private-mode .blur-sensitive:hover,
+.private-mode [class*="blur-sensitive"]:hover {
+  filter: blur(0);
+}

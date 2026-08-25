@@ -102,9 +102,10 @@ export async function createSalary(data: ProcessSalaryRequest) {
                 isrRateUsed = isr.annualIncome > ISR_BRACKET_2_LIMIT ? ISR_RATE_25 : ISR_RATE_15;
             }
 
-            // Décimo: automatic in months 4 (Apr), 8 (Aug), 12 (Dec)
+            // Décimo: automatic in months 4 (Apr), 8 (Aug), 12 (Dec) — only on the 15th payment
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
-            isDecimoIncluded = [4, 8, 12].includes(selectedMonth);
+            const selectedDay = parseInt(data.paymentDate.split('-')[2]);
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && selectedDay >= 15;
 
             if (isDecimoIncluded) {
                 // Décimo = 1/3 of monthly gross (before absences for calculation)
@@ -275,7 +276,8 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             }
 
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
-            isDecimoIncluded = [4, 8, 12].includes(selectedMonth);
+            const selectedDay = parseInt(data.paymentDate.split('-')[2]);
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && selectedDay >= 15;
 
             if (isDecimoIncluded) {
                 const grossMonthlyForDecimo = data.frequency === 'biweekly'
