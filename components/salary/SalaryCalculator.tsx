@@ -405,8 +405,8 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                                 <span>${result.decimoGross.toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>- Seguro Social (9.75%)</span>
-                                                <span>-${(result.decimoGross * 0.0975).toFixed(2)}</span>
+                                                <span>- Seguro Social (7.25%)</span>
+                                                <span>-${(result.decimoGross * 0.0725).toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-yellow-600 dark:text-yellow-400">
                                                 <span>= Décimo neto</span>

@@ -108,6 +108,12 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                     <div className={`mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${score >= 80 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : score >= 50 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'}`}>
                         {score >= 80 ? '✓ Excelente' : score >= 50 ? '⚠ Regular' : '✕ Necesita mejorar'}
                     </div>
+                    <p className="text-[10px] text-zinc-400 mt-3 leading-tight">
+                        Basado en regla 50/30/20 y relación deuda/ingreso.{' '}
+                        <span className="font-semibold">80+</span> = saludable,{' '}
+                        <span className="font-semibold">50-79</span> = precaución,{' '}
+                        <span className="font-semibold">&lt;50</span> = alto riesgo.
+                    </p>
                 </div>
 
                 {/* RULE 1: 50/30/20 — BIGGER CHART */}
