@@ -67,7 +67,7 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
 
     const subTabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
         { id: 'resumen', label: 'Regla 50/30/20', icon: <WalletIcon size={16} /> },
-        { id: 'categorias', label: 'Categorías', icon: <PieChart size={16} /> },
+        { id: 'categorias', label: 'Categorías', icon: <PieChart className="lucide-animated" size={16} /> },
         { id: 'suscripciones', label: 'Suscripciones', icon: <RepeatIcon size={16} /> },
     ];
 

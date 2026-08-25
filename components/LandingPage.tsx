@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRightIcon, SmartphoneIcon, WalletIcon } from '@animateicons/react/lucide';
-import { CheckCircle, Shield, BarChart3, PieChart } from 'lucide-react';
+import { CheckCheckIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
+import { BarChart3, PieChart } from 'lucide-react';
 
 export default function LandingPage() {
     return (
@@ -93,7 +94,7 @@ export default function LandingPage() {
                             desc="Categoriza cada centavo. Visualiza a dónde va tu dinero con gráficos intuitivos."
                         />
                         <FeatureCard
-                            icon={<Target className="w-8 h-8 text-indigo-500" />}
+                            icon={<Target className="w-8 h-8 text-indigo-500 lucide-animated" />}
                             title="Metas de Ahorro"
                             desc="Define objetivos, asigna fondos y celebra cada vez que rompes la alcancía."
                         />

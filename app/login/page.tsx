@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { login } from '@/app/actions/auth';
 import { toast } from 'sonner';
 import { ArrowRightIcon, LockIcon, MailIcon, EyeIcon, EyeOffIcon } from '@animateicons/react/lucide';
-import { Loader2 } from 'lucide-react';
+import { LoaderIcon } from '@animateicons/react/lucide';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -90,7 +90,7 @@ export default function LoginPage() {
                         disabled={loading}
                         className="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none mt-4"
                     >
-                        {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
+                        {loading ? <LoaderIcon className="animate-spin w-5 h-5" /> : (
                             <>
                                 <span>Ingresar</span>
                                 <ArrowRightIcon className="w-5 h-5" />

@@ -2,8 +2,7 @@
 
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, RefreshCwIcon } from '@animateicons/react/lucide';
-import { MoreHorizontal, AlertCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, RefreshCwIcon, MessageCircleMoreIcon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
 import React, { useState } from 'react';
 import { recalculateCardBalance } from '@/app/actions/budget/credit-cards';
 import { toast } from 'sonner';
@@ -81,7 +80,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
             ? 'text-red-700 dark:text-red-400'
             : 'text-emerald-700 dark:text-emerald-400';
 
-        const Icon = cutoffInfo.status === 'passed' ? CheckCircle : AlertTriangle;
+        const Icon = cutoffInfo.status === 'passed' ? CheckCheckIcon : TriangleAlertIcon;
 
         const message = cutoffInfo.status === 'passed'
             ? `Corte completado (${cutoffInfo.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })})`
@@ -188,7 +187,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <AlertCircle size={12} /> Pago Mínimo
+                            <TriangleAlertIcon size={12} /> Pago Mínimo
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             ~{formatMoney(minPayment)}
@@ -236,7 +235,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                         onClick={() => onDelete(card.id)}
                         className="px-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
-                        <MoreHorizontal size={20} />
+                        <MessageCircleMoreIcon size={20} />
                     </button>
                 </div>
             </div>

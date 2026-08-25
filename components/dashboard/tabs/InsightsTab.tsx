@@ -4,7 +4,8 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, CartesianGrid } from 'recharts';
 import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, TrendingDownIcon, DollarSignIcon, WalletIcon, CalendarIcon } from '@animateicons/react/lucide';
-import { Target, AlertTriangle, PieChart } from 'lucide-react';
+import { TriangleAlertIcon } from '@animateicons/react/lucide';
+import { Target, PieChart } from 'lucide-react';
 import { ProfileWithData } from '@/types';
 
 type Expense = ProfileWithData['expenses'][number];
@@ -194,7 +195,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                     <div>
                         <h3 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
                             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
-                                <PieChart size={24} />
+                                <PieChart className="lucide-animated" size={24} />
                             </div>
                             Desglose de Presupuestos
                         </h3>
@@ -225,7 +226,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                                                 <p className="font-bold text-zinc-900 dark:text-white text-base group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{cat.name}</p>
                                                 {cat.status === 'EXCEEDED' && (
                                                     <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-500 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider">
-                                                        <AlertTriangle size={8} /> Excedido
+                                                        <TriangleAlertIcon size={8} /> Excedido
                                                     </span>
                                                 )}
                                             </div>
@@ -270,7 +271,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                 {budgetComparison.length === 0 && (
                     <div className="p-12 text-center text-zinc-400 flex flex-col items-center justify-center min-h-[300px]">
                         <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-full mb-4">
-                            <PieChart className="w-12 h-12 opacity-20" />
+                            <PieChart className="w-12 h-12 opacity-20 lucide-animated" />
                         </div>
                         <p className="text-lg font-bold text-zinc-600 dark:text-zinc-300">No hay datos suficientes</p>
                         <p className="text-sm mt-1">Registra gastos para ver el análisis detallado.</p>

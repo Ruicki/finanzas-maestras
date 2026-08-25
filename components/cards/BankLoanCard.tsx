@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { calculateNextPaymentSplit, calculatePayoffImpact } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
 import { ZapIcon, ChevronDownIcon, TrendingDownIcon, CalendarIcon, PencilIcon } from '@animateicons/react/lucide';
-import { Landmark, MoreHorizontal } from 'lucide-react';
+import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
+import { Landmark } from 'lucide-react';
 
 interface BankLoanCardProps {
     loan: any;
@@ -42,7 +43,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 flex items-center justify-center shadow-inner">
-                            <Landmark size={24} />
+                            <Landmark className="lucide-animated" size={24} />
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-zinc-900 dark:text-white leading-tight">{loan.name}</h3>
@@ -123,7 +124,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                         onClick={() => onDelete(loan.id)}
                         className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
-                        <MoreHorizontal size={20} />
+                        <MessageCircleMoreIcon size={20} />
                     </button>
                 </div>
             </div>

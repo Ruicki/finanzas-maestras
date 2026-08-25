@@ -110,7 +110,7 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
                     {step === 1 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <OptionCard
-                                icon={<Landmark className="w-8 h-8 text-blue-500" />}
+                                icon={<Landmark className="w-8 h-8 text-blue-500 lucide-animated" />}
                                 title="Cuenta Bancaria"
                                 description="Corriente o Ahorros básicos"
                                 onClick={() => handleTypeSelect('BANK')}

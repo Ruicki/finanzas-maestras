@@ -4,7 +4,7 @@ import { createProfile, deleteProfile, getProfiles, resetProfileData, getGlobalS
 import { generateAccessCode, resetPassword } from '@/app/actions/auth';
 import { toast } from 'sonner';
 import { Trash2Icon, UserPlusIcon, KeyRoundIcon, EyeIcon, LockIcon, UsersIcon, DollarSignIcon, CreditCardIcon, TrendingUpIcon, FileTextIcon, HistoryIcon } from '@animateicons/react/lucide';
-import { AlertTriangle, ShieldAlert, Loader2 } from 'lucide-react';
+import { TriangleAlertIcon, ShieldXIcon, LoaderIcon } from '@animateicons/react/lucide';
 import { getAuditLogs } from '@/app/actions/audit';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 
@@ -112,7 +112,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                         <div>
                             <h3 className="font-black text-2xl text-zinc-900 dark:text-white flex items-center gap-3">
                                 <span className="bg-indigo-100 dark:bg-indigo-500/20 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
-                                    <ShieldAlert size={24} />
+                                    <ShieldXIcon size={24} />
                                 </span>
                                 Panel de Administración
                             </h3>
@@ -124,7 +124,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                     className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-indigo-500 transition-colors"
                                     title="Recargar lista"
                                 >
-                                    <Loader2 size={14} className={loading ? 'animate-spin' : ''} />
+                                    <LoaderIcon size={14} className={loading ? 'animate-spin' : ''} />
                                 </button>
                             </div>
                         </div>
@@ -238,7 +238,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                 )}
                                             </div>
                                             <p className="text-sm text-zinc-500 font-medium mt-1">
-                                                {profile.email || <span className="text-amber-500 italic flex items-center gap-1"><AlertTriangle size={12} /> Sin correo vinculado</span>}
+                                                {profile.email || <span className="text-amber-500 italic flex items-center gap-1"><TriangleAlertIcon size={12} /> Sin correo vinculado</span>}
                                             </p>
                                         </div>
                                     </div>

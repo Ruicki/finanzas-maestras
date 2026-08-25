@@ -3,7 +3,7 @@
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
 import { TrendingUpIcon, ArrowUpRightIcon, ArrowDownRightIcon, PiggyBankIcon } from '@animateicons/react/lucide';
-import { AlertTriangle } from 'lucide-react';
+import { TriangleAlertIcon } from '@animateicons/react/lucide';
 
 interface BudgetTableProps {
     categories: any[];
@@ -107,7 +107,7 @@ export default function BudgetTable({ categories, expenses, currentMonth, curren
                         <div className="space-y-2 mb-3">
                             {overLimit.map(cat => (
                                 <div key={cat.id} className="flex items-center gap-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg px-3 py-2">
-                                    <AlertTriangle size={14} className="text-red-500 shrink-0" />
+                                    <TriangleAlertIcon size={14} className="text-red-500 shrink-0" />
                                     <span className="text-xs font-bold text-red-700 dark:text-red-400 truncate flex-1">{cat.name}</span>
                                     <span className="text-xs font-bold text-red-600 dark:text-red-400">+{formatMoney(cat.spent - cat.effectiveLimit)}</span>
                                 </div>

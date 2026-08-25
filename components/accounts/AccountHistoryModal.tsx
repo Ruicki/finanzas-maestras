@@ -7,7 +7,7 @@ import {
     updateAccount,
 } from '@/app/actions/budget';
 import { XIcon, ArrowUpRightIcon, DollarSignIcon, CalendarIcon, RefreshCwIcon, TrendingUpIcon, TrendingDownIcon } from '@animateicons/react/lucide';
-import { ArrowDownLeft, ArrowRightLeft, ListOrdered, SlidersHorizontal, AlertCircle, Minus } from 'lucide-react';
+import { ArrowDownLeftIcon, ArrowLeftRightIcon, ListOrderedIcon, SlidersHorizontalIcon, TriangleAlertIcon, MinusIcon } from '@animateicons/react/lucide';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
@@ -113,10 +113,10 @@ export default function AccountHistoryModal({
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'INCOME':       return <ArrowDownLeft className="w-5 h-5 text-emerald-500" />;
+            case 'INCOME':       return <ArrowDownLeftIcon className="w-5 h-5 text-emerald-500" />;
             case 'EXPENSE':      return <ArrowUpRightIcon className="w-5 h-5 text-red-500" />;
-            case 'TRANSFER_IN':  return <ArrowRightLeft className="w-5 h-5 text-emerald-500" />;
-            case 'TRANSFER_OUT': return <ArrowRightLeft className="w-5 h-5 text-red-500" />;
+            case 'TRANSFER_IN':  return <ArrowLeftRightIcon className="w-5 h-5 text-emerald-500" />;
+            case 'TRANSFER_OUT': return <ArrowLeftRightIcon className="w-5 h-5 text-red-500" />;
             case 'SALARY':       return <DollarSignIcon className="w-5 h-5 text-emerald-500" />;
             default:             return <RefreshCwIcon className="w-5 h-5 text-zinc-400" />;
         }
@@ -177,7 +177,7 @@ export default function AccountHistoryModal({
                                 : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
                         }`}
                     >
-                        <ListOrdered className="w-4 h-4" />
+                        <ListOrderedIcon className="w-4 h-4" />
                         Movimientos
                     </button>
                     <button
@@ -188,7 +188,7 @@ export default function AccountHistoryModal({
                                 : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
                         }`}
                     >
-                        <SlidersHorizontal className="w-4 h-4" />
+                        <SlidersHorizontalIcon className="w-4 h-4" />
                         Configuración
                     </button>
                 </div>
@@ -207,7 +207,7 @@ export default function AccountHistoryModal({
                                         onClick={() => setIsAdjusting(true)}
                                         className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-amber-500 transition-colors"
                                     >
-                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <TriangleAlertIcon className="w-3.5 h-3.5" />
                                         ¿El saldo no coincide con tu banco? Corrígelo aquí
                                     </button>
                                 ) : (
@@ -361,7 +361,7 @@ export default function AccountHistoryModal({
                                     const diff = current - original;
                                     if (Math.abs(diff) < 0.01) return (
                                         <div className="flex items-center gap-1.5 text-xs text-zinc-400 mt-1.5">
-                                            <Minus className="w-3.5 h-3.5" />
+                                            <MinusIcon className="w-3.5 h-3.5" />
                                             Sin cambios
                                         </div>
                                     );

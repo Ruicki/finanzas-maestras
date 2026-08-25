@@ -241,7 +241,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             onClick={() => setShowProfileManager(true)}
                             className="bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
                         >
-                            <Briefcase className="w-5 h-5" />
+                            <Briefcase className="w-5 h-5 lucide-animated" />
                             <span className="hidden md:inline">Gestionar</span>
                         </button>
                     )}
@@ -330,7 +330,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         <div className="grid grid-cols-3 md:flex md:justify-between gap-1">
                             {/* Accounts */}
                             <button onClick={() => updateTab('accounts')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'accounts' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <Landmark size={18} />
+                                <Landmark className="lucide-animated" size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Cuentas</span>
                             </button>
                             {/* Incomes */}
@@ -345,7 +345,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </button>
                             {/* Goals */}
                             <button onClick={() => updateTab('goals')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'goals' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <Target size={18} />
+                                <Target className="lucide-animated" size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Metas</span>
                             </button>
                             {/* Debts */}

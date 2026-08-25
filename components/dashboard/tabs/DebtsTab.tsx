@@ -344,7 +344,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {loans.length > 0 && (
                 <div className="space-y-6">
                     <h3 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-                        <Building className="text-indigo-500" /> Mis Préstamos
+                        <Building className="text-indigo-500 lucide-animated" /> Mis Préstamos
                     </h3>
 
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

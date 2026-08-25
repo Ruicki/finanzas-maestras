@@ -1,4 +1,4 @@
-import { ZapIcon, SmartphoneIcon, WifiIcon, CreditCardIcon, WalletIcon, DollarSignIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { ZapIcon, SmartphoneIcon, WifiIcon, CreditCardIcon, WalletIcon, DollarSignIcon, PiggyBankIcon, TriangleAlertIcon, CheckCheckIcon, ShieldCheckIcon, BadgePercentIcon, ArrowLeftRightIcon, ShieldXIcon, PencilIcon, LoaderIcon, MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { Home, ShoppingBag, Car, Coffee, HeartPulse, GraduationCap, Plane, Dumbbell, Gamepad, Gift, Scissors, Shirt, Watch, Music, Briefcase, Baby, HelpCircle, Building, Landmark, Bitcoin } from 'lucide-react';
 
 interface CategoryIconProps {
@@ -36,10 +36,14 @@ const IconMap: Record<string, any> = {
     'PiggyBank': PiggyBankIcon
 };
 
+const LUCIDE_ICONS = new Set(['Home', 'ShoppingBag', 'Car', 'Coffee', 'HeartPulse', 'GraduationCap', 'Plane', 'Dumbbell', 'Gamepad', 'Gift', 'Scissors', 'Shirt', 'Watch', 'Music', 'Briefcase', 'Baby', 'Building', 'Landmark', 'Bitcoin']);
+
 export function CategoryIcon({ iconName, size = 20, className }: CategoryIconProps) {
     const IconComponent = IconMap[iconName] || HelpCircle;
+    const isLucide = LUCIDE_ICONS.has(iconName);
+    const animClass = isLucide ? 'lucide-animated' : '';
 
-    return <IconComponent size={size} className={className} />;
+    return <IconComponent size={size} className={`${animClass} ${className || ''}`.trim()} />;
 }
 
 export const AVAILABLE_ICONS = Object.keys(IconMap);

@@ -2,7 +2,7 @@
 
 import { formatMoney } from '@/lib/utils';
 import { ArrowUpRightIcon, UserIcon, CalendarIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
-import { MoreHorizontal } from 'lucide-react';
+import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 
 interface FriendLoanCardProps {
     loan: any;
@@ -113,7 +113,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                         onClick={() => onDelete(loan.id)}
                         className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
-                        <MoreHorizontal size={20} />
+                        <MessageCircleMoreIcon size={20} />
                     </button>
                 </div>
             </div>

@@ -127,7 +127,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
 
                     <div className="h-52 relative">
                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
+                            <PieChart className="lucide-animated">
                                 <Pie
                                     data={data503020}
                                     cx="50%"
@@ -240,7 +240,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                         {monthsCovered < 6 && monthlyBurn > 0 && (
                             <div className="bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-3">
                                 <div className="flex items-start gap-2">
-                                    <Target size={14} className="text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                                    <Target size={14} className="lucide-animated text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                                     <div className="text-xs text-emerald-700 dark:text-emerald-300">
                                         <p className="font-bold mb-1">
                                             {monthsMissing > 0 ? `Te faltan ${monthsMissing.toFixed(1)} meses` : '¡Meta alcanzada!'}
