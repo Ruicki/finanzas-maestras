@@ -6,7 +6,8 @@ type Account = ProfileWithData['accounts'][number];
 
 import { deleteAccount } from '@/app/actions/budget';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { Plus, Wallet, Landmark, PiggyBank, Banknote, ArrowRightLeft, MoreVertical, Eye, Pencil, Trash2, Lock } from 'lucide-react';
+import { PlusIcon, WalletIcon, PiggyBankIcon, BanknoteIcon, EyeIcon, PencilIcon, Trash2Icon, LockIcon } from '@animateicons/react/lucide';
+import { Landmark, ArrowRightLeft, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountWizard from '@/components/accounts/AccountWizard';
 import TransferModal from '@/components/accounts/TransferModal';
@@ -57,14 +58,14 @@ function AccountMenu({
                         onClick={() => { setOpen(false); onView(); }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
                     >
-                        <Eye className="w-4 h-4 text-indigo-500" />
+                        <EyeIcon className="w-4 h-4 text-indigo-500" />
                         Ver movimientos
                     </button>
                     <button
                         onClick={() => { setOpen(false); onEdit(); }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
                     >
-                        <Pencil className="w-4 h-4 text-amber-500" />
+                        <PencilIcon className="w-4 h-4 text-amber-500" />
                         Editar cuenta
                     </button>
                     {account.name !== 'Efectivo' && (
@@ -74,7 +75,7 @@ function AccountMenu({
                                 onClick={() => { setOpen(false); onDelete(); }}
                                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2Icon className="w-4 h-4" />
                                 Eliminar
                             </button>
                         </>
@@ -109,10 +110,10 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
     const getIcon = (type: string) => {
         switch (type) {
             case 'BANK':    return <Landmark className="w-6 h-6" />;
-            case 'CASH':    return <Banknote className="w-6 h-6" />;
-            case 'SAVINGS': return <PiggyBank className="w-6 h-6" />;
-            case 'WALLET':  return <Wallet className="w-6 h-6" />;
-            default:        return <Wallet className="w-6 h-6" />;
+            case 'CASH':    return <BanknoteIcon className="w-6 h-6" />;
+            case 'SAVINGS': return <PiggyBankIcon className="w-6 h-6" />;
+            case 'WALLET':  return <WalletIcon className="w-6 h-6" />;
+            default:        return <WalletIcon className="w-6 h-6" />;
         }
     };
 
@@ -186,7 +187,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </p>
                     {acc.lockDate && new Date(acc.lockDate) > new Date() && (
                         <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
-                            <Lock size={12} />
+                            <LockIcon size={12} />
                             Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
                         </p>
                     )}
@@ -221,7 +222,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                         onClick={() => setIsCreating(true)}
                         className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all"
                     >
-                        <Plus className="w-4 h-4" />
+                        <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva Cuenta</span>
                         <span className="sm:hidden">Nueva</span>
                     </button>

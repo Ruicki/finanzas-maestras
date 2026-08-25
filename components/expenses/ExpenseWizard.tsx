@@ -7,14 +7,8 @@ import { createExpense, updateExpense } from '@/app/actions/budget';
 import { getCategories } from '@/app/actions/categories';
 import { toast } from 'sonner';
 import * as LucideIcons from 'lucide-react';
-import {
-    CreditCard as CreditCardIcon,
-    Wallet,
-    Calendar,
-    Save,
-    X,
-    HelpCircle
-} from 'lucide-react';
+import { CreditCardIcon, WalletIcon, CalendarIcon, SaveIcon, XIcon } from '@animateicons/react/lucide';
+import { HelpCircle } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -257,7 +251,7 @@ export default function ExpenseWizard({
                                 onClick={() => setPaymentMethod('CASH')}
                                 className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-bold text-sm transition-all ${paymentMethod === 'CASH' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-400 hover:text-zinc-600'}`}
                             >
-                                <Wallet className="w-4 h-4" />
+                                <WalletIcon className="w-4 h-4" />
                                 Efectivo/Débito
                             </button>
                             <button
@@ -309,7 +303,7 @@ export default function ExpenseWizard({
             <div className="bg-zinc-50 dark:bg-zinc-900 rounded-3xl p-5 border border-zinc-100 dark:border-zinc-800 space-y-4">
                 <div>
                     <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase mb-3 pl-1">
-                        <Calendar className="w-4 h-4" />
+                        <CalendarIcon className="w-4 h-4" />
                         Fecha del Gasto
                     </label>
                     <input
@@ -365,7 +359,7 @@ export default function ExpenseWizard({
                     onClick={handleSave}
                     className="w-full md:w-auto md:max-w-[240px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
                 >
-                    <Save className="w-5 h-5" />
+                    <SaveIcon className="w-5 h-5" />
                     Guardar
                 </button>
             </div>
@@ -379,7 +373,7 @@ export default function ExpenseWizard({
                     onClick={onClose}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 hover:text-red-500 transition-colors z-10"
                 >
-                    <X className="w-6 h-6" />
+                    <XIcon className="w-6 h-6" />
                 </button>
 
                 {step === 1 && <div className="p-6 md:p-8 overflow-y-auto flex-1">{renderStep1_Categories()}</div>}

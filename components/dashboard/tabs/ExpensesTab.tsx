@@ -16,7 +16,7 @@ import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { updateCategoryLimit } from '@/app/actions/categories';
-import { Pencil, Search, Plus, Trash2, CreditCard as CardIcon, DollarSign, Wallet, ArrowUpDown, Filter } from 'lucide-react';
+import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon } from '@animateicons/react/lucide';
 
 interface ExpensesTabProps {
     expenses: ExpenseWithCategory[];
@@ -89,7 +89,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                         className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-zinc-900 dark:bg-zinc-100 px-8 font-bold text-white dark:text-black transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200 hover:scale-105 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 flex-1 md:flex-none"
                     >
                         <span className="flex items-center gap-2">
-                            <Plus className="w-5 h-5" /> Nuevo Gasto
+                            <PlusIcon className="w-5 h-5" /> Nuevo Gasto
                         </span>
                         <div className="absolute inset-0 -z-10 bg-linear-to-r from-indigo-500 to-purple-500 opacity-0 transition-opacity duration-500 group-hover:opacity-10" />
                     </button>
@@ -106,7 +106,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     <div className="relative z-10 flex flex-col justify-between h-full gap-6">
                         <div className="flex items-center gap-3">
                             <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/10 backdrop-blur-md border border-zinc-200 dark:border-white/10">
-                                <DollarSign className="w-6 h-6 text-[#1591DC] dark:text-white" />
+                                <DollarSignIcon className="w-6 h-6 text-[#1591DC] dark:text-white" />
                             </div>
                             <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Total este mes</span>
                         </div>
@@ -132,7 +132,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             <div className="sticky top-4 z-20 bg-white/80 dark:bg-black/80 backdrop-blur-xl p-2 rounded-4xl border border-zinc-200 dark:border-zinc-800 shadow-xl flex flex-col md:flex-row gap-2 md:items-center justify-between">
                 {/* Barra de Búsqueda */}
                 <div className="relative flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
                         type="text"
                         placeholder="Buscar gastos..."
@@ -144,7 +144,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                 {/* Filtro categoría */}
                 <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                    <FilterIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
@@ -159,7 +159,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                 {/* Ordenamiento */}
                 <div className="relative">
-                    <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                    <ArrowUpDownIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
@@ -246,7 +246,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                     <div className="text-right shrink-0">
                                                         <p className="font-black text-zinc-900 dark:text-white">-${exp.amount.toFixed(2)}</p>
                                                         <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs font-medium text-zinc-400 mt-1">
-                                                            {exp.linkedCardId ? <CardIcon size={10} /> : <Wallet size={10} />}
+                                                            {exp.linkedCardId ? <CardIcon size={10} /> : <WalletIcon size={10} />}
                                                             <span className="truncate max-w-[80px]">
                                                                 {exp.linkedCardId
                                                                     ? (creditCards.find(c => c.id === exp.linkedCardId)?.name || 'Tarjeta')
@@ -264,14 +264,14 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                     className="shrink-0 p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm"
                                                     title="Editar"
                                                 >
-                                                    <Pencil size={18} />
+                                                    <PencilIcon size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(exp.id)}
                                                     className="shrink-0 p-2 md:p-3 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm"
                                                     title="Eliminar"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2Icon size={18} />
                                                 </button>
                                             </div>
                                         </div>

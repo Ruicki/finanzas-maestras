@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { claimProfile } from '@/app/actions/auth';
 import { toast } from 'sonner';
-import { Loader2, ArrowRight, Lock, Mail, KeyRound } from 'lucide-react';
+import { ArrowRightIcon, LockIcon, MailIcon, KeyRoundIcon } from '@animateicons/react/lucide';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ClaimPage() {
@@ -44,7 +45,7 @@ export default function ClaimPage() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Código de Acceso</label>
                         <div className="relative">
-                            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
+                            <KeyRoundIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
                             <input
                                 name="code"
                                 type="text"
@@ -58,7 +59,7 @@ export default function ClaimPage() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Tu Correo Electrónico</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
+                            <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
                             <input
                                 name="email"
                                 type="email"
@@ -72,7 +73,7 @@ export default function ClaimPage() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Nueva Contraseña</label>
                         <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
+                            <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
                             <input
                                 name="password"
                                 type="password"
@@ -91,7 +92,7 @@ export default function ClaimPage() {
                         {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                             <>
                                 <span>Activar Cuenta</span>
-                                <ArrowRight className="w-5 h-5" />
+                                <ArrowRightIcon className="w-5 h-5" />
                             </>
                         )}
                     </button>

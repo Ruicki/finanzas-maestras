@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Account } from '@prisma/client';
 import { createIncome, updateIncome } from '@/app/actions/budget';
 import { createSalary } from '@/app/actions/salary';
-import { DollarSign, Building2, Wallet, Save } from 'lucide-react';
+import { DollarSignIcon, WalletIcon, SaveIcon } from '@animateicons/react/lucide';
+import { Building2 } from 'lucide-react';
 import SalaryCalculator from '@/components/salary/SalaryCalculator';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -172,7 +173,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     className="p-6 rounded-3xl border-2 border-zinc-100 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group flex flex-col items-center gap-4"
                 >
                     <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <DollarSign className="w-8 h-8" />
+                        <DollarSignIcon className="w-8 h-8" />
                     </div>
                     <div className="text-center">
                         <span className="block font-bold text-lg text-zinc-800 dark:text-zinc-200">Depósito / Transfer</span>
@@ -185,7 +186,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     className="p-6 rounded-3xl border-2 border-zinc-100 dark:border-zinc-800 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group flex flex-col items-center gap-4"
                 >
                     <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Wallet className="w-8 h-8" />
+                        <WalletIcon className="w-8 h-8" />
                     </div>
                     <div className="text-center">
                         <span className="block font-bold text-lg text-zinc-800 dark:text-zinc-200">Efectivo / Otro</span>
@@ -227,7 +228,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                             className={`p-4 rounded-3xl border-2 transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${salaryMode === 'MANUAL' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'}`}
                         >
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${salaryMode === 'MANUAL' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700'}`}>
-                                <DollarSign className="w-6 h-6" />
+                                <DollarSignIcon className="w-6 h-6" />
                             </div>
                             <div className="text-center z-10">
                                 <span className={`block font-bold text-sm ${salaryMode === 'MANUAL' ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-600 dark:text-zinc-400'}`}>Monto Exacto</span>
@@ -266,7 +267,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                         {type === 'SALARY' && !isEditing && (
                             <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 p-4 rounded-2xl flex items-start gap-3">
                                 <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600 dark:text-emerald-400 shrink-0">
-                                    <DollarSign className="w-5 h-5" />
+                                    <DollarSignIcon className="w-5 h-5" />
                                 </div>
                                 <div className="text-sm text-emerald-800 dark:text-emerald-200">
                                     <strong className="block font-bold mb-1">Registro Rápido</strong>
@@ -368,7 +369,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                                     'bg-amber-500 text-white shadow-amber-500/30'
                                 }`}
                         >
-                            <Save className="w-6 h-6" />
+                            <SaveIcon className="w-6 h-6" />
                             {isEditing ? 'Guardar Cambios' : type === 'SALARY' ? 'Registrar Salario' : 'Guardar Ingreso'}
                         </button>
                     </div>

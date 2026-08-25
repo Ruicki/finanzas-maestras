@@ -2,7 +2,8 @@
 
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { CreditCard, Wifi, MoreHorizontal, Calendar, TrendingUp, AlertCircle, Pencil, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, RefreshCwIcon } from '@animateicons/react/lucide';
+import { MoreHorizontal, AlertCircle, AlertTriangle, CheckCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { recalculateCardBalance } from '@/app/actions/budget/credit-cards';
 import { toast } from 'sonner';
@@ -115,7 +116,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
 
                 <div className="relative z-10 flex justify-between items-start">
                     <span className="font-bold text-lg tracking-tight text-zinc-100 truncate pr-4">{card.name}</span>
-                    <Wifi className="rotate-90 opacity-40 shrink-0" size={20} />
+                    <WifiIcon className="rotate-90 opacity-40 shrink-0" size={20} />
                 </div>
 
                 <div className="relative z-10 w-11 h-8 rounded bg-linear-to-tr from-amber-200 to-amber-100 shadow-sm opacity-90 border border-amber-300/20" />
@@ -126,7 +127,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500 mb-0.5">Titular</span>
                             <span className="font-mono text-sm tracking-widest text-zinc-300 uppercase">{cardholderName}</span>
                         </div>
-                        <CreditCard size={28} className="opacity-50" />
+                        <CreditCardIcon size={28} className="opacity-50" />
                     </div>
                 </div>
             </div>
@@ -151,7 +152,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                             className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all disabled:opacity-50"
                             title="Recalcular balance desde gastos y pagos"
                         >
-                            <RefreshCw size={14} className={recalculating ? 'animate-spin' : ''} />
+                            <RefreshCwIcon size={14} className={recalculating ? 'animate-spin' : ''} />
                         </button>
                         <span className={`text-xs font-bold px-2 py-1 rounded-md ${health.color.replace('text-', 'bg-').replace('400', '100').replace('500', '100')} ${health.color}`}>
                             {health.status === 'Excellent' ? 'Saludable' : health.status === 'Critical' ? 'Crítico' : 'Atención'}
@@ -179,7 +180,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                 <div className="grid grid-cols-2 gap-3 mb-5 p-4 bg-zinc-50 dark:bg-zinc-800/30 rounded-xl border border-zinc-100 dark:border-zinc-800">
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <TrendingUp size={12} /> Interés ({effectiveRate}%)
+                            <TrendingUpIcon size={12} /> Interés ({effectiveRate}%)
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             +{formatMoney(charges.interest)}
@@ -195,7 +196,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <Calendar size={12} /> Corte
+                            <CalendarIcon size={12} /> Corte
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             Día {card.cutoffDay}
@@ -206,7 +207,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <Calendar size={12} /> Pago
+                            <CalendarIcon size={12} /> Pago
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             Día {card.paymentDay}
@@ -228,7 +229,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                             className="px-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
-                            <Pencil size={20} />
+                            <PencilIcon size={20} />
                         </button>
                     )}
                     <button

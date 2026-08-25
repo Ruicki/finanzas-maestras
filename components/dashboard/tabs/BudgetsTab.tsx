@@ -5,7 +5,8 @@ import BudgetCard from '@/components/budgets/BudgetCard';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
 import SubscriptionCalendar from '@/components/budgets/SubscriptionCalendar';
 import { formatMoney } from '@/lib/utils';
-import { Plus, Calendar, TrendingDown, CreditCard, PieChart, Repeat, Wallet } from 'lucide-react';
+import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, WalletIcon } from '@animateicons/react/lucide';
+import { PieChart } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { deleteExpense } from '@/app/actions/budget';
@@ -64,9 +65,9 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
     const annualCost = totalSubscriptions * 12;
 
     const subTabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
-        { id: 'resumen', label: 'Regla 50/30/20', icon: <Wallet size={16} /> },
+        { id: 'resumen', label: 'Regla 50/30/20', icon: <WalletIcon size={16} /> },
         { id: 'categorias', label: 'Categorías', icon: <PieChart size={16} /> },
-        { id: 'suscripciones', label: 'Suscripciones', icon: <Repeat size={16} /> },
+        { id: 'suscripciones', label: 'Suscripciones', icon: <RepeatIcon size={16} /> },
     ];
 
     return (
@@ -180,7 +181,7 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="relative overflow-hidden rounded-3xl bg-indigo-600 text-white p-6 shadow-lg shadow-indigo-500/20">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <CreditCard size={18} className="text-indigo-200" />
+                                        <CreditCardIcon size={18} className="text-indigo-200" />
                                         <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider">Costo Mensual</p>
                                     </div>
                                     <p className="text-3xl font-black">{formatMoney(totalSubscriptions)}</p>
@@ -189,7 +190,7 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
 
                                 <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <TrendingDown size={18} className="text-red-500" />
+                                        <TrendingDownIcon size={18} className="text-red-500" />
                                         <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Costo Anual</p>
                                     </div>
                                     <p className="text-3xl font-black text-zinc-900 dark:text-white">{formatMoney(annualCost)}</p>
@@ -199,7 +200,7 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                 {nextDueDay && (
                                     <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <Calendar size={18} className="text-purple-500" />
+                                            <CalendarIcon size={18} className="text-purple-500" />
                                             <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Próximo Cobro</p>
                                         </div>
                                         <p className="text-3xl font-black text-zinc-900 dark:text-white">Día {nextDueDay}</p>
@@ -278,14 +279,14 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                     onClick={() => setShowWizard(true)}
                                     className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl flex flex-col items-center justify-center min-h-[140px] text-zinc-400 hover:text-indigo-500 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all group"
                                 >
-                                    <Plus size={28} className="mb-2 group-hover:scale-110 transition-transform" />
+                                    <PlusIcon size={28} className="mb-2 group-hover:scale-110 transition-transform" />
                                     <span className="text-xs font-bold">Nueva Suscripción</span>
                                 </button>
                             </div>
                         </>
                     ) : (
                         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
-                            <CreditCard size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
+                            <CreditCardIcon size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
                             <p className="text-sm font-bold text-zinc-500 mb-1">No tienes suscripciones</p>
                             <p className="text-xs text-zinc-400">Registra tus gastos recurrentes para controlar tu &quot;costo de vida&quot; base.</p>
                             <button

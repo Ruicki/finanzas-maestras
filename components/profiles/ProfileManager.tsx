@@ -3,7 +3,8 @@ import { Profile } from '@prisma/client';
 import { createProfile, deleteProfile, getProfiles, resetProfileData, getGlobalStats } from '@/app/actions/budget';
 import { generateAccessCode, resetPassword } from '@/app/actions/auth';
 import { toast } from 'sonner';
-import { Trash2, UserPlus, AlertTriangle, ShieldAlert, KeyRound, Loader2, Eye, Lock, Users, DollarSign, CreditCard, TrendingUp, FileText, History } from 'lucide-react';
+import { Trash2Icon, UserPlusIcon, KeyRoundIcon, EyeIcon, LockIcon, UsersIcon, DollarSignIcon, CreditCardIcon, TrendingUpIcon, FileTextIcon, HistoryIcon } from '@animateicons/react/lucide';
+import { AlertTriangle, ShieldAlert, Loader2 } from 'lucide-react';
 import { getAuditLogs } from '@/app/actions/audit';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 
@@ -142,25 +143,25 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                     {stats && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <StatCard
-                                icon={<Users size={18} className="text-blue-500" />}
+                                icon={<UsersIcon size={18} className="text-blue-500" />}
                                 label="Usuarios"
                                 value={stats.users}
                                 bg="bg-blue-50 dark:bg-blue-900/10"
                             />
                             <StatCard
-                                icon={<DollarSign size={18} className="text-emerald-500" />}
+                                icon={<DollarSignIcon size={18} className="text-emerald-500" />}
                                 label="Dinero Total"
                                 value={`$${stats.money.toLocaleString()}`}
                                 bg="bg-emerald-50 dark:bg-emerald-900/10"
                             />
                             <StatCard
-                                icon={<CreditCard size={18} className="text-purple-500" />}
+                                icon={<CreditCardIcon size={18} className="text-purple-500" />}
                                 label="Deuda Total"
                                 value={`$${stats.debt.toLocaleString()}`}
                                 bg="bg-purple-50 dark:bg-purple-900/10"
                             />
                             <StatCard
-                                icon={<TrendingUp size={18} className="text-orange-500" />}
+                                icon={<TrendingUpIcon size={18} className="text-orange-500" />}
                                 label="Gastos Totales"
                                 value={`$${stats.expenses.toLocaleString()}`}
                                 bg="bg-orange-50 dark:bg-orange-900/10"
@@ -185,7 +186,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                 disabled={!newProfileName.trim()}
                                 className="w-full md:w-auto shrink-0 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
                             >
-                                <UserPlus size={20} />
+                                <UserPlusIcon size={20} />
                                 <span>Crear</span>
                             </button>
                         </div>
@@ -258,7 +259,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                 className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-indigo-100 dark:border-indigo-500/20"
                                                 title="Ver como este usuario"
                                             >
-                                                <Eye size={14} />
+                                                <EyeIcon size={14} />
                                                 <span>Ver Como</span>
                                             </button>
                                         )}
@@ -270,7 +271,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                 className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-zinc-200 dark:border-zinc-700"
                                                 title="Restablecer Contraseña"
                                             >
-                                                <Lock size={14} />
+                                                <LockIcon size={14} />
                                                 <span>Reset</span>
                                             </button>
                                         )}
@@ -288,7 +289,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                 }}
                                                 className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-500 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-amber-100 dark:border-amber-500/20"
                                             >
-                                                <KeyRound size={14} />
+                                                <KeyRoundIcon size={14} />
                                                 <span>Código</span>
                                             </button>
                                         )}
@@ -307,7 +308,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                             className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/10 hover:bg-orange-100 dark:hover:bg-orange-900/20 text-orange-600 dark:text-orange-500 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-orange-100 dark:border-orange-500/20"
                                             title="Borrar transacciones y resetear saldos"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2Icon size={14} />
                                             <span>Reset Datos</span>
                                         </button>
 
@@ -317,7 +318,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                 onClick={() => handleDelete(profile.id)}
                                                 className="flex items-center gap-2 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-500 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-red-100 dark:border-red-500/20"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2Icon size={14} />
                                                 <span>Eliminar</span>
                                             </button>
                                         )}
@@ -332,7 +333,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                             onClick={() => setShowLogs(!showLogs)}
                             className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors w-full"
                         >
-                            <History size={16} />
+                            <HistoryIcon size={16} />
                             <span className="font-bold text-sm">Registro de Auditoría</span>
                             <span className="ml-auto text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md hidden md:block">
                                 {showLogs ? 'Ocultar' : 'Mostrar'} últimos eventos

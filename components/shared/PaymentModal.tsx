@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { calculateMinimumPayment } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { X, CreditCard, Check } from 'lucide-react';
+import { XIcon, CreditCardIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
@@ -78,7 +78,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-                            <CreditCard className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                            <CreditCardIcon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
                         </div>
                         <div>
                             <h2 className="font-bold text-lg text-zinc-900 dark:text-white">Pagar Tarjeta</h2>
@@ -86,7 +86,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-zinc-400" />
+                        <XIcon className="w-5 h-5 text-zinc-400" />
                     </button>
                 </div>
 
@@ -225,7 +225,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         ) : (
                             <>
-                                <Check className="w-4 h-4" />
+                                <CheckIcon className="w-4 h-4" />
                                 Confirmar
                             </>
                         )}

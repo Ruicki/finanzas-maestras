@@ -1,9 +1,5 @@
-import {
-    Home, ShoppingBag, Car, Coffee, Zap, HeartPulse, GraduationCap,
-    Smartphone, Plane, Dumbbell, Gamepad, Gift, Scissors, Shirt,
-    Watch, Music, Wifi, CreditCard, Briefcase, Baby, HelpCircle,
-    Wallet, Building, Landmark, DollarSign, Bitcoin, PiggyBank
-} from 'lucide-react';
+import { ZapIcon, SmartphoneIcon, WifiIcon, CreditCardIcon, WalletIcon, DollarSignIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { Home, ShoppingBag, Car, Coffee, HeartPulse, GraduationCap, Plane, Dumbbell, Gamepad, Gift, Scissors, Shirt, Watch, Music, Briefcase, Baby, HelpCircle, Building, Landmark, Bitcoin } from 'lucide-react';
 
 interface CategoryIconProps {
     iconName: string;
@@ -16,10 +12,10 @@ const IconMap: Record<string, any> = {
     'ShoppingBag': ShoppingBag,
     'Car': Car,
     'Coffee': Coffee,
-    'Zap': Zap,
+    'Zap': ZapIcon,
     'HeartPulse': HeartPulse,
     'GraduationCap': GraduationCap,
-    'Smartphone': Smartphone,
+    'Smartphone': SmartphoneIcon,
     'Plane': Plane,
     'Dumbbell': Dumbbell,
     'Gamepad': Gamepad,
@@ -28,16 +24,16 @@ const IconMap: Record<string, any> = {
     'Shirt': Shirt,
     'Watch': Watch,
     'Music': Music,
-    'Wifi': Wifi,
-    'CreditCard': CreditCard,
+    'Wifi': WifiIcon,
+    'CreditCard': CreditCardIcon,
     'Briefcase': Briefcase,
     'Baby': Baby,
-    'Wallet': Wallet,
+    'Wallet': WalletIcon,
     'Building': Building,
     'Landmark': Landmark,
-    'DollarSign': DollarSign,
+    'DollarSign': DollarSignIcon,
     'Bitcoin': Bitcoin,
-    'PiggyBank': PiggyBank
+    'PiggyBank': PiggyBankIcon
 };
 
 export function CategoryIcon({ iconName, size = 20, className }: CategoryIconProps) {

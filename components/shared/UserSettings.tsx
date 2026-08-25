@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { updateProfile } from '@/app/actions/auth';
 import { toast } from 'sonner';
-import { X, User, Mail, Lock, Save } from 'lucide-react';
+import { XIcon, UserIcon, MailIcon, LockIcon, SaveIcon } from '@animateicons/react/lucide';
 import { Profile } from '@prisma/client';
 
 interface UserSettingsProps {
@@ -47,14 +47,14 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
                         Ajustes de Usuario
                     </h3>
                     <button onClick={onClose} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full">
-                        <X size={20} />
+                        <XIcon size={20} />
                     </button>
                 </div>
 
                 <form action={handleSubmit} className="p-6 space-y-5">
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            <User size={14} /> Nombre
+                            <UserIcon size={14} /> Nombre
                         </label>
                         <input
                             name="name"
@@ -66,7 +66,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
 
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            <Mail size={14} /> Correo Electrónico
+                            <MailIcon size={14} /> Correo Electrónico
                         </label>
                         <input
                             name="email"
@@ -79,7 +79,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
 
                     <div className="space-y-2 pt-2 border-t border-dashed border-zinc-200 dark:border-zinc-800">
                         <label className="text-xs font-bold text-orange-500 uppercase tracking-wider flex items-center gap-2">
-                            <Lock size={14} /> Cambiar Contraseña
+                            <LockIcon size={14} /> Cambiar Contraseña
                         </label>
                         <input
                             name="password"
@@ -121,7 +121,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
                         disabled={loading}
                         className="w-full bg-black dark:bg-white text-white dark:text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
                     >
-                        {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <><Save size={18} /> Guardar Cambios</>}
+                        {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <><SaveIcon size={18} /> Guardar Cambios</>}
                     </button>
                 </form>
             </div>

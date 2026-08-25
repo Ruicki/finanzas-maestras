@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { calculateNextPaymentSplit, calculatePayoffImpact } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { Zap, ChevronDown, Landmark, TrendingDown, Calendar, MoreHorizontal, Pencil } from 'lucide-react';
+import { ZapIcon, ChevronDownIcon, TrendingDownIcon, CalendarIcon, PencilIcon } from '@animateicons/react/lucide';
+import { Landmark, MoreHorizontal } from 'lucide-react';
 
 interface BankLoanCardProps {
     loan: any;
@@ -78,7 +79,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <Calendar size={12} /> Cuota Mensual
+                            <CalendarIcon size={12} /> Cuota Mensual
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             {formatMoney(monthlyPayment)}
@@ -86,7 +87,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <TrendingDown size={12} /> Interés / Mes
+                            <TrendingDownIcon size={12} /> Interés / Mes
                         </span>
                         <span className="text-sm font-bold text-rose-500">
                             ~{formatMoney(split.interest)}
@@ -108,14 +109,14 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                             className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
-                            <Pencil size={20} />
+                            <PencilIcon size={20} />
                         </button>
                     )}
                     <button
                         onClick={() => setSimulating(!simulating)}
                         className={`px-4 py-3 rounded-xl font-bold text-sm border transition-all flex items-center gap-2 ${simulating ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-400' : 'bg-white dark:bg-transparent border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
                     >
-                        <Zap size={16} className={simulating ? "fill-current" : ""} />
+                        <ZapIcon size={16} className={simulating ? "fill-current" : ""} />
                         <span>Ahorro</span>
                     </button>
                     <button
@@ -132,7 +133,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                 <div className="bg-indigo-50/80 dark:bg-indigo-950/20 border-t border-indigo-100 dark:border-indigo-900/30 p-6 animate-in slide-in-from-bottom-2 backdrop-blur-sm">
                     <div className="flex gap-4 items-center">
                         <div className="p-2 bg-white dark:bg-indigo-900/50 rounded-full text-indigo-500 shadow-sm">
-                            <Zap size={18} fill="currentColor" />
+                            <ZapIcon size={18} className="text-indigo-500 fill-indigo-500" />
                         </div>
                         <div className="flex-1">
                             <p className="text-xs font-bold text-zinc-500 uppercase">Impacto de +$50/mes</p>

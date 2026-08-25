@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Smartphone, Shield, BarChart3, PieChart, Wallet } from 'lucide-react';
+import { ArrowRightIcon, SmartphoneIcon, WalletIcon } from '@animateicons/react/lucide';
+import { CheckCircle, Shield, BarChart3, PieChart } from 'lucide-react';
 
 export default function LandingPage() {
     return (
@@ -53,7 +54,7 @@ export default function LandingPage() {
                             className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2"
                         >
                             Crear Cuenta Gratis
-                            <ArrowRight size={20} />
+                            <ArrowRightIcon size={20} />
                         </Link>
                         <Link
                             href="/login"
@@ -87,7 +88,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <FeatureCard
-                            icon={<Wallet className="w-8 h-8 text-pink-500" />}
+                            icon={<WalletIcon className="w-8 h-8 text-pink-500" />}
                             title="Control de Gastos"
                             desc="Categoriza cada centavo. Visualiza a dónde va tu dinero con gráficos intuitivos."
                         />
@@ -133,7 +134,7 @@ export default function LandingPage() {
                         className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-10 py-5 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl relative z-10"
                     >
                         Únete Ahora
-                        <ArrowRight />
+                        <ArrowRightIcon />
                     </Link>
                 </div>
             </section>

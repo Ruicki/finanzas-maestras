@@ -3,7 +3,8 @@
 
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, CartesianGrid } from 'recharts';
-import { ArrowUp, ArrowDown, Target, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Wallet, Calendar, PieChart } from 'lucide-react';
+import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, TrendingDownIcon, DollarSignIcon, WalletIcon, CalendarIcon } from '@animateicons/react/lucide';
+import { Target, AlertTriangle, PieChart } from 'lucide-react';
 import { ProfileWithData } from '@/types';
 
 type Expense = ProfileWithData['expenses'][number];
@@ -106,7 +107,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                 <div className="lg:col-span-2 relative h-80 w-full bg-linear-to-b from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-[2.5rem] overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 group">
                     <div className="absolute top-6 left-8 z-10">
                         <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
-                            <TrendingUp size={14} className="text-zinc-400 dark:text-zinc-600" />
+                            <TrendingUpIcon size={14} className="text-zinc-400 dark:text-zinc-600" />
                             Evolución de Gasto Mensual
                         </p>
                         <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
@@ -158,7 +159,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
                 {/* B. Tarjeta de Resumen Mensual (Pequeña) */}
                 <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-5">
-                        <Wallet className="w-32 h-32" />
+                        <WalletIcon className="w-32 h-32" />
                     </div>
 
                     <div>

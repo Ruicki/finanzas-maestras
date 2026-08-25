@@ -11,6 +11,7 @@
     "release": "prisma migrate deploy && next start"
   },
   "dependencies": {
+    "@animateicons/react": "^0.4.3",
     "@prisma/client": "^5.10.0",
     "@radix-ui/react-tabs": "^1.1.13",
     "@types/bcryptjs": "^2.4.6",
@@ -22,6 +23,7 @@
     "framer-motion": "^12.29.2",
     "jose": "^6.1.3",
     "lucide-react": "^0.562.0",
+    "motion": "^13.1.1",
     "next": "16.1.1",
     "next-themes": "^0.4.6",
     "react": "19.2.3",

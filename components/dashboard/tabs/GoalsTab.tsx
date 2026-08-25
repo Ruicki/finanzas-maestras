@@ -10,7 +10,7 @@ import { createGoal, deleteGoal, handleGoalTransaction, updateGoal, deleteGoalWi
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { Pencil, Trash2, X, PiggyBank, Calculator, Plus, Eye, EyeOff, Calendar } from 'lucide-react';
+import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalculatorIcon, PlusIcon, EyeIcon, EyeOffIcon, CalendarIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface GoalsTabProps {
@@ -179,15 +179,15 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
                 {/* ACCIONES */}
                 <div className="flex gap-1">
-                    <button onClick={() => openEditGoalModal(goal)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><Pencil size={18} /></button>
-                    <button onClick={() => handleSmartDelete(goal)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                    <button onClick={() => openEditGoalModal(goal)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><PencilIcon size={18} /></button>
+                    <button onClick={() => handleSmartDelete(goal)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><Trash2Icon size={18} /></button>
                 </div>
 
 
                 {/* MONTO PRINCIPAL - LÓGICA DE ALCANCÍA */}
                 <div className="flex items-end gap-3 mb-6 cursor-pointer group/piggy">
                     <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 rotate-0 group-hover/piggy:rotate-12 transition-all duration-500">
-                        <PiggyBank size={32} />
+                        <PiggyBankIcon size={32} />
                     </div>
                     <div>
                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Ahorrado</p>
@@ -254,7 +254,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-3xl animate-in fade-in slide-in-from-top-4">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="text-xs font-bold text-zinc-500 uppercase">Gestionar Fondos</span>
-                                        <button onClick={() => setExpandedGoalId(null)} className="p-1 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:text-zinc-800"><X size={14} /></button>
+                                        <button onClick={() => setExpandedGoalId(null)} className="p-1 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:text-zinc-800"><XIcon size={14} /></button>
                                     </div>
 
                                     <div className="flex items-center gap-2 mb-4 bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700">
@@ -325,7 +325,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                             }}
                                             className="py-4 rounded-2xl bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            <span className="flex items-center gap-1.5"><Calendar size={14} /> Pagar Cuota</span>
+                                            <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
                                             <span className="text-xs opacity-80 font-medium">${Number(goal.contributionAmount).toFixed(2)}</span>
                                         </button>
 
@@ -338,7 +338,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                             }}
                                             className="py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 border border-dashed border-zinc-200 dark:border-zinc-700"
                                         >
-                                            <span className="flex items-center gap-1.5"><Plus size={14} /> Abonar Extra</span>
+                                            <span className="flex items-center gap-1.5"><PlusIcon size={14} /> Abonar Extra</span>
                                             <span className="text-xs opacity-80 font-medium">U Otra Cantidad</span>
                                         </button>
                                     </div>
@@ -356,7 +356,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         }}
                                         className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:text-zinc-900 dark:group-hover:text-white border border-dashed border-zinc-200 dark:border-zinc-700"
                                     >
-                                        <Plus size={18} />
+                                        <PlusIcon size={18} />
                                         <span>Agregar / Retirar</span>
                                     </button>
                                 )
@@ -476,11 +476,11 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                     onClick={openNewGoalModal}
                     className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-[#FF62BB] text-[#FF62BB] dark:text-white hover:bg-pink-50 dark:hover:bg-[#FF97D0] px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95"
                 >
-                    <Plus size={24} />
+                    <PlusIcon size={24} />
                     Nueva Meta
                 </button>
                 {/* Decoración */}
-                <PiggyBank className="absolute -bottom-6 -right-6 w-48 h-48 text-white opacity-10 rotate-12" />
+                <PiggyBankIcon className="absolute -bottom-6 -right-6 w-48 h-48 text-white opacity-10 rotate-12" />
             </div>
 
             {/* CUADRÍCULA DE METAS */}
@@ -493,7 +493,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
                 {goals.length === 0 && (
                     <div className="col-span-full py-20 text-center text-zinc-400">
-                        <PiggyBank size={64} className="mx-auto mb-4 opacity-20" />
+                        <PiggyBankIcon size={64} className="mx-auto mb-4 opacity-20" />
                         <p className="text-xl font-bold">Sin metas activas</p>
                         <p>¡Crea tu primera alcancía virtual hoy!</p>
                     </div>
@@ -506,7 +506,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                     <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 text-center">
                         <div className="mb-6 flex justify-center">
                             <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-full animate-bounce">
-                                <PiggyBank size={48} />
+                                <PiggyBankIcon size={48} />
                             </div>
                         </div>
 
@@ -570,7 +570,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             <h3 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                                 {editingGoalId ? 'Editar Meta' : 'Nueva Meta'}
                             </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full hover:bg-zinc-200 transition-colors"><X size={20} /></button>
+                            <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full hover:bg-zinc-200 transition-colors"><XIcon size={20} /></button>
                         </div>
 
                         <div className="space-y-6">
@@ -612,7 +612,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                             className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${form.type === 'VARIABLE' ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-white dark:border-white dark:text-black' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300'}`}
                                         >
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                                                <PiggyBank size={48} />
+                                                <PiggyBankIcon size={48} />
                                             </div>
                                             <div className="relative z-10">
                                                 <span className="block text-2xl mb-1">🐖</span>
@@ -626,7 +626,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                             className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${form.type === 'FIXED' ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-white dark:border-white dark:text-black' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300'}`}
                                         >
                                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                                                <Calendar size={48} />
+                                                <CalendarIcon size={48} />
                                             </div>
                                             <div className="relative z-10">
                                                 <span className="block text-2xl mb-1">📅</span>
@@ -642,7 +642,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             {form.targetAmount && form.deadline && recommended && (
                                 <div className="bg-indigo-50 dark:bg-indigo-900/20 p-5 rounded-3xl border border-indigo-100 dark:border-indigo-800/30">
                                     <div className="flex items-center gap-2 mb-3 text-indigo-600 dark:text-indigo-400">
-                                        <Calculator size={20} />
+                                        <CalculatorIcon size={20} />
                                         <span className="font-bold text-sm">Calculadora Inteligente</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2 text-center">

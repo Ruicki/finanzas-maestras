@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { formatMoney } from '@/lib/utils';
 import { updateCategoryLimit } from '@/app/actions/budget';
 import { toast } from 'sonner';
-import { Edit2, Check, X } from 'lucide-react';
+import { CheckIcon, XIcon } from '@animateicons/react/lucide';
+import { Edit2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
@@ -103,10 +104,10 @@ export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardP
                                         />
                                     </div>
                                     <button onClick={handleSaveLimit} className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                                        <Check size={14} />
+                                        <CheckIcon size={14} />
                                     </button>
                                     <button onClick={() => setIsEditing(false)} className="p-1.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 rounded-lg hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors">
-                                        <X size={14} />
+                                        <XIcon size={14} />
                                     </button>
                                 </div>
                             ) : (

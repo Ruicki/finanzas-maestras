@@ -10,7 +10,7 @@ import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import SalaryCalculator from '@/components/salary/SalaryCalculator';
 import IncomeHistory from '@/components/salary/SalaryHistory';
 import IncomeWizard from '@/components/incomes/IncomeWizard';
-import { Plus } from 'lucide-react';
+import { PlusIcon } from '@animateicons/react/lucide';
 
 interface IncomesTabProps {
     incomes: AdditionalIncome[];
@@ -52,7 +52,7 @@ export default function IncomesTab({ incomes, salaries, accounts, profileId, cus
                             onClick={() => { setIncomeToEdit(null); setShowIncomeWizard(true); }}
                             className="w-20 h-20 bg-zinc-100 dark:bg-white/10 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm cursor-pointer hover:scale-110 transition-transform"
                         >
-                            <Plus className="w-8 h-8 text-[#237227] dark:text-white" />
+                            <PlusIcon className="w-8 h-8 text-[#237227] dark:text-white" />
                         </div>
                         <h3 className="text-3xl font-black mb-2 tracking-tight">Nuevo Ingreso</h3>
                         <p className="text-zinc-500 dark:text-white/70 max-w-sm mx-auto text-lg leading-relaxed">

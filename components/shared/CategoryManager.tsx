@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ProfileWithData } from '@/types';
 import { createCategory, deleteCategory, updateCategory } from '@/app/actions/categories';
 import { toast } from 'sonner';
-import { X, Plus, Trash2, Pencil, Check } from 'lucide-react';
+import { XIcon, PlusIcon, Trash2Icon, PencilIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { CategoryIcon, AVAILABLE_ICONS } from './CategoryIcon';
 
@@ -90,7 +90,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                         {view === 'list' ? 'Gestionar Categorías' : editId ? 'Editar Categoría' : 'Nueva Categoría'}
                     </h3>
                     <button onClick={onClose} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                        <X size={20} className="text-zinc-500" />
+                        <XIcon size={20} className="text-zinc-500" />
                     </button>
                 </div>
 
@@ -103,7 +103,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                 onClick={openCreate}
                                 className="w-full py-4 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 font-bold hover:border-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-all flex items-center justify-center gap-2"
                             >
-                                <Plus size={20} /> Crear Nueva Categoría
+                                <PlusIcon size={20} /> Crear Nueva Categoría
                             </button>
 
                             <div className="grid gap-3">
@@ -124,14 +124,14 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                                 className="p-2 text-zinc-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
                                                 title="Editar"
                                             >
-                                                <Pencil size={18} />
+                                                <PencilIcon size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(cat.id)}
                                                 className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                                                 title="Eliminar"
                                             >
-                                                <Trash2 size={18} />
+                                                <Trash2Icon size={18} />
                                             </button>
                                         </div>
                                     </div>
@@ -179,7 +179,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                                     onClick={() => setNewColor(c)}
                                                     className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${c.replace('text-', 'bg-')} ${newColor === c ? 'ring-2 ring-offset-2 ring-zinc-400 scale-110' : ''}`}
                                                 >
-                                                    {newColor === c && <Check size={14} className="text-white mx-auto" />}
+                                                    {newColor === c && <CheckIcon size={14} className="text-white mx-auto" />}
                                                 </button>
                                             ))}
                                         </div>
