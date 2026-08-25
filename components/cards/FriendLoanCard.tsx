@@ -1,7 +1,8 @@
 'use client';
 
 import { formatMoney } from '@/lib/utils';
-import { ArrowUpRight, User, MoreHorizontal, Calendar, TrendingDown, PiggyBank, Pencil } from 'lucide-react';
+import { ArrowUpRightIcon, UserIcon, CalendarIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
+import { MoreHorizontal } from 'lucide-react';
 
 interface FriendLoanCardProps {
     loan: any;
@@ -31,7 +32,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 flex items-center justify-center shadow-inner">
-                            <User size={24} />
+                            <UserIcon size={24} />
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-zinc-900 dark:text-white leading-tight">{loan.name}</h3>
@@ -68,7 +69,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <PiggyBank size={12} /> Total Pagado
+                            <PiggyBankIcon size={12} /> Total Pagado
                         </span>
                         <span className="text-sm font-bold text-emerald-600 dark:text-emerald-500">
                             {formatMoney(paidAmount)}
@@ -76,7 +77,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase">
-                            <TrendingDown size={12} /> Estado
+                            <TrendingDownIcon size={12} /> Estado
                         </span>
                         <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                             {progress >= 100 ? 'Completado' : 'En Progreso'}
@@ -90,7 +91,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                         onClick={() => onQuickPay(loan, 20)}
                         className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
                     >
-                        <ArrowUpRight size={16} />
+                        <ArrowUpRightIcon size={16} />
                         Abonar $20
                     </button>
                     <button
@@ -105,7 +106,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                             className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
-                            <Pencil size={20} />
+                            <PencilIcon size={20} />
                         </button>
                     )}
                     <button

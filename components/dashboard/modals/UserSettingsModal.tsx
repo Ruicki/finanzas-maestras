@@ -7,7 +7,7 @@ import { Input } from '../../ui/Input';
 import { ProfileWithData } from '@/types';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
 import { resetProfileData } from '@/app/actions/budget';
 
 interface UserSettingsModalProps {
@@ -112,14 +112,14 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                     <div className="space-y-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-bold flex items-center gap-2">
-                                <ShieldCheck size={16} className="text-indigo-500" />
+                                <ShieldCheckIcon size={16} className="text-indigo-500" />
                                 Seguridad
                             </label>
                             <button
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 flex items-center gap-1 transition-colors"
                             >
-                                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                {showPassword ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
                                 {showPassword ? 'Ocultar' : 'Mostrar'}
                             </button>
                         </div>

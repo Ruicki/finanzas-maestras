@@ -5,7 +5,8 @@ import { ProfileWithData } from '@/types';
 import { deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { Plus, TrendingDown, CreditCard, Percent } from 'lucide-react';
+import { PlusIcon, TrendingDownIcon, CreditCardIcon } from '@animateicons/react/lucide';
+import { Percent } from 'lucide-react';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
 import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import PaymentModal from '@/components/shared/PaymentModal';
@@ -24,8 +25,8 @@ interface CreditCardsTabProps {
 
 export default function CreditCardsTab({ creditCards, accounts, profileId, profileName, onUpdate }: CreditCardsTabProps) {
     const [showWizard, setShowWizard] = useState(false);
-    const [payingCard, setPayingCard] = useState<CreditCard | null>(null);
-    const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
+    const [payingCard, setPayingCard] = useState<any | null>(null);
+    const [editingCard, setEditingCard] = useState<any | null>(null);
 
     // Strategy
     const [strategy, setStrategy] = useState<'SNOWBALL' | 'AVALANCHE'>('SNOWBALL');
@@ -71,14 +72,14 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <TrendingDown size={14} className="text-red-500" />
+                        <TrendingDownIcon size={14} className="text-red-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Deuda Total</span>
                     </div>
                     <p className="text-xl font-black text-red-500">${totalDebt.toFixed(2)}</p>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <CreditCard size={14} className="text-[#1591DC]" />
+                        <CreditCardIcon size={14} className="text-[#1591DC]" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Disponible</span>
                     </div>
                     <p className="text-xl font-black text-[#1591DC]">${totalAvailable.toFixed(2)}</p>
@@ -92,7 +93,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                 </div>
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <CreditCard size={14} className="text-zinc-400" />
+                        <CreditCardIcon size={14} className="text-zinc-400" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Tarjetas</span>
                     </div>
                     <p className="text-xl font-black text-zinc-900 dark:text-white">{creditCards.length}</p>
@@ -128,7 +129,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         onClick={() => setShowWizard(true)}
                         className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
-                        <Plus className="w-4 h-4" />
+                        <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva</span>
                     </button>
                 </div>

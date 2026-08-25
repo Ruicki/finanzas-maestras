@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { BANK_PRESETS, BANK_OPTIONS } from '@/lib/credit-card-presets';
-import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { XIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
@@ -108,7 +108,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                     <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                         <h2 className="font-bold text-lg text-zinc-900 dark:text-white">Nueva Tarjeta de Crédito</h2>
                         <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                            <X className="w-5 h-5 text-zinc-400" />
+                            <XIcon className="w-5 h-5 text-zinc-400" />
                         </button>
                     </div>
 
@@ -150,7 +150,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                             className="w-full py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                         >
                             Siguiente
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronRightIcon className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -166,7 +166,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <button onClick={() => setStep(1)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                            <ChevronLeft className="w-5 h-5 text-zinc-400" />
+                            <ChevronLeftIcon className="w-5 h-5 text-zinc-400" />
                         </button>
                         <div>
                             <h2 className="font-bold text-lg text-zinc-900 dark:text-white">{getDisplayName()}</h2>
@@ -174,7 +174,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-zinc-400" />
+                        <XIcon className="w-5 h-5 text-zinc-400" />
                     </button>
                 </div>
 
@@ -336,7 +336,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         ) : (
                             <>
-                                <Check className="w-4 h-4" />
+                                <CheckIcon className="w-4 h-4" />
                                 Crear Tarjeta
                             </>
                         )}

@@ -3,7 +3,8 @@
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { ShieldCheck, TrendingUp, Calculator, Target, ArrowRight, DollarSign, PiggyBank } from 'lucide-react';
+import { ShieldCheckIcon, TrendingUpIcon, CalculatorIcon, ArrowRightIcon, DollarSignIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { Target } from 'lucide-react';
 
 interface FinancialRulesProps {
     income: number;
@@ -68,7 +69,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
             {/* EXECUTIVE SUMMARY */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                    <DollarSign size={18} className="text-zinc-400" />
+                    <DollarSignIcon size={18} className="text-zinc-400" />
                     <h3 className="font-bold text-zinc-700 dark:text-zinc-200">Resumen Ejecutivo</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -113,7 +114,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
-                            <TrendingUp size={18} className="text-blue-500" />
+                            <TrendingUpIcon size={18} className="text-blue-500" />
                             Regla 50/30/20
                         </h3>
                     </div>
@@ -176,7 +177,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 <div className={`rounded-3xl p-6 border shadow-sm flex flex-col ${dtiBg}`}>
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
-                            <Calculator size={18} className="text-purple-500" />
+                            <CalculatorIcon size={18} className="text-purple-500" />
                             Endeudamiento
                         </h3>
                         <div className="text-[10px] font-bold px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-500">
@@ -201,7 +202,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
-                            <ShieldCheck size={18} className="text-emerald-500" />
+                            <ShieldCheckIcon size={18} className="text-emerald-500" />
                             Fondo Emergencia
                         </h3>
                         <div className="text-[10px] font-bold px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-500">
@@ -241,7 +242,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                                         {monthlySavingsNeeded > 0 && (
                                             <p className="flex items-center gap-1">
                                                 Ahorra <span className="font-bold">{formatMoney(monthlySavingsNeeded)}</span>/mes
-                                                <ArrowRight size={10} />
+                                                <ArrowRightIcon size={10} />
                                                 fondo completo en ~{Math.ceil(monthsMissing)} meses
                                             </p>
                                         )}

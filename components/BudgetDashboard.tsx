@@ -7,7 +7,8 @@ import { logout, stopImpersonation } from '@/app/actions/auth';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
 import { ProfileWithData } from '@/types';
-import { Settings, LogOut, Briefcase, Eye, EyeOff, Wallet, TrendingUp, Landmark, DollarSign, Target, CreditCard as CardIcon } from 'lucide-react';
+import { SettingsIcon, LogOutIcon, EyeIcon, EyeOffIcon, WalletIcon, TrendingUpIcon, DollarSignIcon, CreditCardIcon as CardIcon } from '@animateicons/react/lucide';
+import { Briefcase, Landmark, Target } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 
@@ -172,7 +173,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
                     <div className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 border border-indigo-400">
                         <div className="flex items-center gap-2">
-                            <Eye size={18} />
+                            <EyeIcon size={18} />
                             <span className="font-bold text-sm">Viendo como: {activeProfile.name}</span>
                         </div>
                         <button
@@ -212,7 +213,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         className={`p-3 rounded-2xl border transition-all relative group overflow-hidden ${isPrivateMode ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-indigo-400'}`}
                         title="Modo Privado (Blur)"
                     >
-                        {isPrivateMode ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                        {isPrivateMode ? <EyeOffIcon className="w-6 h-6" /> : <EyeIcon className="w-6 h-6" />}
                     </button>
 
                     <ThemeToggle />
@@ -223,7 +224,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         onClick={() => setShowUserSettings(true)}
                         className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-3 rounded-2xl font-bold transition-all flex items-center gap-2"
                     >
-                        <Settings className="w-5 h-5" />
+                        <SettingsIcon className="w-5 h-5" />
                         <span className="hidden md:inline">Ajustes</span>
                     </button>
 
@@ -231,7 +232,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         onClick={handleLogout}
                         className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-3 rounded-2xl font-bold transition-all flex items-center gap-2"
                     >
-                        <LogOut className="w-5 h-5" />
+                        <LogOutIcon className="w-5 h-5" />
                         <span className="hidden md:inline">Salir</span>
                     </button>
 
@@ -272,7 +273,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {/* 1. Cash Available */}
                         <div className="bg-white dark:bg-[#0d1b2a] border border-zinc-200 dark:border-[#1591DC]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <Wallet className="w-20 h-20 text-[#1591DC]" />
+                                <WalletIcon className="w-20 h-20 text-[#1591DC]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Dinero disponible</p>
                             <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
@@ -288,7 +289,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {/* 2. Net Worth */}
                         <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <TrendingUp className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
+                                <TrendingUpIcon className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Patrimonio Neto</p>
                             <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-[#519A66] dark:text-[#6dc28a]' : 'text-red-500'}`}>
@@ -304,7 +305,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {/* 3. Monthly Income (Filtered) */}
                         <div className="bg-white dark:bg-[#0f2318] border border-zinc-200 dark:border-[#519A66]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <DollarSign className="w-20 h-20 text-[#519A66]" />
+                                <DollarSignIcon className="w-20 h-20 text-[#519A66]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Ingresos (Mes)</p>
                             <p className="text-3xl md:text-4xl font-black text-[#519A66] dark:text-[#6dc28a] relative z-10 blur-sensitive">
@@ -315,7 +316,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {/* 4. Total Debt */}
                         <div className="bg-white dark:bg-[#2a0f14] border border-zinc-200 dark:border-red-500/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <TrendingUp className="w-20 h-20 text-red-500" />
+                                <TrendingUpIcon className="w-20 h-20 text-red-500" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Deuda Total</p>
                             <p className="text-3xl md:text-4xl font-black text-red-500 relative z-10 blur-sensitive">
@@ -334,12 +335,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </button>
                             {/* Incomes */}
                             <button onClick={() => updateTab('incomes')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'incomes' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <DollarSign size={18} />
+                                <DollarSignIcon size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Ingresos</span>
                             </button>
                             {/* Expenses */}
                             <button onClick={() => updateTab('expenses')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'expenses' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <TrendingUp size={18} />
+                                <TrendingUpIcon size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Gastos</span>
                             </button>
                             {/* Goals */}
@@ -354,7 +355,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </button>
                             {/* Budgets */}
                             <button onClick={() => updateTab('budgets')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'budgets' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <TrendingUp size={18} />
+                                <TrendingUpIcon size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Presupuesto</span>
                             </button>
                         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Download, FileSpreadsheet } from 'lucide-react';
+import { DownloadIcon, FileSpreadsheetIcon } from '@animateicons/react/lucide';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -39,7 +39,7 @@ export default function ExportMenu({ profile }: ExportMenuProps) {
                     className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-3 rounded-2xl font-bold transition-all flex items-center gap-2"
                     title="Exportar Datos"
                 >
-                    <Download className="w-5 h-5" />
+                    <DownloadIcon className="w-5 h-5" />
                     <span className="hidden md:inline">Exportar</span>
                 </button>
             </DropdownMenuTrigger>
@@ -50,7 +50,7 @@ export default function ExportMenu({ profile }: ExportMenuProps) {
                     onClick={handleExport}
                     className="cursor-pointer rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800 py-2.5 px-3 flex items-center gap-2"
                 >
-                    <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                    <FileSpreadsheetIcon className="w-4 h-4 text-green-600" />
                     <span>Transacciones (CSV)</span>
                 </DropdownMenuItem>
                 {/* 

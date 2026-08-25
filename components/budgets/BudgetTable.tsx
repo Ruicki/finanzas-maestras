@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
-import { TrendingUp, AlertTriangle, ArrowUpRight, ArrowDownRight, PiggyBank } from 'lucide-react';
+import { TrendingUpIcon, ArrowUpRightIcon, ArrowDownRightIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { AlertTriangle } from 'lucide-react';
 
 interface BudgetTableProps {
     categories: any[];
@@ -118,7 +119,7 @@ export default function BudgetTable({ categories, expenses, currentMonth, curren
 
                     {totalRollover > 0 && (
                         <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg px-3 py-2">
-                            <PiggyBank size={14} className="text-blue-500" />
+                            <PiggyBankIcon size={14} className="text-blue-500" />
                             <span className="text-xs font-bold text-blue-700 dark:text-blue-400">Rollover total:</span>
                             <span className="text-xs font-bold text-blue-600 dark:text-blue-300">+{formatMoney(totalRollover)}</span>
                         </div>

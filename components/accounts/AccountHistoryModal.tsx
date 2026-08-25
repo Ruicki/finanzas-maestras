@@ -6,11 +6,8 @@ import {
     adjustAccountBalance,
     updateAccount,
 } from '@/app/actions/budget';
-import {
-    X, ArrowUpRight, ArrowDownLeft, ArrowRightLeft, DollarSign,
-    Calendar, RefreshCw, ListOrdered, SlidersHorizontal, AlertCircle,
-    TrendingUp, TrendingDown, Minus,
-} from 'lucide-react';
+import { XIcon, ArrowUpRightIcon, DollarSignIcon, CalendarIcon, RefreshCwIcon, TrendingUpIcon, TrendingDownIcon } from '@animateicons/react/lucide';
+import { ArrowDownLeft, ArrowRightLeft, ListOrdered, SlidersHorizontal, AlertCircle, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
@@ -117,11 +114,11 @@ export default function AccountHistoryModal({
     const getIcon = (type: string) => {
         switch (type) {
             case 'INCOME':       return <ArrowDownLeft className="w-5 h-5 text-emerald-500" />;
-            case 'EXPENSE':      return <ArrowUpRight className="w-5 h-5 text-red-500" />;
+            case 'EXPENSE':      return <ArrowUpRightIcon className="w-5 h-5 text-red-500" />;
             case 'TRANSFER_IN':  return <ArrowRightLeft className="w-5 h-5 text-emerald-500" />;
             case 'TRANSFER_OUT': return <ArrowRightLeft className="w-5 h-5 text-red-500" />;
-            case 'SALARY':       return <DollarSign className="w-5 h-5 text-emerald-500" />;
-            default:             return <RefreshCw className="w-5 h-5 text-zinc-400" />;
+            case 'SALARY':       return <DollarSignIcon className="w-5 h-5 text-emerald-500" />;
+            default:             return <RefreshCwIcon className="w-5 h-5 text-zinc-400" />;
         }
     };
 
@@ -165,7 +162,7 @@ export default function AccountHistoryModal({
                             onClick={onClose}
                             className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                         >
-                            <X className="w-5 h-5" />
+                            <XIcon className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -266,7 +263,7 @@ export default function AccountHistoryModal({
                                     </div>
                                 ) : transactions.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-16 text-zinc-400">
-                                        <Calendar className="w-12 h-12 mb-3 opacity-20" />
+                                        <CalendarIcon className="w-12 h-12 mb-3 opacity-20" />
                                         <p className="font-semibold">Sin movimientos aún</p>
                                         <p className="text-xs mt-1 opacity-70">Los gastos e ingresos de esta cuenta aparecerán aquí</p>
                                     </div>
@@ -373,7 +370,7 @@ export default function AccountHistoryModal({
                                         <div className={`flex items-center gap-1.5 text-xs font-bold mt-1.5 ${
                                             isUp ? 'text-emerald-600' : 'text-red-500'
                                         }`}>
-                                            {isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                            {isUp ? <TrendingUpIcon className="w-3.5 h-3.5" /> : <TrendingDownIcon className="w-3.5 h-3.5" />}
                                             <span>{isUp ? '+' : ''}{diff.toFixed(2)}</span>
                                             <span className="font-normal opacity-70">
                                                 {isUp ? 'más que antes' : 'menos que antes'}
