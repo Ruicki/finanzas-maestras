@@ -208,6 +208,26 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
 
             // Check if today is the due date
             if (expense.dueDate === currentDay) {
+                // Check if this frequency should fire this month
+                const freq = expense.recurrenceType || 'MONTHLY';
+                const createdMonth = expense.createdAt.getMonth(); // 0-11
+                const currentMonth = today.getMonth(); // 0-11
+                const monthsSinceCreation = (today.getFullYear() - expense.createdAt.getFullYear()) * 12 + (currentMonth - createdMonth);
+
+                let shouldProcess = false;
+                if (freq === 'MONTHLY') {
+                    shouldProcess = true;
+                } else if (freq === 'QUARTERLY') {
+                    shouldProcess = monthsSinceCreation % 3 === 0;
+                } else if (freq === 'SEMIANNUAL') {
+                    shouldProcess = monthsSinceCreation % 6 === 0;
+                } else if (freq === 'ANNUAL') {
+                    shouldProcess = monthsSinceCreation % 12 === 0;
+                } else {
+                    shouldProcess = true; // Default to monthly
+                }
+
+                if (!shouldProcess) continue;
                 try {
                     // Check if account is locked
                     if (expense.account?.lockDate && new Date(expense.account.lockDate) > today) {
