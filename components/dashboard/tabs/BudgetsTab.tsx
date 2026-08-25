@@ -5,7 +5,7 @@ import BudgetCard from '@/components/budgets/BudgetCard';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
 import SubscriptionCalendar from '@/components/budgets/SubscriptionCalendar';
 import { formatMoney } from '@/lib/utils';
-import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, WalletIcon } from '@animateicons/react/lucide';
+import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, WalletIcon, PencilIcon } from '@animateicons/react/lucide';
 import { PieChart } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
@@ -52,6 +52,7 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [expandedSub, setExpandedSub] = useState<string | null>(null);
     const [showWizard, setShowWizard] = useState(false);
+    const [editingSub, setEditingSub] = useState<any | null>(null);
 
     // Subscriptions sorted by due date
     const subscriptions = expenses
@@ -256,6 +257,13 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
+                                                        onClick={() => setEditingSub(exp)}
+                                                        className="p-1.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
+                                                        title="Editar"
+                                                    >
+                                                        <PencilIcon size={12} />
+                                                    </button>
+                                                    <button
                                                         onClick={() => {
                                                             confirmDelete(async () => {
                                                                 await deleteExpense(exp.id);
@@ -300,15 +308,16 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                 </div>
             )}
 
-            {showWizard && profileId && (
+            {(showWizard || editingSub) && profileId && (
                 <ExpenseWizard
                     profileId={profileId}
                     categories={categories}
                     creditCards={creditCards}
                     accounts={accounts}
-                    initialData={{ isRecurring: true }}
-                    onSuccess={() => { setShowWizard(false); onUpdate?.(); }}
-                    onClose={() => setShowWizard(false)}
+                    initialData={editingSub || { isRecurring: true }}
+                    isEditing={!!editingSub}
+                    onSuccess={() => { setShowWizard(false); setEditingSub(null); onUpdate?.(); }}
+                    onClose={() => { setShowWizard(false); setEditingSub(null); }}
                 />
             )}
         </div>

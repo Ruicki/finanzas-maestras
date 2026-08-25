@@ -27,7 +27,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
 
     // Available = Limit - Balance - Desgravamen (matches bank's calculation)
     const utilization = (Number(card.balance) / Number(card.limit)) * 100;
-    const available = Number(card.limit) - Number(card.balance) - desgravamen;
+    const available = Number(card.limit) - Number(card.balance);
     const health = calculateCreditHealth(utilization);
 
     // Smart Estimates (Panama real-world calculations)

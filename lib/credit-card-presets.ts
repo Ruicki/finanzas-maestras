@@ -12,7 +12,7 @@ export interface BankPreset {
 export const BANK_PRESETS: Record<string, BankPreset> = {
     CMF: {
         label: 'CMF',
-        interestRate: 2.25,
+        interestRate: 6.25,
         insuranceRate: 0.325,
         annualFee: 0,
         lateFee: 25,
