@@ -40,10 +40,13 @@ export const SmartMoneyInput = ({ onMoneyChange, value, className, ...props }: S
     }, [onMoneyChange]);
 
     const handleFocus = useCallback(() => {
-        // Seleccionar todo al hacer focus para fácil reemplazo
-        setTimeout(() => {
-            inputRef.current?.select();
-        }, 0);
+        // Solo seleccionar si el valor es 0.00 (campo vacío) para facilitar el primer ingreso
+        const raw = inputRef.current?.value.replace(/\D/g, '') || '';
+        if (raw === '0' || raw === '00' || raw === '') {
+            setTimeout(() => {
+                inputRef.current?.select();
+            }, 0);
+        }
     }, []);
 
     return (
