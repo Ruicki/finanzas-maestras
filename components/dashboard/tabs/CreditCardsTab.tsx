@@ -6,7 +6,7 @@ import { deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { PlusIcon, TrendingDownIcon, CreditCardIcon } from '@animateicons/react/lucide';
-import { Percent } from 'lucide-react';
+import { BadgePercentIcon } from '@animateicons/react/lucide';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
 import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import PaymentModal from '@/components/shared/PaymentModal';
@@ -86,7 +86,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                 </div>
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <Percent size={14} className="text-amber-500" />
+                        <BadgePercentIcon size={14} className="text-amber-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Utilización</span>
                     </div>
                     <p className={`text-xl font-black ${avgUtilization > 75 ? 'text-red-500' : avgUtilization > 30 ? 'text-amber-500' : 'text-emerald-500'}`}>{avgUtilization.toFixed(0)}%</p>

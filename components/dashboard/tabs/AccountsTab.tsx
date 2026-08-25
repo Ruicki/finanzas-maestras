@@ -7,7 +7,8 @@ type Account = ProfileWithData['accounts'][number];
 import { deleteAccount } from '@/app/actions/budget';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { PlusIcon, WalletIcon, PiggyBankIcon, BanknoteIcon, EyeIcon, PencilIcon, Trash2Icon, LockIcon } from '@animateicons/react/lucide';
-import { Landmark, ArrowRightLeft, MoreVertical } from 'lucide-react';
+import { ArrowLeftRightIcon, MessageCircleMoreIcon } from '@animateicons/react/lucide';
+import { Landmark } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountWizard from '@/components/accounts/AccountWizard';
 import TransferModal from '@/components/accounts/TransferModal';
@@ -49,7 +50,7 @@ function AccountMenu({
                 className="p-2 rounded-xl bg-white/15 hover:bg-white/30 text-white transition-all backdrop-blur-md"
                 title="Opciones"
             >
-                <MoreVertical className="w-5 h-5" />
+                <MessageCircleMoreIcon className="w-5 h-5" />
             </button>
 
             {open && (
@@ -109,7 +110,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'BANK':    return <Landmark className="w-6 h-6" />;
+            case 'BANK':    return <Landmark className="w-6 h-6 lucide-animated" />;
             case 'CASH':    return <BanknoteIcon className="w-6 h-6" />;
             case 'SAVINGS': return <PiggyBankIcon className="w-6 h-6" />;
             case 'WALLET':  return <WalletIcon className="w-6 h-6" />;
@@ -215,7 +216,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                         onClick={() => setIsTransferring(true)}
                         className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-4 py-2 rounded-xl font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
                     >
-                        <ArrowRightLeft className="w-4 h-4" />
+                        <ArrowLeftRightIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Transferir</span>
                     </button>
                     <button
@@ -289,7 +290,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             {accounts.length === 0 && !isCreating && (
                 <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
                     <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <Landmark className="w-10 h-10 text-zinc-300" />
+                        <Landmark className="w-10 h-10 text-zinc-300 lucide-animated" />
                     </div>
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>
                     <p className="text-zinc-500 max-w-sm mx-auto mb-6">

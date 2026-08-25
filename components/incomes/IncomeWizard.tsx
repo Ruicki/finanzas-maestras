@@ -160,7 +160,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     className="p-6 rounded-3xl border-2 border-zinc-100 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group flex flex-col items-center gap-4"
                 >
                     <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Building2 className="w-8 h-8" />
+                        <Building2 className="w-8 h-8 lucide-animated" />
                     </div>
                     <div className="text-center">
                         <span className="block font-bold text-lg text-zinc-800 dark:text-zinc-200">Salario / Nómina</span>
@@ -242,7 +242,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                             className={`p-4 rounded-3xl border-2 transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${salaryMode === 'CALCULATOR' ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : 'border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'}`}
                         >
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${salaryMode === 'CALCULATOR' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700'}`}>
-                                <Building2 className="w-6 h-6" />
+                                <Building2 className="w-6 h-6 lucide-animated" />
                             </div>
                             <div className="text-center z-10">
                                 <span className={`block font-bold text-sm ${salaryMode === 'CALCULATOR' ? 'text-indigo-700 dark:text-indigo-400' : 'text-zinc-600 dark:text-zinc-400'}`}>Calculadora</span>

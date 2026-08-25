@@ -3,7 +3,7 @@ import { formatMoney } from '@/lib/utils';
 import { updateCategoryLimit } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { CheckIcon, XIcon } from '@animateicons/react/lucide';
-import { Edit2 } from 'lucide-react';
+import { PencilIcon } from '@animateicons/react/lucide';
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
@@ -78,7 +78,7 @@ export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardP
                             className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800 rounded-lg transition-all hover:scale-110"
                             title="Editar Presupuesto"
                         >
-                            <Edit2 size={16} />
+                            <PencilIcon size={16} />
                         </button>
                     )}
                 </div>
