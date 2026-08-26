@@ -106,11 +106,26 @@ model Goal {
   frequency          String?
   contributionAmount Decimal?  @db.Decimal(10, 2)
   priority           String?   @default("MEDIUM")
+  category           String?
+  notes              String?
+  isPaused           Boolean   @default(false)
   sourceAccountId    Int?
   destinationAccountId Int?
   profileId          Int
   createdAt          DateTime  @default(now())
   profile            Profile   @relation(fields: [profileId], references: [id])
+  transactions       GoalTransaction[]
+}
+
+model GoalTransaction {
+  id          Int      @id @default(autoincrement())
+  goalId      Int
+  type        String   // DEPOSIT, WITHDRAW
+  amount      Decimal  @db.Decimal(10, 2)
+  note        String?
+  accountId   Int?
+  createdAt   DateTime @default(now())
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
 }
 
 model CreditCard {
