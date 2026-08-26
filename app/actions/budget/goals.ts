@@ -16,6 +16,9 @@ export interface CreateGoalInput {
     frequency?: string;
     contributionAmount?: number;
     priority?: string;
+    category?: string;
+    notes?: string;
+    isPaused?: boolean;
     sourceAccountId?: number;
     destinationAccountId?: number;
 }
@@ -41,6 +44,9 @@ export async function createGoal(data: CreateGoalInput) {
             frequency: data.frequency,
             contributionAmount: data.contributionAmount,
             priority: data.priority,
+            category: data.category,
+            notes: data.notes,
+            isPaused: data.isPaused ?? false,
             sourceAccountId: data.sourceAccountId,
             destinationAccountId: data.destinationAccountId,
         },
@@ -60,12 +66,25 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
             frequency: data.frequency,
             contributionAmount: data.contributionAmount,
             priority: data.priority,
+            category: data.category,
+            notes: data.notes,
+            isPaused: data.isPaused,
             sourceAccountId: data.sourceAccountId,
             destinationAccountId: data.destinationAccountId,
         },
     });
     revalidatePath('/budget');
     return serializeGoal(goal);
+}
+
+export async function toggleGoalPaused(id: number): Promise<void> {
+    const goal = await prisma.goal.findUnique({ where: { id } });
+    if (!goal) throw new Error('Meta no encontrada');
+    await prisma.goal.update({
+        where: { id },
+        data: { isPaused: !goal.isPaused },
+    });
+    revalidatePath('/budget');
 }
 
 export async function deleteGoal(id: number): Promise<void> {
@@ -82,7 +101,6 @@ export async function deleteGoalWithReclaim(
         if (!goal) throw new Error('Meta no encontrada');
 
         if (Number(goal.currentAmount) > 0) {
-            // Si hay cuenta de ahorro destino, descontar de ahí
             if (goal.destinationAccountId) {
                 await tx.account.update({
                     where: { id: goal.destinationAccountId },
@@ -90,7 +108,6 @@ export async function deleteGoalWithReclaim(
                 });
             }
 
-            // Devolver a la cuenta destino
             await tx.account.update({
                 where: { id: targetAccountId },
                 data: { balance: { increment: goal.currentAmount } },
@@ -107,6 +124,7 @@ export async function handleGoalTransaction(
     amount: number,
     type: 'DEPOSIT' | 'WITHDRAW',
     accountId?: number,
+    note?: string,
 ) {
     const goal = await prisma.goal.findUnique({ where: { id: goalId } });
     if (!goal) throw new Error('Meta no encontrada');
@@ -124,13 +142,11 @@ export async function handleGoalTransaction(
                 throw new Error(`Cuenta bloqueada hasta ${sourceAccount.lockDate.toLocaleDateString()}`);
             }
 
-            // Descontar de cuenta origen
             await tx.account.update({
                 where: { id: sourceAccountId },
                 data: { balance: { decrement: amount } },
             });
 
-            // Transferir a cuenta destino (si existe)
             const destAccountId = goal.destinationAccountId;
             if (destAccountId) {
                 await tx.account.update({
@@ -145,7 +161,6 @@ export async function handleGoalTransaction(
             const destAccountId = accountId;
             if (!destAccountId) throw new Error('Debes seleccionar una cuenta de destino.');
 
-            // Si hay cuenta destino en la meta, descontar de ahí
             if (goal.destinationAccountId) {
                 const savingsAccount = await tx.account.findUnique({ where: { id: goal.destinationAccountId } });
                 if (!savingsAccount) throw new Error('Cuenta de ahorro no encontrada.');
@@ -157,12 +172,22 @@ export async function handleGoalTransaction(
                 });
             }
 
-            // Devolver a cuenta destino
             await tx.account.update({
                 where: { id: destAccountId },
                 data: { balance: { increment: amount } },
             });
         }
+
+        // Registrar transacción
+        await tx.goalTransaction.create({
+            data: {
+                goalId,
+                type,
+                amount,
+                note: note || null,
+                accountId: accountId || null,
+            },
+        });
 
         const newAmount =
             type === 'DEPOSIT'
@@ -177,4 +202,15 @@ export async function handleGoalTransaction(
 
     revalidatePath('/budget');
     return serializeGoal(updatedGoal);
+}
+
+export async function getGoalTransactions(goalId: number) {
+    const transactions = await prisma.goalTransaction.findMany({
+        where: { goalId },
+        orderBy: { createdAt: 'desc' },
+    });
+    return transactions.map(t => ({
+        ...t,
+        amount: toNum(t.amount),
+    }));
 }
