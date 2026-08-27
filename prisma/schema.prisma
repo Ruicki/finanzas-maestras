@@ -203,5 +203,8 @@ model AuditLog {
   details   String?
   actorId   Int?
   targetId  Int?
+  profileId Int?
+  oldBalance Decimal? @db.Decimal(12, 2)
+  newBalance Decimal? @db.Decimal(12, 2)
   createdAt DateTime @default(now())
 }

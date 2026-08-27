@@ -32,37 +32,41 @@ export async function createExpense(data: CreateExpenseInput) {
     }
 
     try {
-        const expense = await prisma.expense.create({
-            data: {
-                name: data.name,
-                amount: data.amount,
-                category: data.category,
-                profileId: data.profileId,
-                dueDate: data.dueDate,
-                isRecurring: data.isRecurring ?? true,
-                isOneTime: data.isOneTime ?? false,
-                recurrenceType: data.recurrenceType ?? 'MONTHLY',
-                paymentMethod: data.paymentMethod,
-                linkedCardId: data.linkedCardId,
-                accountId: data.accountId,
-                categoryId: data.categoryId,
-                createdAt: data.date ? new Date(data.date) : undefined,
-            },
+        const expense = await prisma.$transaction(async (tx) => {
+            const created = await tx.expense.create({
+                data: {
+                    name: data.name,
+                    amount: data.amount,
+                    category: data.category,
+                    profileId: data.profileId,
+                    dueDate: data.dueDate,
+                    isRecurring: data.isRecurring ?? true,
+                    isOneTime: data.isOneTime ?? false,
+                    recurrenceType: data.recurrenceType ?? 'MONTHLY',
+                    paymentMethod: data.paymentMethod,
+                    linkedCardId: data.linkedCardId,
+                    accountId: data.accountId,
+                    categoryId: data.categoryId,
+                    createdAt: data.date ? new Date(data.date) : undefined,
+                },
+            });
+
+            if (data.linkedCardId) {
+                await tx.creditCard.update({
+                    where: { id: data.linkedCardId },
+                    data: { balance: { increment: data.amount } },
+                });
+            }
+
+            if (data.accountId) {
+                await tx.account.update({
+                    where: { id: data.accountId },
+                    data: { balance: { decrement: data.amount } },
+                });
+            }
+
+            return created;
         });
-
-        if (data.linkedCardId) {
-            await prisma.creditCard.update({
-                where: { id: data.linkedCardId },
-                data: { balance: { increment: data.amount } },
-            });
-        }
-
-        if (data.accountId) {
-            await prisma.account.update({
-                where: { id: data.accountId },
-                data: { balance: { decrement: data.amount } },
-            });
-        }
 
         revalidatePath('/budget');
         return { ...expense, amount: toNum(expense.amount) };
@@ -138,24 +142,26 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
 
 export async function deleteExpense(id: number): Promise<void> {
     try {
-        const expense = await prisma.expense.findUnique({ where: { id } });
+        await prisma.$transaction(async (tx) => {
+            const expense = await tx.expense.findUnique({ where: { id } });
+            if (!expense) throw new Error('Gasto no encontrado');
 
-        if (expense) {
             if (expense.accountId) {
-                await prisma.account.update({
+                await tx.account.update({
                     where: { id: expense.accountId },
                     data: { balance: { increment: expense.amount } },
                 });
             }
             if (expense.linkedCardId) {
-                await prisma.creditCard.update({
+                await tx.creditCard.update({
                     where: { id: expense.linkedCardId },
                     data: { balance: { decrement: expense.amount } },
                 });
             }
-        }
 
-        await prisma.expense.delete({ where: { id } });
+            await tx.expense.delete({ where: { id } });
+        });
+
         revalidatePath('/budget');
     } catch (error) {
         logger.error(`Error deleting expense ${id}:`, error);
@@ -235,39 +241,41 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                         continue;
                     }
 
-                    // Create new expense entry (copy of the recurring template)
-                    const newExpense = await prisma.expense.create({
-                        data: {
-                            name: expense.name,
-                            amount: expense.amount,
-                            category: expense.category,
-                            profileId: expense.profileId,
-                            dueDate: expense.dueDate,
-                            isRecurring: false, // The copy is not recurring
-                            isOneTime: true, // Mark as one-time (already processed)
-                            paymentMethod: expense.paymentMethod,
-                            linkedCardId: expense.linkedCardId,
-                            accountId: expense.accountId,
-                            categoryId: expense.categoryId,
-                            createdAt: today,
-                        },
+                    await prisma.$transaction(async (tx) => {
+                        // Create new expense entry (copy of the recurring template)
+                        await tx.expense.create({
+                            data: {
+                                name: expense.name,
+                                amount: expense.amount,
+                                category: expense.category,
+                                profileId: expense.profileId,
+                                dueDate: expense.dueDate,
+                                isRecurring: false,
+                                isOneTime: true,
+                                paymentMethod: expense.paymentMethod,
+                                linkedCardId: expense.linkedCardId,
+                                accountId: expense.accountId,
+                                categoryId: expense.categoryId,
+                                createdAt: today,
+                            },
+                        });
+
+                        // Deduct from account if linked
+                        if (expense.accountId) {
+                            await tx.account.update({
+                                where: { id: expense.accountId },
+                                data: { balance: { decrement: expense.amount } },
+                            });
+                        }
+
+                        // Add to credit card balance if linked
+                        if (expense.linkedCardId) {
+                            await tx.creditCard.update({
+                                where: { id: expense.linkedCardId },
+                                data: { balance: { increment: expense.amount } },
+                            });
+                        }
                     });
-
-                    // Deduct from account if linked
-                    if (expense.accountId) {
-                        await prisma.account.update({
-                            where: { id: expense.accountId },
-                            data: { balance: { decrement: expense.amount } },
-                        });
-                    }
-
-                    // Add to credit card balance if linked
-                    if (expense.linkedCardId) {
-                        await prisma.creditCard.update({
-                            where: { id: expense.linkedCardId },
-                            data: { balance: { increment: expense.amount } },
-                        });
-                    }
 
                     result.created++;
                 } catch (error) {

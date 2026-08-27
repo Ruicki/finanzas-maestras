@@ -88,6 +88,11 @@ export async function toggleGoalPaused(id: number): Promise<void> {
 }
 
 export async function deleteGoal(id: number): Promise<void> {
+    const goal = await prisma.goal.findUnique({ where: { id } });
+    if (!goal) throw new Error('Meta no encontrada');
+    if (Number(goal.currentAmount) > 0) {
+        throw new Error('No se puede eliminar una meta con dinero. Usa deleteGoalWithReclaim para reclamar los fondos primero.');
+    }
     await prisma.goal.delete({ where: { id } });
     revalidatePath('/budget');
 }
