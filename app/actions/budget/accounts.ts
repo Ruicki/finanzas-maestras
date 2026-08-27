@@ -80,6 +80,30 @@ export async function deleteAccount(id: number): Promise<void> {
     }
 
     await prisma.$transaction(async (tx) => {
+        const linkedSalaries = await tx.salary.findMany({ where: { accountId: id } });
+        for (const salary of linkedSalaries) {
+            await tx.account.update({
+                where: { id },
+                data: { balance: { decrement: Number(salary.netVal) } },
+            });
+        }
+
+        const linkedIncomes = await tx.additionalIncome.findMany({ where: { accountId: id } });
+        for (const income of linkedIncomes) {
+            await tx.account.update({
+                where: { id },
+                data: { balance: { decrement: Number(income.amount) } },
+            });
+        }
+
+        const linkedExpenses = await tx.expense.findMany({ where: { accountId: id } });
+        for (const expense of linkedExpenses) {
+            await tx.account.update({
+                where: { id },
+                data: { balance: { increment: Number(expense.amount) } },
+            });
+        }
+
         await tx.expense.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.additionalIncome.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.salary.updateMany({ where: { accountId: id }, data: { accountId: null } });
