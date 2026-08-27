@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Account } from '@prisma/client';
 import { createIncome, updateIncome } from '@/app/actions/budget';
-import { createSalary } from '@/app/actions/salary';
+import { createSalary, updateSalary } from '@/app/actions/salary';
 import { DollarSignIcon, WalletIcon, SaveIcon } from '@animateicons/react/lucide';
 import { Building2 } from 'lucide-react';
 import SalaryCalculator from '@/components/salary/SalaryCalculator';
@@ -105,17 +105,31 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
 
         try {
             if (isEditing && initialData?.id) {
-                // EDITAR: llamar updateIncome
-                await updateIncome(initialData.id, {
-                    name: description || 'Ingreso',
-                    amount: val,
-                    type: 'ONE_TIME',
-                    profileId,
-                    accountId: selectedAccountId || undefined,
-                    icon: selectedIcon,
-                    date: parseDateNoon(date),
-                });
-                toast.success("Ingreso actualizado");
+                if (initialData.type === 'SALARY' || type === 'SALARY') {
+                    await updateSalary(initialData.id, {
+                        grossVal: val,
+                        bonus: 0,
+                        frequency: 'monthly',
+                        paymentDate: date,
+                        absentDays: 0,
+                        company: description || 'Salario',
+                        profileId,
+                        accountId: selectedAccountId || undefined,
+                        isManualCalculation: true,
+                    });
+                    toast.success("Salario actualizado");
+                } else {
+                    await updateIncome(initialData.id, {
+                        name: description || 'Ingreso',
+                        amount: val,
+                        type: 'ONE_TIME',
+                        profileId,
+                        accountId: selectedAccountId || undefined,
+                        icon: selectedIcon,
+                        date: parseDateNoon(date),
+                    });
+                    toast.success("Ingreso actualizado");
+                }
             } else if (type === 'SALARY' && salaryMode === 'MANUAL') {
                 // CREAR SALARIO MANUAL
                 await createSalary({
