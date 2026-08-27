@@ -45,12 +45,31 @@ export async function updateAccount(
 export async function adjustAccountBalance(
     accountId: number,
     newBalance: number,
-    _reason: string,
+    reason: string,
 ) {
-    await prisma.account.update({
-        where: { id: accountId },
-        data: { balance: newBalance },
+    await prisma.$transaction(async (tx) => {
+        const account = await tx.account.findUnique({ where: { id: accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+
+        const oldBalance = Number(account.balance);
+
+        await tx.account.update({
+            where: { id: accountId },
+            data: { balance: newBalance },
+        });
+
+        await tx.auditLog.create({
+            data: {
+                action: 'BALANCE_ADJUSTMENT',
+                details: reason || 'Sin razón especificada',
+                targetId: accountId,
+                profileId: account.profileId,
+                oldBalance,
+                newBalance,
+            },
+        });
     });
+
     revalidatePath('/budget');
 }
 

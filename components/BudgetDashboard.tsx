@@ -105,7 +105,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     };
 
     // Filtered Lists
-    const expensesList = activeProfile?.expenses?.filter((e) => e.category !== 'Deuda' && isInSelectedMonth(e.createdAt)) || [];
+    const expensesList = activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta' && isInSelectedMonth(e.createdAt)) || [];
 
     // Monthly Totals (Filtered)
     const totalExpenses = expensesList.reduce((sum, exp) => sum + Number(exp.amount), 0);
@@ -125,8 +125,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const totalLoanPayments = (activeProfile?.loans || []).reduce((sum, loan) => sum + Number(loan.monthlyPayment || 0), 0);
     const totalDebtPayments = totalCCPayments + totalLoanPayments;
 
-    // Savings (Global Accumulation usually, but we could show monthly variation if we tracked history. Showing Total Current Saved for now)
-    const totalGoalsSaved = activeProfile?.goals?.reduce((sum, g) => sum + Number(g.currentAmount), 0) || 0;
+    // Goals: only count goals WITHOUT destination account (money already in accounts with destination is counted in totalAssets)
+    const goalsWithoutDestination = activeProfile?.goals?.filter(g => !g.destinationAccountId) || [];
+    const totalGoalsSaved = goalsWithoutDestination.reduce((sum, g) => sum + Number(g.currentAmount), 0) || 0;
 
     // Income Calculation (Filtered)
     const allSalaries = activeProfile?.salaries || [];
