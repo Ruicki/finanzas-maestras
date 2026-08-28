@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
         return NextResponse.next();
@@ -16,7 +16,6 @@ export async function middleware(request: NextRequest) {
     const isPublicAsset = path.startsWith('/_next') ||
         path.startsWith('/api') ||
         path.includes('.'); // files like favicon.ico
-
 
     let isValidSession = false;
 
