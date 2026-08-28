@@ -3,10 +3,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 export default async function proxy(request: NextRequest) {
-    const secretKey = process.env.JWT_SECRET;
-    if (!secretKey) {
-        return NextResponse.next();
-    }
+    const secretKey = process.env.JWT_SECRET || 'secret-key-change-me-in-prod';
     const key = new TextEncoder().encode(secretKey);
 
     const session = request.cookies.get('auth_session');
