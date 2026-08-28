@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum, toNumOrNull } from './serializers';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── GOALS ─────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,10 @@ export async function createGoal(data: CreateGoalInput) {
 }
 
 export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
+    const existing = await prisma.goal.findUnique({ where: { id } });
+    if (!existing) throw new Error('Meta no encontrada');
+    await requireOwnership(existing.profileId);
+
     const goal = await prisma.goal.update({
         where: { id },
         data: {
@@ -80,6 +85,7 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
 export async function toggleGoalPaused(id: number): Promise<void> {
     const goal = await prisma.goal.findUnique({ where: { id } });
     if (!goal) throw new Error('Meta no encontrada');
+    await requireOwnership(goal.profileId);
     await prisma.goal.update({
         where: { id },
         data: { isPaused: !goal.isPaused },
@@ -90,6 +96,7 @@ export async function toggleGoalPaused(id: number): Promise<void> {
 export async function deleteGoal(id: number): Promise<void> {
     const goal = await prisma.goal.findUnique({ where: { id } });
     if (!goal) throw new Error('Meta no encontrada');
+    await requireOwnership(goal.profileId);
     if (Number(goal.currentAmount) > 0) {
         throw new Error('No se puede eliminar una meta con dinero. Usa deleteGoalWithReclaim para reclamar los fondos primero.');
     }
@@ -104,6 +111,7 @@ export async function deleteGoalWithReclaim(
     await prisma.$transaction(async (tx) => {
         const goal = await tx.goal.findUnique({ where: { id } });
         if (!goal) throw new Error('Meta no encontrada');
+        await requireOwnership(goal.profileId);
 
         if (Number(goal.currentAmount) > 0) {
             if (goal.destinationAccountId) {
@@ -133,6 +141,7 @@ export async function handleGoalTransaction(
 ) {
     const goal = await prisma.goal.findUnique({ where: { id: goalId } });
     if (!goal) throw new Error('Meta no encontrada');
+    await requireOwnership(goal.profileId);
     if (amount <= 0) throw new Error('El monto debe ser mayor a cero');
 
     const updatedGoal = await prisma.$transaction(async (tx) => {

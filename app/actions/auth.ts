@@ -3,9 +3,11 @@
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signSession, verifySession } from '@/lib/auth-utils';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { logAction } from './audit';
 
 const SESSION_COOKIE = 'auth_session';
@@ -16,6 +18,11 @@ export async function login(formData: FormData) {
 
     if (!email || !password) {
         return { error: 'Por favor ingrese correo y contraseña' };
+    }
+
+    const rateLimit = checkRateLimit(`login:${email}`);
+    if (!rateLimit.allowed) {
+        return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
 
     try {
@@ -82,6 +89,11 @@ export async function register(formData: FormData) {
         return { error: 'Todos los campos son obligatorios' };
     }
 
+    const rateLimit = checkRateLimit(`register:${email}`);
+    if (!rateLimit.allowed) {
+        return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
+    }
+
     try {
         const existing = await prisma.profile.findUnique({ where: { email } });
         if (existing) return { error: 'Este correo ya está registrado' };
@@ -132,7 +144,7 @@ export async function updateProfile(profileId: number, formData: FormData) {
     const password = formData.get('password') as string;
 
     try {
-        const data: any = {};
+        const data: { name?: string; email?: string; password?: string } = {};
         if (name) data.name = name;
         if (email) {
             // Verificar unicidad si el correo cambia
@@ -158,15 +170,15 @@ export async function updateProfile(profileId: number, formData: FormData) {
 
 export async function generateAccessCode(profileId: number) {
     try {
-        // Código simple de 6 caracteres
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const bytes = crypto.randomBytes(4);
+        const code = bytes.toString('base64url').substring(0, 8).toUpperCase();
 
         await prisma.profile.update({
             where: { id: profileId },
             data: { accessCode: code }
         });
 
-        revalidatePath('/budget'); // Refrescar UI para mostrar el código si es necesario o simplemente devolverlo
+        revalidatePath('/budget');
         return { success: true, code };
     } catch (error) {
         console.error("Generate Access Code Error:", error);
@@ -181,6 +193,11 @@ export async function claimProfile(formData: FormData) {
 
     if (!rawCode || !email || !password) {
         return { error: 'Todos los campos son obligatorios' };
+    }
+
+    const rateLimit = checkRateLimit(`claim:${email}`);
+    if (!rateLimit.allowed) {
+        return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
 
     const code = rawCode.trim().toUpperCase();
@@ -265,10 +282,11 @@ export async function startImpersonation(targetId: number) {
         return { error: 'Solo los administradores pueden realizar esta acción' };
     }
 
-    // Set temporary cookie
+    // Set temporary cookie (expires in 1 hour)
     cookieStore.set(IMPERSONATE_COOKIE, targetId.toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60, // 1 hour
         path: '/',
     });
 

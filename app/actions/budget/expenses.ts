@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ export async function createExpense(data: CreateExpenseInput) {
 export async function updateExpense(id: number, data: Partial<CreateExpenseInput>) {
     const oldExpense = await prisma.expense.findUnique({ where: { id } });
     if (!oldExpense) throw new Error('Gasto no encontrado');
+    await requireOwnership(oldExpense.profileId);
 
     try {
         await prisma.$transaction(async (tx) => {
@@ -145,6 +147,7 @@ export async function deleteExpense(id: number): Promise<void> {
         await prisma.$transaction(async (tx) => {
             const expense = await tx.expense.findUnique({ where: { id } });
             if (!expense) throw new Error('Gasto no encontrado');
+            await requireOwnership(expense.profileId);
 
             if (expense.accountId) {
                 await tx.account.update({
@@ -240,6 +243,21 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                         result.errors.push(`Cuenta bloqueada para gasto "${expense.name}"`);
                         continue;
                     }
+
+                    // Idempotency: check if already processed today
+                    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                    const todayEnd = new Date(todayStart.getTime() + 86400000);
+                    const alreadyProcessed = await prisma.expense.findFirst({
+                        where: {
+                            profileId: expense.profileId,
+                            name: expense.name,
+                            amount: expense.amount,
+                            isOneTime: true,
+                            isRecurring: false,
+                            createdAt: { gte: todayStart, lt: todayEnd },
+                        },
+                    });
+                    if (alreadyProcessed) continue;
 
                     await prisma.$transaction(async (tx) => {
                         // Create new expense entry (copy of the recurring template)

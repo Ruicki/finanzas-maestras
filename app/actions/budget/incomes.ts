@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── INCOMES ───────────────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ export async function createIncome(data: CreateIncomeInput) {
 export async function updateIncome(id: number, data: Partial<CreateIncomeInput>) {
     const oldIncome = await prisma.additionalIncome.findUnique({ where: { id } });
     if (!oldIncome) throw new Error('Ingreso no encontrado');
+    await requireOwnership(oldIncome.profileId);
 
     await prisma.$transaction(async (tx) => {
         // Revertir impacto anterior
@@ -91,6 +93,7 @@ export async function deleteIncome(id: number): Promise<void> {
         const income = await tx.additionalIncome.findUnique({ where: { id } });
 
         if (income) {
+            await requireOwnership(income.profileId);
             if (income.accountId) {
                 await tx.account.update({
                     where: { id: income.accountId },

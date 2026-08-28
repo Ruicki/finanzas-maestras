@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum, serializeCreditCard } from './serializers';
 import { logger } from '@/lib/logger';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── CREDIT CARDS ──────────────────────────────────────────────────────────
 
@@ -50,6 +51,10 @@ export async function updateCreditCardDetails(
     id: number,
     data: Partial<CreateCreditCardInput>,
 ) {
+    const existing = await prisma.creditCard.findUnique({ where: { id } });
+    if (!existing) throw new Error('Tarjeta no encontrada');
+    await requireOwnership(existing.profileId);
+
     const card = await prisma.creditCard.update({
         where: { id },
         data: {
@@ -81,6 +86,9 @@ export async function updateCreditCardBalance(id: number, balance: number) {
 }
 
 export async function deleteCreditCard(id: number) {
+    const card = await prisma.creditCard.findUnique({ where: { id } });
+    if (!card) throw new Error('Tarjeta no encontrada');
+    await requireOwnership(card.profileId);
     await prisma.creditCard.delete({ where: { id } });
     revalidatePath('/budget');
 }
@@ -95,12 +103,12 @@ export async function recalculateCardBalance(cardId: number) {
         where: { linkedCardId: cardId },
     });
 
-    // Sum of all payments made to this card (expenses with "Pago:" prefix, no linkedCardId)
+    // Sum of all payments made to this card (expenses with "Pago: {cardName}" prefix)
     const payments = await prisma.expense.aggregate({
         _sum: { amount: true },
         where: {
             profileId: card.profileId,
-            name: { startsWith: 'Pago:' },
+            name: { startsWith: `Pago: ${card.name}` },
             linkedCardId: null,
             category: 'Pagos Tarjeta',
         },
@@ -134,6 +142,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
 
     const account = await prisma.account.findUnique({ where: { id: accountId } });
     if (!account) throw new Error('Cuenta no encontrada');
+    await requireOwnership(account.profileId);
     if (account.lockDate && new Date(account.lockDate) > new Date()) {
         throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
     }

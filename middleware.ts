@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const secretKey = process.env.JWT_SECRET || 'secret-key-change-me-in-prod';
-const key = new TextEncoder().encode(secretKey);
-
 export async function middleware(request: NextRequest) {
+    const secretKey = process.env.JWT_SECRET;
+    if (!secretKey) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+    const key = new TextEncoder().encode(secretKey);
+
     const session = request.cookies.get('auth_session');
     const path = request.nextUrl.pathname;
     const isAuthPage = path === '/login' || path === '/register' || path === '/claim';
