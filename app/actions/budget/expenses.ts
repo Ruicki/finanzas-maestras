@@ -25,6 +25,7 @@ export interface CreateExpenseInput {
 }
 
 export async function createExpense(data: CreateExpenseInput) {
+    await requireOwnership(data.profileId);
     if (data.accountId) {
         const account = await prisma.account.findUnique({ where: { id: data.accountId } });
         if (account?.lockDate && new Date(account.lockDate) > new Date()) {
