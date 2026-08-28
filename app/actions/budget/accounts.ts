@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── ACCOUNTS ──────────────────────────────────────────────────────────────
 
@@ -29,6 +30,9 @@ export async function updateAccount(
 ) {
     if (data.balance !== undefined && data.balance < 0)
         throw new Error('El saldo no puede ser negativo');
+    const account = await prisma.account.findUnique({ where: { id } });
+    if (!account) throw new Error('Cuenta no encontrada');
+    await requireOwnership(account.profileId);
     await prisma.account.update({
         where: { id },
         data: {
@@ -50,6 +54,7 @@ export async function adjustAccountBalance(
     await prisma.$transaction(async (tx) => {
         const account = await tx.account.findUnique({ where: { id: accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
+        await requireOwnership(account.profileId);
 
         const oldBalance = Number(account.balance);
 
@@ -75,35 +80,13 @@ export async function adjustAccountBalance(
 
 export async function deleteAccount(id: number): Promise<void> {
     const account = await prisma.account.findUnique({ where: { id } });
-    if (account?.name === 'Efectivo' && account.isDefault) {
+    if (!account) throw new Error('Cuenta no encontrada');
+    await requireOwnership(account.profileId);
+    if (account.name === 'Efectivo' && account.isDefault) {
         throw new Error('No se puede eliminar la cuenta principal de Efectivo.');
     }
 
     await prisma.$transaction(async (tx) => {
-        const linkedSalaries = await tx.salary.findMany({ where: { accountId: id } });
-        for (const salary of linkedSalaries) {
-            await tx.account.update({
-                where: { id },
-                data: { balance: { decrement: Number(salary.netVal) } },
-            });
-        }
-
-        const linkedIncomes = await tx.additionalIncome.findMany({ where: { accountId: id } });
-        for (const income of linkedIncomes) {
-            await tx.account.update({
-                where: { id },
-                data: { balance: { decrement: Number(income.amount) } },
-            });
-        }
-
-        const linkedExpenses = await tx.expense.findMany({ where: { accountId: id } });
-        for (const expense of linkedExpenses) {
-            await tx.account.update({
-                where: { id },
-                data: { balance: { increment: Number(expense.amount) } },
-            });
-        }
-
         await tx.expense.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.additionalIncome.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.salary.updateMany({ where: { accountId: id }, data: { accountId: null } });

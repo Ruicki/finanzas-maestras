@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { SalaryRepository } from "@/lib/repositories/salary.repository";
 import { AccountRepository } from "@/lib/repositories/account.repository";
 import { logger } from "@/lib/logger";
+import { requireOwnership } from '@/lib/auth-utils';
 
 interface ProcessSalaryRequest {
     grossVal: number;
@@ -215,6 +216,7 @@ export async function deleteSalaryById(id: number): Promise<void> {
             const salary = await SalaryRepository.findById(tx, id);
 
             if (salary) {
+                if (salary.profileId) await requireOwnership(salary.profileId);
                 if (salary.accountId) {
                     await AccountRepository.modifyBalance(tx, {
                         accountId: salary.accountId,
@@ -236,6 +238,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
     logger.info(`Updating salary id ${id}`);
     const oldSalary = await prisma.salary.findUnique({ where: { id } });
     if (!oldSalary) throw new Error("Salario no encontrado");
+    if (oldSalary.profileId) await requireOwnership(oldSalary.profileId);
 
     try {
         let finalNetVal = 0;

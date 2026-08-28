@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { toNum, toNumOrNull } from './budget/serializers';
+import { requireOwnership } from '@/lib/auth-utils';
 
 export type CreateLoanInput = {
     name: string;
@@ -48,9 +49,10 @@ export async function createLoan(data: CreateLoanInput) {
 }
 
 export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {
-    // If updating total usage/balance, logic might be complex.
-    // For now, allow direct update of fields.
-    // Ideally, preventing balance hijack if payments exist is good, but for "Universal Edit" we assume user knows what they do.
+    const existing = await prisma.loan.findUnique({ where: { id } });
+    if (!existing) throw new Error('Préstamo no encontrado');
+    await requireOwnership(existing.profileId);
+
     await prisma.loan.update({
         where: { id },
         data: {
@@ -70,6 +72,9 @@ export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {
 }
 
 export async function deleteLoan(id: number) {
+    const loan = await prisma.loan.findUnique({ where: { id } });
+    if (!loan) throw new Error('Préstamo no encontrado');
+    await requireOwnership(loan.profileId);
     await prisma.loan.delete({ where: { id } });
     revalidatePath('/budget');
 }
@@ -79,6 +84,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
 
     const loan = await prisma.loan.findUnique({ where: { id: loanId } });
     if (!loan) throw new Error("Préstamo no encontrado");
+    await requireOwnership(loan.profileId);
 
     if (amount > Number(loan.currentBalance)) {
         throw new Error(`El pago excede la deuda actual ($${Number(loan.currentBalance).toFixed(2)})`);

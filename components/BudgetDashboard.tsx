@@ -20,7 +20,6 @@ import DebtsTab from '@/components/dashboard/tabs/DebtsTab';
 import BudgetsTab from '@/components/dashboard/tabs/BudgetsTab';
 import AccountsTab from '@/components/dashboard/tabs/AccountsTab';
 import InsightsTab from '@/components/dashboard/tabs/InsightsTab';
-import CreditCardsTab from '@/components/dashboard/tabs/CreditCardsTab';
 import UserSettingsModal from '@/components/dashboard/modals/UserSettingsModal';
 import ProfileManagerModal from '@/components/dashboard/modals/ProfileManagerModal';
 
@@ -399,16 +398,6 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 goals={activeProfile.goals || []}
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
-                                onUpdate={refreshData}
-                            />
-                        )}
-
-                        {activeTab === 'cards' && (
-                            <CreditCardsTab
-                                creditCards={activeProfile.creditCards || []}
-                                accounts={activeProfile.accounts || []}
-                                profileId={activeProfile.id}
-                                profileName={activeProfile.name}
                                 onUpdate={refreshData}
                             />
                         )}
