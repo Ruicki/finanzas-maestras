@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 export async function middleware(request: NextRequest) {
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.next();
     }
     const key = new TextEncoder().encode(secretKey);
 

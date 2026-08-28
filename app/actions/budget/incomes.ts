@@ -20,6 +20,7 @@ export interface CreateIncomeInput {
 }
 
 export async function createIncome(data: CreateIncomeInput) {
+    await requireOwnership(data.profileId);
     return await prisma.$transaction(async (tx) => {
         const income = await tx.additionalIncome.create({
             data: {

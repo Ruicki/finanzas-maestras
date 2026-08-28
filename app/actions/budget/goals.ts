@@ -34,6 +34,7 @@ function serializeGoal(goal: any) {
 }
 
 export async function createGoal(data: CreateGoalInput) {
+    await requireOwnership(data.profileId);
     const goal = await prisma.goal.create({
         data: {
             name: data.name,
