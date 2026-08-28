@@ -2,10 +2,8 @@
 
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, RefreshCwIcon, MessageCircleMoreIcon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
-import React, { useState } from 'react';
-import { recalculateCardBalance } from '@/app/actions/budget/credit-cards';
-import { toast } from 'sonner';
+import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, MessageCircleMoreIcon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
+import React from 'react';
 
 interface UltimateCreditCardProps {
     card: any;
@@ -16,8 +14,6 @@ interface UltimateCreditCardProps {
 }
 
 export default function UltimateCreditCard({ card, onPay, onDelete, cardholderName = 'USUARIO', onEdit }: UltimateCreditCardProps) {
-    const [recalculating, setRecalculating] = useState(false);
-
     // Panama credit cards include desgravamen (insurance) in the bank's balance
     const hasRate = Number(card.interestRate) > 0;
     const effectiveRate = hasRate ? Number(card.interestRate) : 2.0;
@@ -47,22 +43,6 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
 
     // Cutoff alert
     const cutoffInfo = getDaysToCutoff(card.cutoffDay);
-
-    const handleRecalculate = async () => {
-        setRecalculating(true);
-        try {
-            const result = await recalculateCardBalance(card.id);
-            if (result.difference !== 0) {
-                toast.success(`Balance corregido: ${formatMoney(result.oldBalance)} → ${formatMoney(result.newBalance)} (${result.difference > 0 ? '+' : ''}${formatMoney(result.difference)})`);
-            } else {
-                toast.info('Balance correcto, sin cambios');
-            }
-        } catch (error) {
-            toast.error('Error al recalcular balance');
-        } finally {
-            setRecalculating(false);
-        }
-    };
 
     const renderCutoffAlert = () => {
         if (cutoffInfo.status === 'normal') return null;
@@ -145,14 +125,6 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleRecalculate}
-                            disabled={recalculating}
-                            className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all disabled:opacity-50"
-                            title="Recalcular balance desde gastos y pagos"
-                        >
-                            <RefreshCwIcon size={14} className={recalculating ? 'animate-spin' : ''} />
-                        </button>
                         <span className={`text-xs font-bold px-2 py-1 rounded-md ${health.color.replace('text-', 'bg-').replace('400', '100').replace('500', '100')} ${health.color}`}>
                             {health.status === 'Excellent' ? 'Saludable' : health.status === 'Critical' ? 'Crítico' : 'Atención'}
                         </span>
