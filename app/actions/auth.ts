@@ -8,9 +8,9 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signSession, verifySession } from '@/lib/auth-utils';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { logAction } from './audit';
 
 const SESSION_COOKIE = 'auth_session';
+const IMPERSONATE_COOKIE = 'impersonate_id';
 
 export async function login(formData: FormData) {
     const email = formData.get('email') as string;
@@ -66,18 +66,6 @@ export async function logout() {
     const cookieStore = await cookies();
     cookieStore.delete(SESSION_COOKIE);
     redirect('/login');
-}
-
-export async function getSession() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(SESSION_COOKIE)?.value;
-    if (!token) return null;
-
-    // Verificar token firmado
-    const payload = await verifySession(token);
-    if (!payload || !payload.userId) return null;
-
-    return parseInt(payload.userId as string);
 }
 
 export async function register(formData: FormData) {
@@ -269,8 +257,6 @@ export async function resetPassword(profileId: number, newPassword: string) {
     }
 }
 
-const IMPERSONATE_COOKIE = 'impersonate_id';
-
 export async function startImpersonation(targetId: number) {
     const cookieStore = await cookies();
     const token = cookieStore.get(SESSION_COOKIE)?.value;
@@ -282,15 +268,16 @@ export async function startImpersonation(targetId: number) {
         return { error: 'Solo los administradores pueden realizar esta acción' };
     }
 
-    // Set temporary cookie (expires in 1 hour)
     cookieStore.set(IMPERSONATE_COOKIE, targetId.toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60, // 1 hour
+        maxAge: 60 * 60,
         path: '/',
     });
 
     revalidatePath('/');
+    // Dynamic import to break circular dependency auth ↔ audit
+    const { logAction } = await import('./audit');
     await logAction('IMPERSONATE_START', `Impersonación iniciada para ID: ${targetId}`, targetId);
     return { success: true };
 }
@@ -302,13 +289,6 @@ export async function stopImpersonation() {
     return { success: true };
 }
 
-export async function getImpersonatedId(): Promise<number | null> {
-    const cookieStore = await cookies();
-    const val = cookieStore.get(IMPERSONATE_COOKIE)?.value;
-    return val ? parseInt(val) : null;
-}
-
-// Deprecated or alias to startImpersonation for compatibility
 export async function impersonate(targetProfileId: number) {
     return startImpersonation(targetProfileId);
 }

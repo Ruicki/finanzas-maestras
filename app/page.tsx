@@ -1,6 +1,6 @@
 import BudgetDashboard from "@/components/BudgetDashboard";
 import LandingPage from "@/components/LandingPage";
-import { getSession, getImpersonatedId } from "./actions/auth";
+import { getSession, getImpersonatedId } from "@/lib/auth-utils";
 import { getProfileById, createAccount } from "./actions/budget";
 import { initializeDefaultCategories } from "./actions/categories";
 import { ProfileWithData } from "@/types";

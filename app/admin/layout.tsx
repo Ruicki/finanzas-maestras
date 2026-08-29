@@ -1,4 +1,4 @@
-import { getSession } from "@/app/actions/auth";
+import { getSession } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";

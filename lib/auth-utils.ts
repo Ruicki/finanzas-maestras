@@ -1,5 +1,9 @@
 
 import { SignJWT, jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+
+const SESSION_COOKIE = 'auth_session';
+const IMPERSONATE_COOKIE = 'impersonate_id';
 
 const secretKey = process.env.JWT_SECRET || 'secret-key-change-me-in-prod';
 const key = new TextEncoder().encode(secretKey);
@@ -23,10 +27,27 @@ export async function verifySession(token: string) {
     }
 }
 
+export async function getSession(): Promise<number | null> {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    if (!token) return null;
+
+    const payload = await verifySession(token);
+    if (!payload || !payload.userId) return null;
+
+    return parseInt(payload.userId as string);
+}
+
+export async function getImpersonatedId(): Promise<number | null> {
+    const cookieStore = await cookies();
+    const val = cookieStore.get(IMPERSONATE_COOKIE)?.value;
+    return val ? parseInt(val) : null;
+}
+
 export async function requireAuth(): Promise<{ userId: number; role?: string }> {
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth_session')?.value;
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
     if (!token) throw new Error('No autenticado');
 
     const payload = await verifySession(token);
@@ -40,7 +61,7 @@ export async function requireAuth(): Promise<{ userId: number; role?: string }> 
 
 export async function requireOwnership(resourceProfileId: number): Promise<void> {
     const { userId, role } = await requireAuth();
-    if (role === 'ADMIN') return; // Admins can access everything
+    if (role === 'ADMIN') return;
     if (userId !== resourceProfileId) {
         throw new Error('No autorizado para acceder a este recurso');
     }
