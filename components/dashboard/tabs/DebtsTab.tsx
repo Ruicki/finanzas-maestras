@@ -103,7 +103,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
         setCardForm({
             name: card.name,
             limit: card.limit.toString(),
-            initialBalance: '', // No editar saldo inicial al editar
+            initialBalance: card.balance.toString(),
             cutoffDay: card.cutoffDay.toString(),
             paymentDay: card.paymentDay.toString(),
             interestRate: card.interestRate?.toString() || '',
@@ -168,8 +168,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     annualFeeMonth: cardForm.hasAnnualFee ? parseInt(cardForm.annualFeeMonth) : undefined,
                     minPaymentPercentage: 3.0,
                     insuranceRate: 0.0,
-                    // initialBalance only for create
-                    initialBalance: (!editingId && cardForm.initialBalance) ? parseFloat(cardForm.initialBalance) : 0,
+                    initialBalance: parseFloat(cardForm.initialBalance) || 0,
                     profileId
                 };
 
