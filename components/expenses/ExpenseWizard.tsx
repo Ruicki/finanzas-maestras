@@ -333,8 +333,6 @@ export default function ExpenseWizard({
                         <div className="grid grid-cols-2 gap-2">
                             {[
                                 { value: 'MONTHLY', label: 'Mensual' },
-                                { value: 'QUARTERLY', label: 'Trimestral' },
-                                { value: 'SEMIANNUAL', label: 'Semestral' },
                                 { value: 'ANNUAL', label: 'Anual' },
                             ].map(opt => (
                                 <button
