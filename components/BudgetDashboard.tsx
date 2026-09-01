@@ -113,8 +113,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     // one-time expenses only in their creation month
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
-        if (e.isRecurring) return true; // subscriptions always show
-        return isInSelectedMonth(e.createdAt);
+        if (e.isRecurring && e.recurrenceType === 'MONTHLY') return true; // monthly subs show every month
+        return isInSelectedMonth(e.createdAt); // annual + one-time: only in their creation month
     }) || [];
 
     // Monthly Totals (Filtered) — recurring expenses normalized to monthly
