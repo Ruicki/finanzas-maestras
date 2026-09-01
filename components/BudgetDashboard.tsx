@@ -90,6 +90,16 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
+    // Normalize recurring expense amount to monthly equivalent
+    const normalizeToMonthly = (amount: number, type?: string | null): number => {
+        switch (type) {
+            case 'WEEKLY': return amount * 4;
+            case 'BIWEEKLY': return amount * 2;
+            case 'YEARLY': case 'ANNUALLY': return amount / 12;
+            default: return amount;
+        }
+    };
+
     // Helper: Filter by selected month
     // Helper: Filter by selected month using ISO String (UTC) to match database storage
     const isInSelectedMonth = (dateStr: Date | string) => {
@@ -103,14 +113,21 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         return iso.startsWith(targetMonth);
     };
 
-    // Filtered Lists — only expenses from the selected month
+    // Filtered Lists — recurring expenses (subscriptions) appear in ALL months;
+    // one-time expenses only in their creation month
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
+        if (e.isRecurring) return true; // subscriptions always show
         return isInSelectedMonth(e.createdAt);
     }) || [];
 
-    // Monthly Totals (Filtered)
-    const totalExpenses = expensesList.reduce((sum, exp) => sum + Number(exp.amount), 0);
+    // Monthly Totals (Filtered) — recurring expenses normalized to monthly
+    const totalExpenses = expensesList.reduce((sum, exp) => {
+        const monthly = exp.isRecurring
+            ? normalizeToMonthly(Number(exp.amount), exp.recurrenceType)
+            : Number(exp.amount);
+        return sum + monthly;
+    }, 0);
 
     // Debt Payments: use actual credit card minimums + loan payments (not expense category)
     const totalCCPayments = (activeProfile?.creditCards || []).reduce((sum, cc) => {

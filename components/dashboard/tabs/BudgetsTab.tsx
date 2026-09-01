@@ -160,7 +160,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                         const d = new Date(e.createdAt);
                                         return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                                     })
-                                    .reduce((sum, e) => sum + Number(e.amount), 0);
+                                    .reduce((sum, e) => sum + normalizeToMonthly(Number(e.amount), e.recurrenceType), 0);
                                 const rollover = getCategoryRollover(cat);
                                 const limit = getCategoryLimit(cat);
                                 const effective = limit + rollover;
