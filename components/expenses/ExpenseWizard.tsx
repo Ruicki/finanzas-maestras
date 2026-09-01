@@ -28,6 +28,7 @@ interface ExpenseWizardProps {
     onInit?: () => void;
     initialData?: any; // New prop for editing
     isEditing?: boolean;
+    recentNames?: string[];
 }
 
 export default function ExpenseWizard({
@@ -39,7 +40,8 @@ export default function ExpenseWizard({
     onSuccess,
     onInit,
     initialData,
-    isEditing = false
+    isEditing = false,
+    recentNames = []
 }: ExpenseWizardProps) {
     const [step, setStep] = useState(isEditing ? 2 : 1); // Skip to step 2 if editing
 
@@ -56,6 +58,12 @@ export default function ExpenseWizard({
     });
     const [isRecurring, setIsRecurring] = useState(false);
     const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    // Filtered name suggestions
+    const filteredNames = name.length > 0
+        ? recentNames.filter(n => n.toLowerCase().includes(name.toLowerCase()) && n.toLowerCase() !== name.toLowerCase()).slice(0, 5)
+        : recentNames.slice(0, 5);
 
     // Load Initial Data
     useEffect(() => {
@@ -230,15 +238,31 @@ export default function ExpenseWizard({
             {/* Cuadrícula de Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Descripción</label>
                         <input
                             type="text"
                             value={name}
-                            onChange={e => setName(e.target.value)}
+                            onChange={e => { setName(e.target.value); setShowSuggestions(true); }}
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-purple-500/50 transition-all"
                             placeholder="¿En qué gastaste?"
                         />
+                        {showSuggestions && filteredNames.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg overflow-hidden">
+                                {filteredNames.map((suggestion, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onMouseDown={() => { setName(suggestion); setShowSuggestions(false); }}
+                                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors flex items-center gap-2"
+                                    >
+                                        <span className="text-zinc-400">↩</span> {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -54,8 +54,22 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
         .filter(e => e.isRecurring)
         .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
 
+    // Group subscriptions by name (same name = merged)
+    const groupedSubscriptions: Record<string, any> = subscriptions.reduce((acc: Record<string, any>, sub) => {
+        const key = sub.name.trim().toLowerCase();
+        if (!acc[key]) {
+            acc[key] = { ...sub, count: 1, totalAmount: Number(sub.amount), items: [sub] };
+        } else {
+            acc[key].count += 1;
+            acc[key].totalAmount += Number(sub.amount);
+            acc[key].items.push(sub);
+        }
+        return acc;
+    }, {} as Record<string, any>);
+    const uniqueSubscriptions = Object.values(groupedSubscriptions);
+
     const totalSubscriptions = subscriptions.reduce((s, e) => s + normalizeToMonthly(Number(e.amount), e.recurrenceType), 0);
-    const subscriptionCount = subscriptions.length;
+    const subscriptionCount = uniqueSubscriptions.length;
     const nextDueDay = subscriptions.length > 0 ? Math.min(...subscriptions.map(s => s.dueDate || 1)) : null;
     const subscriptionPctOfIncome = totalIncome > 0 ? (totalSubscriptions / totalIncome) * 100 : 0;
     const annualCost = totalSubscriptions * 12;
@@ -274,9 +288,10 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             {/* Calendar View */}
                             <SubscriptionCalendar subscriptions={subscriptions} />
 
-                            {/* Subscription Cards */}
+                            {/* Subscription Cards — grouped by name */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {subscriptions.map((exp) => {
+                                {uniqueSubscriptions.map((sub) => {
+                                    const exp = sub;
                                     const catColor = exp.categoryRel?.color || 'bg-zinc-400';
                                     const catIcon = exp.categoryRel?.icon || 'RefreshCw';
                                     return (
@@ -289,7 +304,14 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                         <CategoryIcon iconName={catIcon} size={18} />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[140px]">{exp.name}</h4>
+                                                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[140px]">
+                                                            {exp.name}
+                                                            {sub.count > 1 && (
+                                                                <span className="ml-1.5 text-[9px] font-bold text-indigo-500 bg-indigo-100 dark:bg-indigo-500/20 px-1.5 py-0.5 rounded-full">
+                                                                    x{sub.count}
+                                                                </span>
+                                                            )}
+                                                        </h4>
                                                         <div className="flex items-center gap-1.5">
                                                             {exp.categoryRel && (
                                                                 <p className="text-[10px] font-bold text-zinc-400 uppercase">{exp.categoryRel.name}</p>
@@ -309,7 +331,10 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
 
                                             <div className="flex justify-between items-end mt-3">
                                                 <div>
-                                                    <p className="text-2xl font-black text-zinc-900 dark:text-white">-{formatMoney(Number(exp.amount))}</p>
+                                                    <p className="text-2xl font-black text-zinc-900 dark:text-white">-{formatMoney(sub.totalAmount)}</p>
+                                                    {sub.count > 1 && (
+                                                        <p className="text-[10px] text-zinc-400">{sub.count} × {formatMoney(Number(exp.amount))}</p>
+                                                    )}
                                                     {exp.recurrenceType && exp.recurrenceType !== 'MONTHLY' && (
                                                         <p className="text-[10px] text-zinc-400">{formatMoney(normalizeToMonthly(Number(exp.amount), exp.recurrenceType))}/mes</p>
                                                     )}
@@ -325,8 +350,11 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                     <button
                                                         onClick={() => {
                                                             confirmDelete(async () => {
-                                                                await deleteExpense(exp.id);
-                                                                toast.success("Suscripción eliminada");
+                                                                // Delete all items in this group
+                                                                for (const item of sub.items) {
+                                                                    await deleteExpense(item.id);
+                                                                }
+                                                                toast.success(`${sub.count > 1 ? sub.count + ' suscripciones' : 'Suscripción'} eliminada(s)`);
                                                                 if (onUpdate) onUpdate();
                                                             });
                                                         }}
@@ -375,6 +403,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                     accounts={accounts}
                     initialData={editingSub || { isRecurring: true }}
                     isEditing={!!editingSub}
+                    recentNames={[...new Set(expenses.map(e => e.name))]}
                     onSuccess={() => { setShowWizard(false); setEditingSub(null); onUpdate?.(); }}
                     onClose={() => { setShowWizard(false); setEditingSub(null); }}
                 />

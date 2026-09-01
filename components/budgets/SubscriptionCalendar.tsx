@@ -12,28 +12,37 @@ const RECURRENCE_LABELS: Record<string, string> = {
     ANNUAL: 'Anual',
 };
 
-function normalizeToMonthly(amount: number, type?: string | null): number {
-    // ANNUAL: show full amount in the month it's charged (don't divide)
-    return amount;
-}
-
 export default function SubscriptionCalendar({ subscriptions }: SubscriptionCalendarProps) {
     if (subscriptions.length === 0) return null;
 
     const today = new Date().getDate();
 
-    // Group subscriptions by day (normalize amounts to monthly)
-    const subsByDay: Record<number, any[]> = {};
+    // Group subscriptions by name, then by day
+    const groupedByName: Record<string, { amount: number; dueDate: number; recurrenceType: string; count: number }> = {};
     subscriptions.forEach(sub => {
-        const day = sub.dueDate || 1;
+        const key = sub.name.trim().toLowerCase();
+        if (!groupedByName[key]) {
+            groupedByName[key] = { amount: Number(sub.amount), dueDate: sub.dueDate || 1, recurrenceType: sub.recurrenceType, count: 1 };
+        } else {
+            groupedByName[key].amount += Number(sub.amount);
+            groupedByName[key].count += 1;
+        }
+    });
+
+    const uniqueSubs = Object.values(groupedByName);
+
+    // Group by day (using grouped totals)
+    const subsByDay: Record<number, any[]> = {};
+    uniqueSubs.forEach(sub => {
+        const day = sub.dueDate;
         if (!subsByDay[day]) subsByDay[day] = [];
         subsByDay[day].push(sub);
     });
 
-    // Total per day (normalized to monthly)
+    // Total per day
     const totalPerDay: Record<number, number> = {};
     Object.entries(subsByDay).forEach(([day, subs]) => {
-        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + normalizeToMonthly(Number(sub.amount), sub.recurrenceType), 0);
+        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + sub.amount, 0);
     });
 
     // Days with subscriptions
