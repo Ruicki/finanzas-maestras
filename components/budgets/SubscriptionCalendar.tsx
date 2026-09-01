@@ -9,18 +9,12 @@ interface SubscriptionCalendarProps {
 
 const RECURRENCE_LABELS: Record<string, string> = {
     MONTHLY: 'Mensual',
-    QUARTERLY: 'Trimestral',
-    SEMIANNUAL: 'Semestral',
     ANNUAL: 'Anual',
 };
 
 function normalizeToMonthly(amount: number, type?: string | null): number {
-    switch (type) {
-        case 'ANNUAL': return amount / 12;
-        case 'SEMIANNUAL': return amount / 6;
-        case 'QUARTERLY': return amount / 3;
-        default: return amount;
-    }
+    // ANNUAL: show full amount in the month it's charged (don't divide)
+    return amount;
 }
 
 export default function SubscriptionCalendar({ subscriptions }: SubscriptionCalendarProps) {

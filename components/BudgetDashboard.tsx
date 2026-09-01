@@ -90,14 +90,10 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
-    // Normalize recurring expense amount to monthly equivalent
+    // Normalize recurring expense amount — ANNUAL shows full amount in charging month
     const normalizeToMonthly = (amount: number, type?: string | null): number => {
-        switch (type) {
-            case 'WEEKLY': return amount * 4;
-            case 'BIWEEKLY': return amount * 2;
-            case 'YEARLY': case 'ANNUALLY': return amount / 12;
-            default: return amount;
-        }
+        // ANNUAL: full amount, not divided
+        return amount;
     };
 
     // Helper: Filter by selected month
