@@ -17,24 +17,10 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
 
     const today = new Date().getDate();
 
-    // Group subscriptions by name, then by day
-    const groupedByName: Record<string, { amount: number; dueDate: number; recurrenceType: string; count: number }> = {};
-    subscriptions.forEach(sub => {
-        const key = sub.name.trim().toLowerCase();
-        if (!groupedByName[key]) {
-            groupedByName[key] = { amount: Number(sub.amount), dueDate: sub.dueDate || 1, recurrenceType: sub.recurrenceType, count: 1 };
-        } else {
-            groupedByName[key].amount += Number(sub.amount);
-            groupedByName[key].count += 1;
-        }
-    });
-
-    const uniqueSubs = Object.values(groupedByName);
-
-    // Group by day (using grouped totals)
+    // Group by day (each subscription individually)
     const subsByDay: Record<number, any[]> = {};
-    uniqueSubs.forEach(sub => {
-        const day = sub.dueDate;
+    subscriptions.forEach(sub => {
+        const day = sub.dueDate || 1;
         if (!subsByDay[day]) subsByDay[day] = [];
         subsByDay[day].push(sub);
     });
@@ -42,7 +28,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
     // Total per day
     const totalPerDay: Record<number, number> = {};
     Object.entries(subsByDay).forEach(([day, subs]) => {
-        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + sub.amount, 0);
+        totalPerDay[Number(day)] = subs.reduce((s, sub) => s + Number(sub.amount), 0);
     });
 
     // Days with subscriptions
@@ -104,7 +90,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
                         {activeDays.slice(0, 8).map(day => (
                             <div key={day} className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-2 py-1 rounded-lg">
                                 <span className="text-[10px] font-bold text-indigo-500">Día {day}</span>
-                                <span className="text-[10px] text-zinc-500">{subsByDay[day].length} {subsByDay[day].length === 1 ? 'sub' : 'subs'}</span>
+                                <span className="text-[10px] text-zinc-500">{subsByDay[day].map((s: any) => s.name).join(', ')}</span>
                                 <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">{formatMoney(totalPerDay[day])}</span>
                             </div>
                         ))}
