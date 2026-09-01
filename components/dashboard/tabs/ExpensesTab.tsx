@@ -306,6 +306,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                         profileId={profileId}
                         initialData={expenseToEdit}
                         isEditing={!!expenseToEdit}
+                        recentNames={[...new Set(expenses.map(e => e.name))]}
                         onClose={() => { setShowWizard(false); setExpenseToEdit(null); }}
                         onInit={() => onUpdate()}
                         onSuccess={() => {
