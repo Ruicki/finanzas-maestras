@@ -30,10 +30,6 @@ export default function MonthSelector({ currentDate, onMonthChange }: MonthSelec
         onMonthChange(newDate);
     };
 
-    const isCurrentMonth = now && safeDate
-        ? safeDate.getMonth() === now.getMonth() && safeDate.getFullYear() === now.getFullYear()
-        : false;
-
     return (
         <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm">
             <button
@@ -52,8 +48,7 @@ export default function MonthSelector({ currentDate, onMonthChange }: MonthSelec
 
             <button
                 onClick={handleNextMonth}
-                disabled={isCurrentMonth}
-                className={`p-2 rounded-xl text-zinc-500 transition-colors ${isCurrentMonth ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                className="p-2 rounded-xl text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
                 <ChevronRightIcon size={20} />
             </button>

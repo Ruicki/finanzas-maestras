@@ -16,6 +16,15 @@ type SafeSerialized<T> = {
     T[P]
 };
 
+export type SerializedCategoryBudget = {
+    id: number;
+    categoryId: number;
+    year: number;
+    month: number;
+    limit: number;
+    createdAt: Date;
+};
+
 export type ProfileWithData = SafeSerialized<Profile> & {
     expenses: (SafeSerialized<Expense> & { categoryRel?: SafeSerialized<Category> | null })[];
     goals: SafeSerialized<Goal>[];
@@ -24,5 +33,9 @@ export type ProfileWithData = SafeSerialized<Profile> & {
     creditCards: SafeSerialized<CreditCard>[];
     loans: SafeSerialized<Loan>[];
     accounts: SafeSerialized<Account>[];
-    categories: SafeSerialized<Category>[];
+    categories: (SafeSerialized<Category> & {
+        budgets?: SerializedCategoryBudget[];
+        monthlyLimit?: number | null;
+        rolloverBalance?: number;
+    })[];
 };

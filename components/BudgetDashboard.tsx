@@ -135,9 +135,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     const additionalIncomes = activeProfile?.incomes || [];
     const monthlyAdditionalIncome = additionalIncomes.reduce((acc, inc) => {
-        // ONE_TIME -> Only current month
+        // ONE_TIME -> Only the month of the income date (fallback a createdAt)
         if (inc.type === 'ONE_TIME') {
-            return isInSelectedMonth(inc.createdAt) ? acc + Number(inc.amount) : acc;
+            return isInSelectedMonth(inc.date || inc.createdAt) ? acc + Number(inc.amount) : acc;
         }
         // Recurring -> Always count (Assume active)
         if (inc.frequency === 'MONTHLY') return acc + Number(inc.amount);

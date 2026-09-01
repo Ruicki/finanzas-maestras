@@ -94,6 +94,19 @@ model Category {
   rolloverBalance Decimal   @default(0) @db.Decimal(10, 2)
   profile         Profile   @relation(fields: [profileId], references: [id])
   expenses        Expense[]
+  budgets         CategoryBudget[]
+}
+
+model CategoryBudget {
+  id         Int      @id @default(autoincrement())
+  categoryId Int
+  year       Int
+  month      Int
+  limit      Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, year, month])
 }
 
 model Goal {
