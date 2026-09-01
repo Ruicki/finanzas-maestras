@@ -104,7 +104,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     };
 
     // Filtered Lists
-    const expensesList = activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta' && isInSelectedMonth(e.createdAt)) || [];
+    // Recurring expenses appear in ALL months; one-time expenses only in their creation month
+    const expensesList = activeProfile?.expenses?.filter((e) => {
+        if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
+        if (e.isRecurring) return true;
+        return isInSelectedMonth(e.createdAt);
+    }) || [];
 
     // Monthly Totals (Filtered)
     const totalExpenses = expensesList.reduce((sum, exp) => sum + Number(exp.amount), 0);
@@ -417,6 +422,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             <BudgetsTab
                                 categories={activeProfile.categories || []}
                                 expenses={expensesList}
+                                allExpenses={activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta') || []}
                                 creditCards={activeProfile.creditCards || []}
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
@@ -433,6 +439,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {activeTab === 'insights' && (
                             <InsightsTab
                                 expenses={expensesList}
+                                allExpenses={activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta') || []}
                                 categories={activeProfile.categories || []}
                                 incomes={additionalIncomes}
                                 salaries={allSalaries}
