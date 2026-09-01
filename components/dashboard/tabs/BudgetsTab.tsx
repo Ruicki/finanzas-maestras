@@ -116,6 +116,12 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                     {/* Summary Cards Row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {(() => {
+                            // Límite del mes seleccionado por categoría (presupuesto específico o fallback global)
+                            const getCategoryLimit = (cat: any) => {
+                                const mb = cat.budgets?.find((b: any) => b.year === currentYear && b.month === currentMonth + 1);
+                                return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
+                            };
+
                             const catStats = categories.map(cat => {
                                 const spent = expenses
                                     .filter(e => {
@@ -126,8 +132,8 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                 return { ...cat, spent };
                             });
                             const totalSpent = catStats.reduce((s, c) => s + c.spent, 0);
-                            const totalAssigned = categories.reduce((s, c) => s + (Number(c.monthlyLimit) || 0), 0);
-                            const overBudget = catStats.filter(c => Number(c.monthlyLimit) > 0 && c.spent > Number(c.monthlyLimit));
+                            const totalAssigned = categories.reduce((s, c) => s + getCategoryLimit(c), 0);
+                            const overBudget = catStats.filter(c => getCategoryLimit(c) > 0 && c.spent > getCategoryLimit(c));
 
                             return (
                                 <>
@@ -167,6 +173,8 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                 key={categoryObj.id}
                                 category={categoryObj}
                                 expenses={expenses}
+                                year={currentYear}
+                                month={currentMonth + 1}
                                 onUpdate={onUpdate}
                             />
                         ))}

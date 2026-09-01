@@ -70,7 +70,8 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
         // C. Comparación de Presupuesto
         const budgetComparison = categories.map(cat => {
             const catExpenses = expenses.filter(e => e.categoryId === cat.id).reduce((acc, e) => acc + e.amount, 0);
-            const limit = cat.monthlyLimit || 0;
+            const mb = cat.budgets?.find((b) => b.year === currentYear && b.month === currentMonth + 1);
+            const limit = mb ? Number(mb.limit) : Number(cat.monthlyLimit || 0);
             const diff = limit - catExpenses;
             const percent = limit > 0 ? (catExpenses / limit) * 100 : 0;
 

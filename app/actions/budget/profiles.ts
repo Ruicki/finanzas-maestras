@@ -17,7 +17,7 @@ export async function getProfiles() {
             incomes: true,
             salaries: true,
             loans: true,
-            categories: true,
+            categories: { include: { budgets: true } },
         },
         orderBy: { createdAt: 'asc' },
     });
@@ -55,6 +55,7 @@ export async function getProfiles() {
             ...c,
             monthlyLimit: toNumOrNull(c.monthlyLimit),
             rolloverBalance: toNum(c.rolloverBalance),
+            budgets: c.budgets.map((b) => ({ ...b, limit: toNum(b.limit) })),
         })),
     }));
 }
@@ -70,7 +71,7 @@ export async function getProfileById(id: number) {
             salaries: true,
             creditCards: true,
             loans: true,
-            categories: true,
+            categories: { include: { budgets: true } },
         },
     });
 
@@ -109,6 +110,7 @@ export async function getProfileById(id: number) {
             ...c,
             monthlyLimit: toNumOrNull(c.monthlyLimit),
             rolloverBalance: toNum(c.rolloverBalance),
+            budgets: c.budgets.map((b) => ({ ...b, limit: toNum(b.limit) })),
         })),
     };
 }

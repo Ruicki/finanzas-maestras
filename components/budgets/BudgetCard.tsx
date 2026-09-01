@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatMoney } from '@/lib/utils';
-import { updateCategoryLimit } from '@/app/actions/budget';
+import { setCategoryBudget } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { CheckIcon, XIcon } from '@animateicons/react/lucide';
 import { PencilIcon } from '@animateicons/react/lucide';
@@ -10,19 +10,26 @@ import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 interface BudgetCardProps {
     category: any;
     expenses: any[];
+    year: number;
+    month: number; // 1-12
     onUpdate?: () => void;
 }
 
-export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardProps) {
+export default function BudgetCard({ category, expenses, year, month, onUpdate }: BudgetCardProps) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
-    const [limitInput, setLimitInput] = useState(category.monthlyLimit?.toString() || '');
 
     // Calculate stats
     const catExpenses = expenses.filter(e => e.categoryId === category.id || e.category === category.name);
     const total = catExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
-    const limit = category.monthlyLimit ? Number(category.monthlyLimit) : 0;
+    // Límite del mes seleccionado: presupuesto específico del mes, o fallback al límite global
+    const monthBudget = category.budgets?.find((b: any) => b.year === year && b.month === month);
+    const limit = monthBudget
+        ? Number(monthBudget.limit)
+        : category.monthlyLimit ? Number(category.monthlyLimit) : 0;
+    const [limitInput, setLimitInput] = useState(limit > 0 ? limit.toString() : '');
+
     const rollover = category.isRollover ? Number(category.rolloverBalance) : 0;
     const effectiveLimit = limit + rollover;
 
@@ -31,8 +38,10 @@ export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardP
     const remaining = Math.max(0, effectiveLimit - total);
 
     useEffect(() => {
-        setLimitInput(category.monthlyLimit?.toString() || '');
-    }, [category.monthlyLimit]);
+        const mb = category.budgets?.find((b: any) => b.year === year && b.month === month);
+        const lim = mb ? Number(mb.limit) : category.monthlyLimit ? Number(category.monthlyLimit) : 0;
+        setLimitInput(lim > 0 ? lim.toString() : '');
+    }, [category, year, month]);
 
     async function handleSaveLimit() {
         const val = parseFloat(limitInput);
@@ -43,9 +52,9 @@ export default function BudgetCard({ category, expenses, onUpdate }: BudgetCardP
             return;
         }
 
-        const res = await updateCategoryLimit(category.id, val);
+        const res = await setCategoryBudget({ categoryId: category.id, year, month, limit: val });
         if (res.success) {
-            toast.success("Límite actualizado");
+            toast.success(monthBudget ? "Presupuesto del mes actualizado" : "Presupuesto del mes guardado");
             setIsEditing(false);
             if (onUpdate) {
                 onUpdate();
