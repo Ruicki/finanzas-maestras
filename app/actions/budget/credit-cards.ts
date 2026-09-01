@@ -60,6 +60,7 @@ export async function updateCreditCardDetails(
         data: {
             name: data.name,
             limit: data.limit,
+            balance: data.initialBalance,
             cutoffDay: data.cutoffDay,
             paymentDay: data.paymentDay,
             interestRate: data.interestRate,
