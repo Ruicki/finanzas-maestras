@@ -103,11 +103,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         return iso.startsWith(targetMonth);
     };
 
-    // Filtered Lists
-    // Recurring expenses appear in ALL months; one-time expenses only in their creation month
+    // Filtered Lists — only expenses from the selected month
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
-        if (e.isRecurring) return true;
         return isInSelectedMonth(e.createdAt);
     }) || [];
 
