@@ -17,13 +17,14 @@ import { CategoryIcon } from '@/components/shared/CategoryIcon';
 // Tipos auxiliares
 type InsightsTabProps = {
     expenses: Expense[];
+    allExpenses?: Expense[];
     categories: Category[];
     incomes: AdditionalIncome[];
     salaries: Salary[];
     currency?: string;
 };
 
-export default function InsightsTab({ expenses, categories, incomes, salaries, currency = "$" }: InsightsTabProps) {
+export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, currency = "$" }: InsightsTabProps) {
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
@@ -72,8 +73,23 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
             const catExpenses = expenses.filter(e => e.categoryId === cat.id).reduce((acc, e) => acc + e.amount, 0);
             const mb = cat.budgets?.find((b) => b.year === currentYear && b.month === currentMonth + 1);
             const limit = mb ? Number(mb.limit) : Number(cat.monthlyLimit || 0);
-            const diff = limit - catExpenses;
-            const percent = limit > 0 ? (catExpenses / limit) * 100 : 0;
+
+            // Calculate rollover from previous month
+            let prevM = currentMonth;
+            let prevY = currentYear;
+            prevM -= 1;
+            if (prevM < 0) { prevM = 11; prevY -= 1; }
+            const prevMb = cat.budgets?.find((b: any) => b.year === prevY && b.month === prevM + 1);
+            const prevLimit = prevMb ? Number(prevMb.limit) : Number(cat.monthlyLimit || 0);
+            const prevSpent = allExpenses
+                .filter(e => e.categoryId === cat.id)
+                .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
+                .reduce((sum, e) => sum + Number(e.amount), 0);
+            const rollover = prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
+
+            const effectiveLimit = limit + rollover;
+            const diff = effectiveLimit - catExpenses;
+            const percent = effectiveLimit > 0 ? (catExpenses / effectiveLimit) * 100 : 0;
 
             return {
                 ...cat,
@@ -96,7 +112,7 @@ export default function InsightsTab({ expenses, categories, incomes, salaries, c
             budgetComparison,
             topCategories
         };
-    }, [expenses, categories, incomes, salaries]);
+    }, [expenses, allExpenses, categories, incomes, salaries]);
 
 
     return (

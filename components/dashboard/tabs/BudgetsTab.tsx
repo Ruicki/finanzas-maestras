@@ -33,6 +33,7 @@ function normalizeToMonthly(amount: number, type?: string | null): number {
 interface BudgetsTabProps {
     categories: any[];
     expenses: any[];
+    allExpenses?: any[];
     creditCards?: any[];
     accounts?: any[];
     profileId?: number;
@@ -48,7 +49,7 @@ interface BudgetsTabProps {
 
 type SubTab = 'resumen' | 'categorias' | 'suscripciones';
 
-export default function BudgetsTab({ categories, expenses, creditCards = [], accounts = [], profileId, currency = 'USD', totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
+export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, currency = 'USD', totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [expandedSub, setExpandedSub] = useState<string | null>(null);
     const [showWizard, setShowWizard] = useState(false);
@@ -116,10 +117,41 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                     {/* Summary Cards Row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {(() => {
+                            // Helper: get the budget limit for a specific month
+                            const getMonthLimit = (cat: any, year: number, month1: number) => {
+                                const mb = cat.budgets?.find((b: any) => b.year === year && b.month === month1);
+                                return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
+                            };
+
+                            // Helper: calculate rollover from previous month
+                            const getRollover = (cat: any) => {
+                                let prevMonth = currentMonth; // 0-indexed current
+                                let prevYear = currentYear;
+                                prevMonth -= 1;
+                                if (prevMonth < 0) { prevMonth = 11; prevYear -= 1; }
+                                const prevMonth1 = prevMonth + 1; // 1-indexed
+
+                                const prevLimit = getMonthLimit(cat, prevYear, prevMonth1);
+                                if (prevLimit <= 0) return 0;
+
+                                const prevSpent = allExpenses
+                                    .filter(e => {
+                                        if (e.categoryId !== cat.id) return false;
+                                        const d = new Date(e.createdAt);
+                                        return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+                                    })
+                                    .reduce((sum, e) => sum + Number(e.amount), 0);
+
+                                return Math.max(0, prevLimit - prevSpent);
+                            };
+
                             // Límite del mes seleccionado por categoría (presupuesto específico o fallback global)
                             const getCategoryLimit = (cat: any) => {
-                                const mb = cat.budgets?.find((b: any) => b.year === currentYear && b.month === currentMonth + 1);
-                                return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
+                                return getMonthLimit(cat, currentYear, currentMonth + 1);
+                            };
+
+                            const getCategoryRollover = (cat: any) => {
+                                return getRollover(cat);
                             };
 
                             const catStats = categories.map(cat => {
@@ -129,11 +161,15 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                         return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                                     })
                                     .reduce((sum, e) => sum + Number(e.amount), 0);
-                                return { ...cat, spent };
+                                const rollover = getCategoryRollover(cat);
+                                const limit = getCategoryLimit(cat);
+                                const effective = limit + rollover;
+                                return { ...cat, spent, rollover, effective };
                             });
                             const totalSpent = catStats.reduce((s, c) => s + c.spent, 0);
-                            const totalAssigned = categories.reduce((s, c) => s + getCategoryLimit(c), 0);
-                            const overBudget = catStats.filter(c => getCategoryLimit(c) > 0 && c.spent > getCategoryLimit(c));
+                            const totalAssigned = catStats.reduce((s, c) => s + c.effective, 0);
+                            const totalRollover = catStats.reduce((s, c) => s + c.rollover, 0);
+                            const overBudget = catStats.filter(c => c.effective > 0 && c.spent > c.effective);
 
                             return (
                                 <>
@@ -145,7 +181,12 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
                                     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Presupuesto</p>
                                         <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalAssigned)}</p>
-                                        <p className="text-[10px] text-zinc-400 mt-1">{categories.length} categorías</p>
+                                        <p className="text-[10px] text-zinc-400 mt-1">
+                                            {totalRollover > 0
+                                                ? `${formatMoney(totalRollover)} del mes anterior`
+                                                : `${categories.length} categorías`
+                                            }
+                                        </p>
                                     </div>
                                     <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Restante</p>
@@ -168,16 +209,32 @@ export default function BudgetsTab({ categories, expenses, creditCards = [], acc
 
                     {/* Category Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => (
-                            <BudgetCard
-                                key={categoryObj.id}
-                                category={categoryObj}
-                                expenses={expenses}
-                                year={currentYear}
-                                month={currentMonth + 1}
-                                onUpdate={onUpdate}
-                            />
-                        ))}
+                        {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => {
+                            // Calculate rollover for this category
+                            let prevM = currentMonth;
+                            let prevY = currentYear;
+                            prevM -= 1;
+                            if (prevM < 0) { prevM = 11; prevY -= 1; }
+                            const prevMb = categoryObj.budgets?.find((b: any) => b.year === prevY && b.month === prevM + 1);
+                            const prevLimit = prevMb ? Number(prevMb.limit) : (Number(categoryObj.monthlyLimit) || 0);
+                            const prevSpent = allExpenses
+                                .filter(e => e.categoryId === categoryObj.id)
+                                .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
+                                .reduce((sum, e) => sum + Number(e.amount), 0);
+                            const rollover = prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
+
+                            return (
+                                <BudgetCard
+                                    key={categoryObj.id}
+                                    category={categoryObj}
+                                    expenses={expenses}
+                                    year={currentYear}
+                                    month={currentMonth + 1}
+                                    rollover={rollover}
+                                    onUpdate={onUpdate}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             )}

@@ -12,10 +12,11 @@ interface BudgetCardProps {
     expenses: any[];
     year: number;
     month: number; // 1-12
+    rollover?: number;
     onUpdate?: () => void;
 }
 
-export default function BudgetCard({ category, expenses, year, month, onUpdate }: BudgetCardProps) {
+export default function BudgetCard({ category, expenses, year, month, rollover = 0, onUpdate }: BudgetCardProps) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
 
@@ -30,7 +31,6 @@ export default function BudgetCard({ category, expenses, year, month, onUpdate }
         : category.monthlyLimit ? Number(category.monthlyLimit) : 0;
     const [limitInput, setLimitInput] = useState(limit > 0 ? limit.toString() : '');
 
-    const rollover = category.isRollover ? Number(category.rolloverBalance) : 0;
     const effectiveLimit = limit + rollover;
 
     const percentage = effectiveLimit > 0 ? Math.min((total / effectiveLimit) * 100, 100) : 0;
@@ -124,6 +124,11 @@ export default function BudgetCard({ category, expenses, year, month, onUpdate }
                                     <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
                                         {limit > 0 ? formatMoney(effectiveLimit) : 'Sin límite'}
                                     </p>
+                                    {rollover > 0 && (
+                                        <p className="text-[10px] font-bold text-emerald-500 mt-0.5">
+                                            +{formatMoney(rollover)} del mes anterior
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

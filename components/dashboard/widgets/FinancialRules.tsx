@@ -125,6 +125,12 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                         </h3>
                     </div>
 
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">
+                        Distribuye tu ingreso: <span className="font-bold text-blue-500">50% Necesidades</span> (vivienda, comida, servicios),{' '}
+                        <span className="font-bold text-purple-500">30% Deseos</span> (entretenimiento, gustos) y{' '}
+                        <span className="font-bold text-emerald-500">20% Ahorro/Deudas</span>.
+                    </p>
+
                     <div className="h-52 relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart className="lucide-animated">
