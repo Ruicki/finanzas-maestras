@@ -108,11 +108,11 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         setEditingGoalId(goal.id);
         setForm({
             name: goal.name,
-            targetAmount: goal.targetAmount.toString(),
+            targetAmount: Number(goal.targetAmount).toFixed(2),
             deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
             type: goal.type,
             frequency: goal.frequency || 'MONTHLY',
-            contributionAmount: goal.contributionAmount?.toString() || '',
+            contributionAmount: Number(goal.contributionAmount || 0).toFixed(2),
             priority: goal.priority || 'MEDIUM',
             category: (goal as any).category || 'SAVINGS',
             notes: (goal as any).notes || '',
@@ -390,7 +390,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                     ) : (
                         goal.type === 'FIXED' && goal.contributionAmount ? (
                             <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onUpdate(); }).catch((err: any) => toast.error(err.message)); } else { setExpandedGoalId(goal.id); setTransactionAmount(String(goal.contributionAmount || '')); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                                <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onUpdate(); }).catch((err: any) => toast.error(err.message)); } else { setExpandedGoalId(goal.id); setTransactionAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
                                     <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
                                     <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
                                 </button>
