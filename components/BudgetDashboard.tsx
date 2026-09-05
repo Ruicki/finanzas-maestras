@@ -115,7 +115,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
         if (e.isRecurring && e.recurrenceType === 'MONTHLY') return true; // monthly: every month
-        // annual + one-time: only in their creation/billing month
+        if (e.isRecurring && e.recurrenceType === 'ANNUAL') {
+            // Annual: appears every year in the same month as creation
+            const created = new Date(e.createdAt);
+            return (created.getMonth() + 1) === selectedMonth;
+        }
+        // one-time: only in their creation month
         return isInSelectedMonth(e.createdAt);
     }) || [];
 

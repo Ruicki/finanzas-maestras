@@ -81,6 +81,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                 isOneTime: true,
                 date: new Date(),
             });
+            await markSubscriptionPaid(payingSub.id);
             toast.success(`${payingSub.name} pagado ✓`);
             setPayingSub(null);
             setPayAccountId('');
