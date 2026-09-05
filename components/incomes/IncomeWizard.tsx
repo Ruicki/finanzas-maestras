@@ -36,7 +36,6 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
     const [description, setDescription] = useState('');
     const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
     const [selectedIcon, setSelectedIcon] = useState('Wallet');
-    const [incomeFrequency, setIncomeFrequency] = useState<string>('ONE_TIME');
     const [date, setDate] = useState<string>(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -49,7 +48,6 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
             setDescription(initialData.name || '');
             setSelectedAccountId(initialData.accountId || null);
             setSelectedIcon(initialData.icon || 'Wallet');
-            setIncomeFrequency(initialData.frequency || 'ONE_TIME');
             setDate(initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
 
             // Detectar tipo basado en los datos
@@ -124,8 +122,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     await updateIncome(initialData.id, {
                         name: description || 'Ingreso',
                         amount: val,
-                        type: incomeFrequency === 'ONE_TIME' ? 'ONE_TIME' : 'RECURRING',
-                        frequency: incomeFrequency === 'ONE_TIME' ? undefined : incomeFrequency,
+                        type: 'ONE_TIME',
                         profileId,
                         accountId: selectedAccountId || undefined,
                         icon: selectedIcon,
@@ -152,8 +149,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                 await createIncome({
                     name: description,
                     amount: val,
-                    type: incomeFrequency === 'ONE_TIME' ? 'ONE_TIME' : 'RECURRING',
-                    frequency: incomeFrequency === 'ONE_TIME' ? undefined : incomeFrequency,
+                    type: 'ONE_TIME',
                     profileId,
                     accountId: selectedAccountId || undefined,
                     icon: selectedIcon,
@@ -313,6 +309,17 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Descripción</label>
+                                    <input
+                                        type="text"
+                                        value={description}
+                                        onChange={e => setDescription(e.target.value)}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-zinc-200 dark:ring-zinc-700 transition-all"
+                                        placeholder={type === 'SALARY' ? "Nombre Empresa" : "Ej: Venta Garage"}
+                                    />
+                                </div>
+
+                                <div>
                                     <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Fecha</label>
                                     <input
                                         type="date"
@@ -321,21 +328,6 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                                         className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-zinc-200 dark:ring-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all"
                                     />
                                 </div>
-
-                                {type !== 'SALARY' && (
-                                    <div>
-                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 pl-1">Frecuencia</label>
-                                        <select
-                                            value={incomeFrequency}
-                                            onChange={e => setIncomeFrequency(e.target.value)}
-                                            className="w-full bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 ring-zinc-200 dark:ring-zinc-700 appearance-none text-zinc-800 dark:text-zinc-200 transition-all"
-                                        >
-                                            <option value="ONE_TIME">Único (una vez)</option>
-                                            <option value="MONTHLY">Mensual</option>
-                                            <option value="BIWEEKLY">Quincenal</option>
-                                        </select>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
