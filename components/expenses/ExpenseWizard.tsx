@@ -300,7 +300,7 @@ export default function ExpenseWizard({
                                 >
                                     <option value="" disabled>Seleccionar Cuenta...</option>
                                     {accounts.filter(acc => acc.purpose !== 'SAVINGS').map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance.toFixed(2)})</option>
+                                        <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance.toFixed(2)})</option>
                                     ))}
                                 </select>
                             </div>

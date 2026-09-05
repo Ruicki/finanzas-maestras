@@ -256,7 +256,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                         >
                             <option value="">-- No vincular a cuenta --</option>
                             {accounts?.filter(acc => acc.purpose !== 'SAVINGS').map(acc => (
-                                <option key={acc.id} value={acc.id}>{acc.name} (${Number(acc.balance)})</option>
+                                <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{Number(acc.balance)})</option>
                             ))}
                         </select>
                     </div>

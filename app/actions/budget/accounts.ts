@@ -15,11 +15,12 @@ export async function createAccount(
     profileId: number,
     lockDate?: Date,
     purpose: string = 'SPENDING',
+    symbol?: string,
 ) {
     await requireOwnership(profileId);
     if (balance < 0) throw new Error('El saldo no puede ser negativo');
     const account = await prisma.account.create({
-        data: { name, type, balance, profileId, lockDate, purpose },
+        data: { name, type, balance, profileId, lockDate, purpose, symbol: symbol || null },
     });
     revalidatePath('/budget');
     return { ...account, balance: toNum(account.balance) };
@@ -27,7 +28,7 @@ export async function createAccount(
 
 export async function updateAccount(
     id: number,
-    data: { name?: string; type?: string; balance?: number; lockDate?: Date; purpose?: string },
+    data: { name?: string; type?: string; balance?: number; lockDate?: Date; purpose?: string; symbol?: string },
 ) {
     if (data.balance !== undefined && data.balance < 0)
         throw new Error('El saldo no puede ser negativo');
@@ -42,6 +43,7 @@ export async function updateAccount(
             balance: data.balance,
             lockDate: data.lockDate,
             purpose: data.purpose,
+            symbol: data.symbol,
         },
     });
     revalidatePath('/budget');
@@ -197,6 +199,9 @@ export async function createTransfer(
     destinationAccountId: number,
     amount: number,
     description?: string,
+    exchangeRate?: number,
+    sourceAmount?: number,
+    destAmount?: number,
 ) {
     if (sourceAccountId === destinationAccountId)
         throw new Error('No puedes transferir a la misma cuenta');
@@ -227,6 +232,12 @@ export async function createTransfer(
         );
     }
 
+    const isCrossCurrency = exchangeRate != null && exchangeRate > 0;
+    const effectiveDestAmount = isCrossCurrency
+        ? (destAmount != null ? destAmount : amount * exchangeRate!)
+        : amount;
+    const effectiveSourceAmount = sourceAmount != null ? sourceAmount : amount;
+
     try {
         await prisma.$transaction(async (tx) => {
             await tx.account.update({
@@ -235,10 +246,19 @@ export async function createTransfer(
             });
             await tx.account.update({
                 where: { id: destinationAccountId },
-                data: { balance: { increment: amount } },
+                data: { balance: { increment: effectiveDestAmount } },
             });
             await tx.transfer.create({
-                data: { amount, sourceAccountId, destinationAccountId, description, date: new Date() },
+                data: {
+                    amount,
+                    sourceAccountId,
+                    destinationAccountId,
+                    description,
+                    date: new Date(),
+                    exchangeRate: isCrossCurrency ? exchangeRate! : null,
+                    sourceAmount: isCrossCurrency ? effectiveSourceAmount : null,
+                    destAmount: isCrossCurrency ? effectiveDestAmount : null,
+                },
             });
         });
 

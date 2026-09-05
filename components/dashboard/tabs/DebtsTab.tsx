@@ -618,7 +618,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                     <option value="">Seleccionar Cuenta...</option>
                                     <option value="">-- Pago Externo / Otro --</option>
                                     {accounts.filter(acc => (acc as any).purpose !== 'SAVINGS').map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>
+                                        <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>
                                     ))}
                                 </select>
                             </div>

@@ -188,6 +188,7 @@ model Account {
   purpose       String             @default("SPENDING")
   balance       Decimal            @default(0) @db.Decimal(12, 2)
   currency      String             @default("USD")
+  symbol        String?
   profileId     Int
   createdAt     DateTime           @default(now())
   isDefault     Boolean            @default(false)
@@ -201,14 +202,17 @@ model Account {
 }
 
 model Transfer {
-  id                   Int      @id @default(autoincrement())
-  amount               Decimal  @db.Decimal(10, 2)
+  id                   Int       @id @default(autoincrement())
+  amount               Decimal   @db.Decimal(10, 2)
   description          String?
-  date                 DateTime @default(now())
+  date                 DateTime  @default(now())
   sourceAccountId      Int
   destinationAccountId Int
-  destinationAccount   Account  @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
-  sourceAccount        Account  @relation("SourceAccount", fields: [sourceAccountId], references: [id])
+  exchangeRate         Decimal?  @db.Decimal(12, 6)
+  sourceAmount         Decimal?  @db.Decimal(12, 6)
+  destAmount           Decimal?  @db.Decimal(12, 6)
+  destinationAccount   Account   @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
+  sourceAccount        Account   @relation("SourceAccount", fields: [sourceAccountId], references: [id])
 }
 
 model AuditLog {
