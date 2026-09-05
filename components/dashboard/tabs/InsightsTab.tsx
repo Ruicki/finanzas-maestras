@@ -22,9 +22,11 @@ type InsightsTabProps = {
     incomes: AdditionalIncome[];
     salaries: Salary[];
     currency?: string;
+    selectedMonth?: number;
+    selectedYear?: number;
 };
 
-export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, currency = "$" }: InsightsTabProps) {
+export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, currency = "$", selectedMonth, selectedYear }: InsightsTabProps) {
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
@@ -36,8 +38,8 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         budgetComparison,
         topCategories
     } = useMemo(() => {
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
+        const currentMonth = selectedMonth ?? new Date().getMonth();
+        const currentYear = selectedYear ?? new Date().getFullYear();
 
         // A. Totales
         const salaryTotal = salaries.reduce((acc, s) => acc + s.netVal, 0);
@@ -55,7 +57,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             const dayExpenses = expenses
                 .filter(e => {
                     const d = new Date(e.createdAt || new Date());
-                    return d.getDate() === day;
+                    return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                 })
                 .reduce((acc, e) => acc + e.amount, 0);
 

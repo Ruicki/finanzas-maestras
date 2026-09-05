@@ -21,6 +21,7 @@ export type CreateLoanInput = {
 }
 
 export async function createLoan(data: CreateLoanInput) {
+    await requireOwnership(data.profileId);
     const loan = await prisma.loan.create({
         data: {
             name: data.name,
@@ -94,6 +95,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
     if (sourceAccountId) {
         account = await prisma.account.findUnique({ where: { id: sourceAccountId } });
         if (!account) throw new Error("Cuenta no encontrada");
+        if (account.profileId !== loan.profileId) throw new Error("La cuenta no pertenece a este perfil");
         if (Number(account.balance) < amount) throw new Error("Fondos insuficientes en la cuenta de origen");
     }
 

@@ -367,7 +367,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             </div>
                             <div className="flex items-center gap-2 mb-3 bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700">
                                 <span className="text-zinc-400 font-bold pl-2">$</span>
-                                <SmartMoneyInput autoFocus value={transactionAmount} onMoneyChange={setTransactionAmount} className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white" placeholder="0.00" />
+                                <SmartMoneyInput selectOnFocus={false} value={transactionAmount} onMoneyChange={setTransactionAmount} className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white" placeholder="0.00" />
                             </div>
                             <div className="mb-3">
                                 {goal.type === 'FIXED' && goal.sourceAccountId ? (
@@ -610,7 +610,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-zinc-500 ml-2">Cuota ($)</label>
-                                            <SmartMoneyInput value={form.contributionAmount} onMoneyChange={(val) => setForm({ ...form, contributionAmount: val })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none" placeholder="100" />
+                                            <SmartMoneyInput selectOnFocus={false} value={form.contributionAmount} onMoneyChange={(val) => setForm({ ...form, contributionAmount: val })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none" placeholder="100" />
                                         </div>
                                     </div>
                                     <div>

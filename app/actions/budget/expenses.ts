@@ -310,3 +310,33 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
 
     return result;
 }
+
+// ─── SUBSCRIPTION STATUS ─────────────────────────────────────────────────────
+
+export async function markSubscriptionPaid(expenseId: number): Promise<void> {
+    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!expense) throw new Error('Gasto no encontrado');
+    if (!expense.isRecurring) throw new Error('Este gasto no es una suscripción');
+    await requireOwnership(expense.profileId);
+
+    await prisma.expense.update({
+        where: { id: expenseId },
+        data: { lastPaidAt: new Date() },
+    });
+
+    revalidatePath('/budget');
+}
+
+export async function markSubscriptionUnpaid(expenseId: number): Promise<void> {
+    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!expense) throw new Error('Gasto no encontrado');
+    if (!expense.isRecurring) throw new Error('Este gasto no es una suscripción');
+    await requireOwnership(expense.profileId);
+
+    await prisma.expense.update({
+        where: { id: expenseId },
+        data: { lastPaidAt: null },
+    });
+
+    revalidatePath('/budget');
+}

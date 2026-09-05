@@ -9,7 +9,7 @@ import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, W
 import { PieChart } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { deleteExpense, createExpense } from '@/app/actions/budget';
+import { deleteExpense, createExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
 import { toast } from 'sonner';
 
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -20,8 +20,15 @@ const RECURRENCE_LABELS: Record<string, string> = {
 };
 
 function normalizeToMonthly(amount: number, type?: string | null): number {
-    // ANNUAL: show full amount in the month it's charged (don't divide)
+    // ANNUAL: full amount in billing month (not divided)
     return amount;
+}
+
+function isPaidThisMonth(exp: any): boolean {
+    if (!exp.lastPaidAt) return false;
+    const paid = new Date(exp.lastPaidAt);
+    const now = new Date();
+    return paid.getMonth() === now.getMonth() && paid.getFullYear() === now.getFullYear();
 }
 
 interface BudgetsTabProps {
@@ -344,8 +351,15 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-[10px] font-bold text-zinc-500">
-                                                        Día {exp.dueDate || '1'}
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {isPaidThisMonth(exp) ? (
+                                                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">Pagado</span>
+                                                        ) : (
+                                                            <span className="text-[9px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Pendiente</span>
+                                                        )}
+                                                        <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-[10px] font-bold text-zinc-500">
+                                                            Día {exp.dueDate || '1'}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -423,12 +437,33 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                             {/* Action Buttons */}
                                             {!isPaying && (
                                                 <div className="px-5 pb-4 flex items-center justify-between">
-                                                    <button
-                                                        onClick={() => { setPayingSub(exp); setPayMethod('ACCOUNT'); }}
-                                                        className="py-2 px-4 rounded-xl bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-all shadow-sm hover:shadow-md"
-                                                    >
-                                                        Pagar
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => { setPayingSub(exp); setPayMethod('ACCOUNT'); }}
+                                                            className="py-2 px-4 rounded-xl bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-all shadow-sm hover:shadow-md"
+                                                        >
+                                                            Pagar
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    if (isPaidThisMonth(exp)) {
+                                                                        await markSubscriptionUnpaid(exp.id);
+                                                                        toast.success("Marcado como pendiente");
+                                                                    } else {
+                                                                        await markSubscriptionPaid(exp.id);
+                                                                        toast.success("Marcado como pagado");
+                                                                    }
+                                                                    if (onUpdate) onUpdate();
+                                                                } catch (err) {
+                                                                    toast.error("Error al actualizar");
+                                                                }
+                                                            }}
+                                                            className={`py-2 px-3 rounded-xl text-[10px] font-bold transition-all ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
+                                                        >
+                                                            {isPaidThisMonth(exp) ? 'Pagado ✓' : 'Marcar pagado'}
+                                                        </button>
+                                                    </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => setEditingSub(exp)}
