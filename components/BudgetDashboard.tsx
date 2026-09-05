@@ -317,6 +317,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <span className="text-[#519A66]">Ingresos ${totalMonthlyIncome.toFixed(0)}</span>
                                 <span className="text-zinc-300 dark:text-zinc-600">vs</span>
                                 <span className="text-red-400">Gastos ${totalExpenses.toFixed(0)}</span>
+                                <span className="text-zinc-300 dark:text-zinc-600">vs</span>
+                                <span className="text-amber-400">Deudas ${totalCreditDebt.toFixed(0)}</span>
                             </div>
                         </div>
 
