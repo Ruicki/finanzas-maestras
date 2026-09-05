@@ -18,6 +18,7 @@ interface AccountWizardProps {
         balance: number;
         lockDate?: Date | null;
         purpose?: string;
+        symbol?: string | null;
     };
     isEditing?: boolean;
 }
@@ -34,6 +35,7 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
     const [name, setName] = useState(initialData?.name || '');
     const [balance, setBalance] = useState(initialData?.balance?.toString() || '');
     const [lockDate, setLockDate] = useState(initialData?.lockDate ? new Date(initialData.lockDate).toISOString().split('T')[0] : '');
+    const [symbol, setSymbol] = useState(initialData?.symbol || '');
     const [loading, setLoading] = useState(false);
 
     useScrollLock(true);
@@ -74,10 +76,11 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
                     balance: parseFloat(balance),
                     lockDate: lockDate ? new Date(lockDate) : undefined,
                     purpose,
+                    symbol: type === 'WALLET' ? (symbol || undefined) : undefined,
                 });
                 toast.success("¡Cuenta actualizada!");
             } else {
-                await createAccount(name, type, parseFloat(balance), profileId, lockDate ? new Date(lockDate) : undefined, purpose);
+                await createAccount(name, type, parseFloat(balance), profileId, lockDate ? new Date(lockDate) : undefined, purpose, type === 'WALLET' ? symbol : undefined);
                 toast.success("¡Cuenta creada!");
             }
             onSuccess();
@@ -139,11 +142,27 @@ export default function AccountWizard({ profileId, onClose, onSuccess, initialDa
                                     onChange={(e) => setName(e.target.value)}
                                     disabled={type === 'CASH'}
                                     className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 text-lg font-bold outline-none focus:border-indigo-500 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
-                                    placeholder={type === 'BANK' ? 'Ej: Banco General' : 'Nombre...'}
+                                    placeholder={type === 'BANK' ? 'Ej: Banco General' : type === 'WALLET' ? 'Ej: Binance' : 'Nombre...'}
                                     autoFocus
                                 />
                                 {type === 'CASH' && <p className="text-xs text-amber-500">El nombre es fijo para cuentas de efectivo.</p>}
                             </div>
+
+                            {type === 'WALLET' && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Activo / Símbolo</label>
+                                    <input
+                                        type="text"
+                                        value={symbol}
+                                        onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 text-lg font-bold outline-none focus:border-indigo-500 transition-colors"
+                                        placeholder="Ej: BTC, ETH, USDT, BNB"
+                                    />
+                                    <p className="text-xs text-zinc-400">
+                                        Símbolo del activo cripto (opcional, pero útil para transferencias con tipo de cambio)
+                                    </p>
+                                </div>
+                            )}
 
                             {/* PURPOSE SELECTOR - Only for BANK type */}
                             {type === 'BANK' && (

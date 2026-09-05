@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createTransfer } from '@/app/actions/budget';
-import { Account } from '@prisma/client';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { ArrowRightLeft, CreditCard, ChevronRight, X, ArrowDown } from "lucide-react";
+import { ArrowRightLeft, ChevronRight, X, ArrowDown, ArrowRight } from "lucide-react";
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface TransferModalProps {
@@ -18,13 +17,33 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
     const [sourceId, setSourceId] = useState<number | null>(null);
     const [destinationId, setDestinationId] = useState<number | null>(null);
     const [amount, setAmount] = useState('');
+    const [exchangeRate, setExchangeRate] = useState('');
     const [loading, setLoading] = useState(false);
     useScrollLock(true);
+
+    const sourceAccount = accounts.find(a => a.id === sourceId);
+    const destAccount = accounts.find(a => a.id === destinationId);
+
+    const isCrossCurrency = sourceAccount && destAccount && (
+        sourceAccount.type !== destAccount.type ||
+        (sourceAccount.symbol && destAccount.symbol && sourceAccount.symbol !== destAccount.symbol) ||
+        (sourceAccount.symbol && !destAccount.symbol) ||
+        (!sourceAccount.symbol && destAccount.symbol)
+    );
+
+    useEffect(() => {
+        if (!isCrossCurrency) {
+            setExchangeRate('');
+        }
+    }, [isCrossCurrency]);
+
+    const numAmount = parseFloat(amount) || 0;
+    const numRate = parseFloat(exchangeRate) || 1;
+    const destAmount = isCrossCurrency && numRate > 0 ? numAmount * numRate : numAmount;
 
     const handleTransfer = async () => {
         if (!sourceId || !destinationId || !amount) return;
 
-        const numAmount = parseFloat(amount);
         if (isNaN(numAmount) || numAmount <= 0) {
             toast.warning("Monto inválido");
             return;
@@ -32,7 +51,11 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
 
         setLoading(true);
         try {
-            await createTransfer(sourceId, destinationId, numAmount);
+            if (isCrossCurrency && numRate > 0) {
+                await createTransfer(sourceId, destinationId, numAmount, undefined, numRate, numAmount, destAmount);
+            } else {
+                await createTransfer(sourceId, destinationId, numAmount);
+            }
             toast.success("Transferencia realizada");
             onSuccess();
             onClose();
@@ -44,13 +67,10 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
         }
     };
 
-    const sourceAccount = accounts.find(a => a.id === sourceId);
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[85vh]">
 
-                {/* Encabezado */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
@@ -65,19 +85,18 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
 
                 <div className="p-6 space-y-6">
 
-                    {/* Cuenta Origen */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Desde (Origen)</label>
                         <div className="relative">
                             <select
                                 value={sourceId ?? ''}
-                                onChange={(e) => setSourceId(Number(e.target.value))}
+                                onChange={(e) => { setSourceId(Number(e.target.value)); setDestinationId(null); }}
                                 className="w-full appearance-none bg-zinc-100 dark:bg-zinc-800 border-2 border-transparent focus:border-indigo-500 rounded-2xl p-4 pr-10 font-bold text-zinc-900 dark:text-white outline-none transition-all cursor-pointer"
                             >
                                 <option value="" disabled>Seleccionar cuenta...</option>
                                 {accounts.map(acc => (
                                     <option key={acc.id} value={acc.id}>
-                                        {acc.name} (${acc.balance.toFixed(2)})
+                                        {acc.name} ({acc.symbol || '$'} {Number(acc.balance).toFixed(2)})
                                     </option>
                                 ))}
                             </select>
@@ -85,14 +104,12 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                         </div>
                     </div>
 
-                    {/* Divisor de Flecha */}
                     <div className="flex justify-center -my-2 relative z-10">
                         <div className="bg-white dark:bg-zinc-900 p-2 rounded-full border border-zinc-100 dark:border-zinc-800 shadow-sm">
                             <ArrowDown className="w-5 h-5 text-zinc-400" />
                         </div>
                     </div>
 
-                    {/* Cuenta Destino */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Para (Destino)</label>
                         <div className="relative">
@@ -105,7 +122,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                                 <option value="" disabled>Seleccionar cuenta...</option>
                                 {accounts.filter(a => a.id !== sourceId).map(acc => (
                                     <option key={acc.id} value={acc.id}>
-                                        {acc.name} (${acc.balance.toFixed(2)})
+                                        {acc.name} ({acc.symbol || '$'} {Number(acc.balance).toFixed(2)})
                                     </option>
                                 ))}
                             </select>
@@ -113,11 +130,12 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                         </div>
                     </div>
 
-                    {/* Entrada de Monto */}
                     <div className="pt-2">
-                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Monto a Transferir</label>
+                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">
+                            Monto {sourceAccount?.symbol || 'USD'} a Transferir
+                        </label>
                         <div className="relative mt-2">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-xl">$</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-xl">{sourceAccount?.symbol || '$'}</span>
                             <SmartMoneyInput
                                 value={amount}
                                 onMoneyChange={setAmount}
@@ -125,20 +143,51 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                                 placeholder="0.00"
                             />
                         </div>
-                        {sourceAccount && amount && parseFloat(amount) > Number(sourceAccount.balance) && (
+                        {sourceAccount && amount && numAmount > Number(sourceAccount.balance) && (
                             <p className="text-red-500 text-sm font-bold mt-2 flex items-center gap-1">
-                                ⚠️ Fondos insuficientes (Disp: ${Number(sourceAccount.balance).toFixed(2)})
+                                Fondos insuficientes (Disp: {sourceAccount.symbol || '$'} {Number(sourceAccount.balance).toFixed(2)})
                             </p>
                         )}
                     </div>
 
+                    {isCrossCurrency && (
+                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 space-y-4">
+                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                                <ArrowRight size={16} />
+                                <span className="text-xs font-bold uppercase">Tipo de Cambio</span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                                    1 {sourceAccount?.symbol || 'ORIGEN'} = ? {destAccount?.symbol || 'DESTINO'}
+                                </label>
+                                <div className="relative">
+                                    <SmartMoneyInput
+                                        value={exchangeRate}
+                                        onMoneyChange={setExchangeRate}
+                                        className="w-full bg-white dark:bg-zinc-800 border-2 border-amber-200 dark:border-amber-500/30 rounded-xl p-3 text-xl font-black text-zinc-900 dark:text-white outline-none focus:border-amber-500 transition-colors"
+                                        placeholder="1.00"
+                                    />
+                                </div>
+                            </div>
+
+                            {numAmount > 0 && numRate > 0 && (
+                                <div className="bg-white dark:bg-zinc-800 rounded-xl p-3 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-zinc-500">Recibirás</span>
+                                    <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                                        {destAccount?.symbol || '$'} {destAmount.toFixed(6)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </div>
 
-                {/* Pie de página */}
                 <div className="p-6 pt-2">
                     <button
                         onClick={handleTransfer}
-                        disabled={loading || !sourceId || !destinationId || !amount || (sourceAccount ? parseFloat(amount) > Number(sourceAccount.balance) : false)}
+                        disabled={loading || !sourceId || !destinationId || !amount || (sourceAccount ? numAmount > Number(sourceAccount.balance) : false)}
                         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none active:scale-95"
                     >
                         {loading ? 'Procesando...' : 'Confirmar Transferencia'}

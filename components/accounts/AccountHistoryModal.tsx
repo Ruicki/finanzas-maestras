@@ -155,7 +155,7 @@ export default function AccountHistoryModal({
                             </div>
                             <h2 className="text-2xl font-black mb-1">{account.name}</h2>
                             <p className="text-3xl font-black">
-                                ${Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                {(account as any).symbol || '$'}{Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                         <button

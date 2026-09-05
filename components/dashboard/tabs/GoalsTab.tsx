@@ -378,7 +378,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 ) : (
                                     <select value={selectedAccountId} onChange={e => setSelectedAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
                                         <option value="">Cuenta...</option>
-                                        {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
+                                        {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
                                     </select>
                                 )}
                             </div>
@@ -502,7 +502,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             <label className="text-xs font-bold text-zinc-500 uppercase ml-2 mb-2 block">¿A dónde?</label>
                             <select value={reclaimAccountId} onChange={e => setReclaimAccountId(e.target.value)} className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold outline-none">
                                 <option value="">Cuenta...</option>
-                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
+                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
                             </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -617,14 +617,14 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Origen</label>
                                         <select value={form.sourceAccountId} onChange={e => setForm({ ...form, sourceAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Seleccionar...</option>
-                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
+                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Ahorro Destino</label>
                                         <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Sin destino</option>
-                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (${acc.balance})</option>)}
+                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                 </div>

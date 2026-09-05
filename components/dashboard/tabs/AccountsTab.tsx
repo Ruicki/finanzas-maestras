@@ -184,7 +184,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </p>
                     <h3 className="text-xl font-bold truncate mb-2">{acc.name}</h3>
                     <p className="text-3xl font-black tracking-tight">
-                        ${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {acc.symbol || '$'}{acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </p>
                     {acc.lockDate && new Date(acc.lockDate) > new Date() && (
                         <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
