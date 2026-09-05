@@ -9,7 +9,7 @@ import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, W
 import { PieChart } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { deleteExpense, createExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
+import { deleteExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
 import { toast } from 'sonner';
 
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -55,44 +55,6 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
     const [expandedSub, setExpandedSub] = useState<string | null>(null);
     const [showWizard, setShowWizard] = useState(false);
     const [editingSub, setEditingSub] = useState<any | null>(null);
-    const [payingSub, setPayingSub] = useState<any | null>(null);
-    const [payMethod, setPayMethod] = useState<'ACCOUNT' | 'CARD'>('ACCOUNT');
-    const [payAccountId, setPayAccountId] = useState<string>('');
-    const [payCardId, setPayCardId] = useState<string>('');
-    const [processingPay, setProcessingPay] = useState(false);
-
-    async function handlePaySubscription() {
-        if (!payingSub || !profileId) return;
-        if (payMethod === 'ACCOUNT' && !payAccountId) { toast.error("Selecciona una cuenta"); return; }
-        if (payMethod === 'CARD' && !payCardId) { toast.error("Selecciona una tarjeta"); return; }
-
-        setProcessingPay(true);
-        try {
-            await createExpense({
-                name: payingSub.name,
-                amount: Number(payingSub.amount),
-                category: payingSub.category || 'Suscripciones',
-                profileId,
-                categoryId: payingSub.categoryId,
-                paymentMethod: payMethod === 'CARD' ? 'CREDIT' : 'CASH',
-                linkedCardId: payMethod === 'CARD' ? Number(payCardId) : undefined,
-                accountId: payMethod === 'ACCOUNT' ? Number(payAccountId) : undefined,
-                isRecurring: false,
-                isOneTime: true,
-                date: new Date(),
-            });
-            await markSubscriptionPaid(payingSub.id);
-            toast.success(`${payingSub.name} pagado ✓`);
-            setPayingSub(null);
-            setPayAccountId('');
-            setPayCardId('');
-            onUpdate?.();
-        } catch (err: any) {
-            toast.error(err.message || "Error al pagar");
-        } finally {
-            setProcessingPay(false);
-        }
-    }
 
     // Subscriptions sorted by due date (each one individually)
     const subscriptions = expenses
@@ -327,9 +289,8 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                 {subscriptions.map((exp) => {
                                     const catColor = exp.categoryRel?.color || 'bg-zinc-400';
                                     const catIcon = exp.categoryRel?.icon || 'RefreshCw';
-                                    const isPaying = payingSub?.id === exp.id;
                                     return (
-                                        <div key={exp.id} className={`bg-white dark:bg-zinc-900 border rounded-2xl flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md transition-all relative overflow-hidden ${isPaying ? 'border-indigo-400 dark:border-indigo-500/50 ring-2 ring-indigo-500/20' : 'border-zinc-200 dark:border-zinc-800'}`}>
+                                        <div key={exp.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md transition-all relative overflow-hidden">
                                             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-purple-500 to-indigo-500" />
 
                                             <div className="p-5">
@@ -374,97 +335,27 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                 </div>
                                             </div>
 
-                                            {/* Payment Form (inline) */}
-                                            {isPaying && (
-                                                <div className="px-5 pb-4 space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                    <p className="text-[10px] font-bold text-zinc-400 uppercase">Pagar con</p>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => setPayMethod('ACCOUNT')}
-                                                            className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 ${payMethod === 'ACCOUNT' ? 'bg-emerald-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-                                                        >
-                                                            <WalletIcon size={12} /> Efectivo
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setPayMethod('CARD')}
-                                                            className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 ${payMethod === 'CARD' ? 'bg-indigo-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-                                                        >
-                                                            <CreditCardIcon size={12} /> Tarjeta
-                                                        </button>
-                                                    </div>
-
-                                                    {payMethod === 'ACCOUNT' ? (
-                                                        <select
-                                                            value={payAccountId}
-                                                            onChange={e => setPayAccountId(e.target.value)}
-                                                            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 outline-none"
-                                                        >
-                                                            <option value="">Seleccionar cuenta</option>
-                                                            {accounts.map((acc: any) => (
-                                                                <option key={acc.id} value={acc.id}>{acc.name} ({formatMoney(acc.balance)})</option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <select
-                                                            value={payCardId}
-                                                            onChange={e => setPayCardId(e.target.value)}
-                                                            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-700 dark:text-zinc-300 outline-none"
-                                                        >
-                                                            <option value="">Seleccionar tarjeta</option>
-                                                            {creditCards.map((card: any) => (
-                                                                <option key={card.id} value={card.id}>{card.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    )}
-
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => setPayingSub(null)}
-                                                            className="flex-1 py-2 rounded-xl text-[10px] font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
-                                                        >
-                                                            Cancelar
-                                                        </button>
-                                                        <button
-                                                            onClick={handlePaySubscription}
-                                                            disabled={processingPay}
-                                                            className="flex-1 py-2 rounded-xl text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 transition-all"
-                                                        >
-                                                            {processingPay ? 'Procesando...' : `Pagar ${formatMoney(Number(exp.amount))}`}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-
                                             {/* Action Buttons */}
-                                            {!isPaying && (
-                                                <div className="px-5 pb-4 flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => { setPayingSub(exp); setPayMethod('ACCOUNT'); }}
-                                                            className="py-2 px-4 rounded-xl bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-all shadow-sm hover:shadow-md"
-                                                        >
-                                                            Pagar
-                                                        </button>
-                                                        <button
-                                                            onClick={async () => {
-                                                                try {
-                                                                    if (isPaidThisMonth(exp)) {
-                                                                        await markSubscriptionUnpaid(exp.id);
-                                                                        toast.success("Marcado como pendiente");
-                                                                    } else {
-                                                                        await markSubscriptionPaid(exp.id);
-                                                                        toast.success("Marcado como pagado");
-                                                                    }
-                                                                    if (onUpdate) onUpdate();
-                                                                } catch (err) {
-                                                                    toast.error("Error al actualizar");
+                                            <div className="px-5 pb-4 flex items-center justify-between">
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                if (isPaidThisMonth(exp)) {
+                                                                    await markSubscriptionUnpaid(exp.id);
+                                                                    toast.success("Marcado como pendiente");
+                                                                } else {
+                                                                    await markSubscriptionPaid(exp.id);
+                                                                    toast.success("Marcado como pagado");
                                                                 }
-                                                            }}
-                                                            className={`py-2 px-3 rounded-xl text-[10px] font-bold transition-all ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
-                                                        >
-                                                            {isPaidThisMonth(exp) ? 'Pagado ✓' : 'Marcar pagado'}
-                                                        </button>
-                                                    </div>
+                                                                if (onUpdate) onUpdate();
+                                                            } catch (err) {
+                                                                toast.error("Error al actualizar");
+                                                            }
+                                                        }}
+                                                        className={`py-2 px-4 rounded-xl text-[10px] font-bold transition-all ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
+                                                    >
+                                                        {isPaidThisMonth(exp) ? 'Pagado ✓' : 'Marcar pagado'}
+                                                    </button>
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => setEditingSub(exp)}
@@ -487,7 +378,6 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                         </button>
                                                     </div>
                                                 </div>
-                                            )}
                                         </div>
                                     );
                                 })}
