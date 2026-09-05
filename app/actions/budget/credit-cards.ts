@@ -26,6 +26,7 @@ export interface CreateCreditCardInput {
 }
 
 export async function createCreditCard(data: CreateCreditCardInput) {
+    await requireOwnership(data.profileId);
     const card = await prisma.creditCard.create({
         data: {
             name: data.name,
@@ -60,7 +61,6 @@ export async function updateCreditCardDetails(
         data: {
             name: data.name,
             limit: data.limit,
-            balance: data.initialBalance,
             cutoffDay: data.cutoffDay,
             paymentDay: data.paymentDay,
             interestRate: data.interestRate,
@@ -78,6 +78,10 @@ export async function updateCreditCardDetails(
 }
 
 export async function updateCreditCardBalance(id: number, balance: number) {
+    const existing = await prisma.creditCard.findUnique({ where: { id } });
+    if (!existing) throw new Error('Tarjeta no encontrada');
+    await requireOwnership(existing.profileId);
+
     const card = await prisma.creditCard.update({
         where: { id },
         data: { balance },

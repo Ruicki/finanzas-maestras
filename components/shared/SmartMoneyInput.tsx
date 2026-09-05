@@ -5,6 +5,7 @@ import React, { useRef, useCallback } from 'react';
 interface SmartMoneyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     onMoneyChange: (value: string) => void;
     value: string | number;
+    selectOnFocus?: boolean;
 }
 
 /**
@@ -12,7 +13,7 @@ interface SmartMoneyInputProps extends React.InputHTMLAttributes<HTMLInputElemen
  * Al escribir "123" muestra "$1.23", al escribir "1234" muestra "$12.34".
  * Siempre mantiene 2 decimales.
  */
-export const SmartMoneyInput = ({ onMoneyChange, value, className, ...props }: SmartMoneyInputProps) => {
+export const SmartMoneyInput = ({ onMoneyChange, value, className, selectOnFocus = true, ...props }: SmartMoneyInputProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const displayValue = typeof value === 'number'
@@ -40,11 +41,9 @@ export const SmartMoneyInput = ({ onMoneyChange, value, className, ...props }: S
     }, [onMoneyChange]);
 
     const handleFocus = useCallback(() => {
-        // Select all text on focus so typing replaces the existing value
-        setTimeout(() => {
-            inputRef.current?.select();
-        }, 0);
-    }, []);
+        if (!selectOnFocus) return;
+        inputRef.current?.select();
+    }, [selectOnFocus]);
 
     return (
         <input

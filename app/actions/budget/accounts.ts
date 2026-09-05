@@ -16,6 +16,7 @@ export async function createAccount(
     lockDate?: Date,
     purpose: string = 'SPENDING',
 ) {
+    await requireOwnership(profileId);
     if (balance < 0) throw new Error('El saldo no puede ser negativo');
     const account = await prisma.account.create({
         data: { name, type, balance, profileId, lockDate, purpose },
@@ -100,6 +101,10 @@ export async function deleteAccount(id: number): Promise<void> {
 }
 
 export async function getAccountTransactions(accountId: number) {
+    const account = await prisma.account.findUnique({ where: { id: accountId } });
+    if (!account) throw new Error('Cuenta no encontrada');
+    await requireOwnership(account.profileId);
+
     const [expenses, incomes, transfersFrom, transfersTo, salaries] =
         await prisma.$transaction([
             prisma.expense.findMany({
@@ -201,7 +206,18 @@ export async function createTransfer(
     const sourceAccount = await prisma.account.findUnique({
         where: { id: sourceAccountId },
     });
-    if (!sourceAccount || Number(sourceAccount.balance) < amount) {
+    if (!sourceAccount) throw new Error('Cuenta origen no encontrada');
+    await requireOwnership(sourceAccount.profileId);
+
+    const destAccount = await prisma.account.findUnique({
+        where: { id: destinationAccountId },
+    });
+    if (!destAccount) throw new Error('Cuenta destino no encontrada');
+    if (destAccount.profileId !== sourceAccount.profileId) {
+        throw new Error('Las cuentas deben pertenecer al mismo perfil');
+    }
+
+    if (Number(sourceAccount.balance) < amount) {
         throw new Error('Fondos insuficientes en la cuenta origen');
     }
 

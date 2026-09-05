@@ -90,9 +90,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
-    // Normalize recurring expense amount — ANNUAL shows full amount in charging month
+    // Normalize recurring expense amount — ANNUAL shows full amount in billing month
     const normalizeToMonthly = (amount: number, type?: string | null): number => {
-        // ANNUAL: full amount, not divided
+        // ANNUAL: full amount in billing month (not divided)
         return amount;
     };
 
@@ -109,12 +109,14 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         return iso.startsWith(targetMonth);
     };
 
-    // Filtered Lists — recurring expenses (subscriptions) appear in ALL months;
+    // Filtered Lists — monthly recurring appear in ALL months;
+    // annual recurring appear only in their billing month (creation month);
     // one-time expenses only in their creation month
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
-        if (e.isRecurring && e.recurrenceType === 'MONTHLY') return true; // monthly subs show every month
-        return isInSelectedMonth(e.createdAt); // annual + one-time: only in their creation month
+        if (e.isRecurring && e.recurrenceType === 'MONTHLY') return true; // monthly: every month
+        // annual + one-time: only in their creation/billing month
+        return isInSelectedMonth(e.createdAt);
     }) || [];
 
     // Monthly Totals (Filtered) — recurring expenses normalized to monthly
@@ -374,6 +376,11 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <TrendingUpIcon size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Presupuesto</span>
                             </button>
+                            {/* Insights */}
+                            <button onClick={() => updateTab('insights')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'insights' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
+                                <Briefcase className="lucide-animated" size={18} />
+                                <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Análisis</span>
+                            </button>
                         </div>
                     </div>
 
@@ -454,6 +461,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 categories={activeProfile.categories || []}
                                 incomes={additionalIncomes}
                                 salaries={allSalaries}
+                                selectedMonth={selectedMonth}
+                                selectedYear={selectedYear}
                             />
                         )}
                     </div>

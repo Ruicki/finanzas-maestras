@@ -76,6 +76,7 @@ model Expense {
   profileId       Int
   accountId       Int?
   createdAt       DateTime  @default(now())
+  lastPaidAt      DateTime?
   account         Account?  @relation(fields: [accountId], references: [id])
   categoryRel     Category? @relation(fields: [categoryId], references: [id])
   profile         Profile   @relation(fields: [profileId], references: [id])

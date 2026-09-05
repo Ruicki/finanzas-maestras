@@ -15,7 +15,37 @@ interface FinancialRulesProps {
 }
 
 export default function FinancialRules({ income, expenses, debtsPayment, totalSavings, totalCash }: FinancialRulesProps) {
-    if (income === 0) return null;
+    if (income === 0) {
+        return (
+            <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm text-center">
+                    <DollarSignIcon size={32} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200 mb-2">Sin ingresos registrados</h3>
+                    <p className="text-sm text-zinc-400 max-w-md mx-auto">
+                        Registra tus ingresos en la pestaña <span className="font-bold text-zinc-600 dark:text-zinc-300">Ingresos</span> para ver el análisis de presupuesto 50/30/20 y el puntaje financiero.
+                    </p>
+                </div>
+
+                {/* Emergency Fund still shows */}
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
+                    <div className="flex justify-between items-start mb-4">
+                        <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
+                            <ShieldCheckIcon size={18} className="text-emerald-500" />
+                            Fondo Emergencia
+                        </h3>
+                        <div className="text-[10px] font-bold px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-500">
+                            META: 6 MESES
+                        </div>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
+                        <span className="text-4xl font-black text-zinc-900 dark:text-white">0.0</span>
+                        <span className="text-sm font-bold text-zinc-400 mb-2">meses</span>
+                        <p className="text-xs text-zinc-400">Registra tus gastos fijos para calcular tu fondo de emergencia.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // --- RULE 1: 50/30/20 ---
     const getType = (e: any): string => {

@@ -115,6 +115,10 @@ export async function deleteGoalWithReclaim(
         await requireOwnership(goal.profileId);
 
         if (Number(goal.currentAmount) > 0) {
+            const targetAccount = await tx.account.findUnique({ where: { id: targetAccountId } });
+            if (!targetAccount) throw new Error('Cuenta destino no encontrada.');
+            if (targetAccount.profileId !== goal.profileId) throw new Error('La cuenta destino no pertenece a este perfil.');
+
             if (goal.destinationAccountId) {
                 await tx.account.update({
                     where: { id: goal.destinationAccountId },
@@ -152,6 +156,7 @@ export async function handleGoalTransaction(
 
             const sourceAccount = await tx.account.findUnique({ where: { id: sourceAccountId } });
             if (!sourceAccount) throw new Error('Cuenta origen no encontrada.');
+            if (sourceAccount.profileId !== goal.profileId) throw new Error('La cuenta origen no pertenece a este perfil.');
             if (Number(sourceAccount.balance) < amount) throw new Error('Fondos insuficientes.');
             if (sourceAccount.lockDate && new Date(sourceAccount.lockDate) > new Date()) {
                 throw new Error(`Cuenta bloqueada hasta ${sourceAccount.lockDate.toLocaleDateString()}`);
@@ -176,10 +181,21 @@ export async function handleGoalTransaction(
             const destAccountId = accountId;
             if (!destAccountId) throw new Error('Debes seleccionar una cuenta de destino.');
 
+            const destAccount = await tx.account.findUnique({ where: { id: destAccountId } });
+            if (!destAccount) throw new Error('Cuenta destino no encontrada.');
+            if (destAccount.profileId !== goal.profileId) throw new Error('La cuenta destino no pertenece a este perfil.');
+            if (destAccount.lockDate && new Date(destAccount.lockDate) > new Date()) {
+                throw new Error(`Cuenta bloqueada hasta ${destAccount.lockDate.toLocaleDateString()}`);
+            }
+
             if (goal.destinationAccountId) {
                 const savingsAccount = await tx.account.findUnique({ where: { id: goal.destinationAccountId } });
                 if (!savingsAccount) throw new Error('Cuenta de ahorro no encontrada.');
+                if (savingsAccount.profileId !== goal.profileId) throw new Error('La cuenta de ahorro no pertenece a este perfil.');
                 if (Number(savingsAccount.balance) < amount) throw new Error('Fondos insuficientes en la cuenta de ahorro.');
+                if (savingsAccount.lockDate && new Date(savingsAccount.lockDate) > new Date()) {
+                    throw new Error(`Cuenta de ahorro bloqueada hasta ${savingsAccount.lockDate.toLocaleDateString()}`);
+                }
 
                 await tx.account.update({
                     where: { id: goal.destinationAccountId },
