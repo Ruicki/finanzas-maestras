@@ -71,18 +71,18 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[95vh] sm:max-h-[85vh] flex flex-col">
 
                 {/* Header */}
-                <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full">
                             <CreditCardIcon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
                         </div>
                         <div>
                             <h2 className="font-bold text-lg text-zinc-900 dark:text-white">Pagar Tarjeta</h2>
-                            <p className="text-xs text-zinc-500">{card.name}</p>
+                            <p className="text-xs text-zinc-500">{card.name} · Saldo {formatMoney(card.balance)}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
@@ -90,110 +90,66 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                     </button>
                 </div>
 
-                {/* Balance info */}
-                <div className="px-6 pt-4 pb-2 shrink-0">
-                    <div className="flex justify-between items-baseline">
-                        <span className="text-xs text-zinc-500">Saldo actual</span>
-                        <span className="text-xl font-bold text-zinc-900 dark:text-white">{formatMoney(card.balance)}</span>
+                {/* Content - no scroll needed */}
+                <div className="flex-1 px-5 py-4 space-y-3">
+
+                    {/* Payment type - horizontal row on small screens */}
+                    <div className="grid grid-cols-3 gap-2">
+                        <button
+                            onClick={() => setPaymentType('MINIMUM')}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                                paymentType === 'MINIMUM'
+                                    ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                            }`}
+                        >
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase">Mínimo</p>
+                            <p className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">{formatMoney(minPayment)}</p>
+                        </button>
+                        <button
+                            onClick={() => setPaymentType('TOTAL')}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                                paymentType === 'TOTAL'
+                                    ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                            }`}
+                        >
+                            <p className="text-[10px] font-bold text-emerald-500 uppercase">Total</p>
+                            <p className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">{formatMoney(card.balance)}</p>
+                        </button>
+                        <button
+                            onClick={() => setPaymentType('CUSTOM')}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${
+                                paymentType === 'CUSTOM'
+                                    ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
+                                    : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                            }`}
+                        >
+                            <p className="text-[10px] font-bold text-zinc-500 uppercase">Otro</p>
+                            {paymentType === 'CUSTOM' ? (
+                                <div className="mt-1 relative">
+                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-xs">$</span>
+                                    <SmartMoneyInput
+                                        value={customAmount}
+                                        onMoneyChange={setCustomAmount}
+                                        onClick={(e) => { e.stopPropagation(); setPaymentType('CUSTOM'); }}
+                                        placeholder="0"
+                                        className="w-full pl-5 pr-1 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg font-bold text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400 text-center"
+                                    />
+                                </div>
+                            ) : (
+                                <p className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">...</p>
+                            )}
+                        </button>
                     </div>
-                </div>
-
-                {/* Scrollable content */}
-                <div className="flex-1 overflow-y-auto min-h-0 px-6">
-                    {/* Payment options */}
-                    <div className="space-y-3 py-2">
-                    {/* Pago Mínimo */}
-                    <button
-                        onClick={() => setPaymentType('MINIMUM')}
-                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-                            paymentType === 'MINIMUM'
-                                ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
-                                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-                        }`}
-                    >
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                    paymentType === 'MINIMUM' ? 'border-zinc-900 dark:border-white' : 'border-zinc-300 dark:border-zinc-600'
-                                }`}>
-                                    {paymentType === 'MINIMUM' && <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 dark:bg-white" />}
-                                </div>
-                                <div>
-                                    <p className="font-bold text-zinc-900 dark:text-white">Pago Mínimo</p>
-                                    <p className="text-xs text-zinc-500">Cubre interés + seguro + 3% capital</p>
-                                </div>
-                            </div>
-                            <span className="font-bold text-zinc-900 dark:text-white">{formatMoney(minPayment)}</span>
-                        </div>
-                    </button>
-
-                    {/* Pago Total */}
-                    <button
-                        onClick={() => setPaymentType('TOTAL')}
-                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-                            paymentType === 'TOTAL'
-                                ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
-                                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-                        }`}
-                    >
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                    paymentType === 'TOTAL' ? 'border-zinc-900 dark:border-white' : 'border-zinc-300 dark:border-zinc-600'
-                                }`}>
-                                    {paymentType === 'TOTAL' && <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 dark:bg-white" />}
-                                </div>
-                                <div>
-                                    <p className="font-bold text-zinc-900 dark:text-white">Pago Total</p>
-                                    <p className="text-xs text-emerald-600 dark:text-emerald-400">No generas intereses</p>
-                                </div>
-                            </div>
-                            <span className="font-bold text-zinc-900 dark:text-white">{formatMoney(card.balance)}</span>
-                        </div>
-                    </button>
-
-                    {/* Otro monto */}
-                    <button
-                        onClick={() => setPaymentType('CUSTOM')}
-                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-                            paymentType === 'CUSTOM'
-                                ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800'
-                                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-                        }`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                paymentType === 'CUSTOM' ? 'border-zinc-900 dark:border-white' : 'border-zinc-300 dark:border-zinc-600'
-                            }`}>
-                                {paymentType === 'CUSTOM' && <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 dark:bg-white" />}
-                            </div>
-                            <div className="flex-1">
-                                <p className="font-bold text-zinc-900 dark:text-white">Otro monto</p>
-                                <div className="mt-2">
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
-                                        <SmartMoneyInput
-                                            value={customAmount}
-                                            onMoneyChange={setCustomAmount}
-                                            onClick={(e) => { e.stopPropagation(); setPaymentType('CUSTOM'); }}
-                                            placeholder="0.00"
-                                            className="w-full pl-8 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
-                                        />
-                                    </div>
-                                    <p className="text-xs text-zinc-500 mt-1">Mínimo: $25.00</p>
-                                </div>
-                            </div>
-                        </div>
-                    </button>
-                </div>
 
                     {/* Account selector */}
-                    <div className="pb-4 pt-2">
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Cuenta de origen</label>
+                    <div>
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5 block">Cuenta de origen</label>
                         <select
                             value={selectedAccountId ?? ''}
                             onChange={(e) => setSelectedAccountId(Number(e.target.value) || null)}
-                            className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                            className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 font-bold text-sm text-zinc-900 dark:text-white outline-none focus:border-zinc-400"
                         >
                             <option value="">Seleccionar cuenta...</option>
                             {accounts.map(acc => (
@@ -206,10 +162,18 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                             <p className="text-xs text-red-500 mt-1">Fondos insuficientes</p>
                         )}
                     </div>
+
+                    {/* Summary */}
+                    {amount > 0 && (
+                        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-3 flex justify-between items-center">
+                            <span className="text-xs font-bold text-zinc-500">Vas a pagar</span>
+                            <span className="text-lg font-black text-zinc-900 dark:text-white">{formatMoney(amount)}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}
-                <div className="p-6 pt-2 flex gap-3 shrink-0">
+                <div className="px-5 pb-5 pt-2 flex gap-3 shrink-0">
                     <button
                         onClick={onClose}
                         className="flex-1 py-3 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
