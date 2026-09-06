@@ -367,7 +367,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             </div>
                             <div className="flex items-center gap-2 mb-3 bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700">
                                 <span className="text-zinc-400 font-bold pl-2">$</span>
-                                <SmartMoneyInput selectOnFocus={false} value={transactionAmount} onMoneyChange={setTransactionAmount} className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white" placeholder="0.00" />
+                                <input type="number" step="0.01" min="0" value={transactionAmount} onChange={e => setTransactionAmount(e.target.value)} className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white" placeholder="0.00" />
                             </div>
                             <div className="mb-3">
                                 {goal.type === 'FIXED' && goal.sourceAccountId ? (
