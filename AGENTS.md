@@ -1,250 +1,124 @@
-# Reglas de Negocio - Finanzas Maestras
+# Guía de Desarrollo para Agentes de IA — Finanzas Maestras
 
-> ESTE ARCHIVO ES DE LECTURA OBLIGATORIA. Toda modificación al código debe respetar estas reglas.
-> Si una funcionalidad existe, solo se puede MEJORAR, nunca ELIMINAR o DEGRADAR.
-
-## Regla General
-
-**NUNCA eliminar funcionalidades que ya funcionan.** Si algo está implementado y funciona, solo se permite:
-- Mejorar su rendimiento
-- Corregir bugs
-- Agregar nuevas opciones
-- Refactorizar sin cambiar comportamiento
+> Este archivo define las directrices obligatorias, estándares de arquitectura, seguridad y protocolos de operación para cualquier agente de IA o desarrollador que trabaje en el repositorio **Finanzas Maestras**.
 
 ---
 
-## Cuentas
+## 1. Contexto del Sistema
 
-### Cuenta Efectivo (CASH)
-- **REGLA INVARIABLE:** Siempre debe existir exactamente UNA cuenta tipo CASH llamada "Efectivo".
-- La auto-reparación en `app/page.tsx:28-37` crea la cuenta si no existe.
-- No se puede eliminar desde la UI (botón oculto en `AccountsTab.tsx:72`).
-- El nombre es fijo: "Efectivo" (no editable en el formulario).
-- La opción de crear cuentas CASH desde el wizard fue eliminada intencionalmente.
-- Saldo puede ser 0 o positivo, nunca negativo.
+**Finanzas Maestras** es una plataforma SaaS de finanzas personales diseñada para el mercado panameño (cálculo de salario con deducciones de ley: Seguro Social, Seguro Educativo, Impuesto Sobre la Renta y Décimo Tercer Mes).
 
-### Tipos de Cuenta
-- BANK: Cuentas bancarias (Corriente, Ahorro)
-- CASH: Efectivo físico (solo 1 por instancia, auto-creada)
-- WALLET: Billeteras digitales (PayPal, Yappy, Binance, etc.)
-- SAVINGS: Ahorros bloqueados para metas
-
-### Propósito de Cuenta
-- SPENDING: Uso diario (disponible para gastos e ingresos)
-- SAVINGS: Ahorro (excluida de cálculo de "Disponible")
-- Las cuentas SAVINGS no aparecen en selectores de gastos/ingresos
-
-### Symbol (WALLET)
-- Campo `symbol` en Account es para cuentas WALLET (BTC, ETH, USDT, etc.)
-- Se muestra en todos los selectores de cuentas cuando existe
-- Se persiste en createAccount y updateAccount
+### Stack Tecnológico
+* **Framework:** Next.js 16 (App Router) con React 19 y Server Actions.
+* **Lenguaje:** TypeScript 5 (Modo estricto, sin `any`).
+* **Estilos:** Tailwind CSS v4 con variables CSS y tema oscuro/claro (`next-themes`).
+* **ORM & DB:** Prisma ORM 5.10 sobre PostgreSQL (Neon DB, connection pooling y direct url).
+* **Autenticación:** Tokens JWT firmados con Jose en cookies `httpOnly`, hashing con `bcryptjs`.
+* **UI & Animaciones:** Radix UI primitives, Lucide Icons, Framer Motion, Recharts, Sonner (toasts).
+* **Testing:** Jest + ts-jest.
 
 ---
 
-## Ingresos
+## 2. Metodología Obligatoria: Spec-Driven Development (SDD)
 
-### Tipos de Ingreso
-- SALARY: Salarios con cálculo automático (absentDays, bonus, deductions)
-- DEPOSIT: Depósitos puntuales (sin frecuencia)
-- **NO existe frecuencia en depósitos.** La frecuencia fue revertida intencionalmente.
+Cualquier cambio que involucre lógica de negocio, refactorización o corrección estructural debe seguir el ciclo de vida SDD:
 
-### Campos del Ingreso
-- `type`: SALARY o DEPOSIT
-- `amount`: Monto
-- `date`: Fecha del ingreso
-- `description`: Campo obligatorio restaurado (no se puede eliminar)
-- `absentDays`: Solo para SALARY
-- `bonus`: Solo para SALARY
-- `frequency`: Solo se usa internamente, NO se muestra al usuario en depósitos
-
-### Cálculo de Ingresos del Mes
-- Incluye: salarios del mes + depósitos del mes
-- Se filtra por mes y año seleccionado
-- Los salarios se calculan con absentDays
+1. **Análisis:** Desglosar requerimientos y verificar impacto sistémico antes de modificar código.
+2. **Planeación y Documentación (`.specs/`):**
+   * `.specs/requirements.md`: Definición de necesidades y criterios de aceptación.
+   * `.specs/design.md`: Decisiones de diseño, diagramas de flujo y arquitectura.
+   * `.specs/tasks.md`: Desglose granular de tareas ejecutables con checklist.
+3. **Validación:** Presentar el plan al usuario y esperar confirmación explícita.
+4. **Ejecución:** Implementación limpia, modular y basada en el plan aprobado.
+5. **Verificación:** Ejecución de linters, compilación TypeScript y tests unitarios.
 
 ---
 
-## Gastos
+## 3. Reglas de Seguridad Innegociables
 
-### Método de Pago
-- CASH: Pago en efectivo (descuenta de cuenta seleccionada)
-- CREDIT: Pago con tarjeta de crédito
-
-### Categorías
-- Se inicializan automáticamente al crear perfil
-- No se pueden eliminar categorías predeterminadas
-- Se pueden crear categorías personalizadas
-
----
-
-## Suscripciones
-
-### Modelo de Datos
-- Las suscripciones son gastos recurrentes con `isRecurring: true`
-- Campo `frequency`: WEEKLY, BIWEEKLY, MONTHLY, ANNUAL
-- Campo `lastPaidAt`: Marca de tiempo del último pago registrado
-
-### Estado Pagado/Pendiente
-- **NO existe botón "Pagar" que cree gastos duplicados**
-- Solo existe "Marcar pagado/Pendiente" que actualiza `lastPaidAt`
-- Las suscripciones YA SON el registro del gasto
-- Badge: Pagado (verde) / Pendiente (gris)
-
-### Recurrencia Anual
-- Las suscripciones ANNUAL aparecen TODOS los años en su mes de facturación
-- No solo en el año de creación
-- Ejemplo: Suscripción creada en Marzo 2024 → aparece en Marzo 2025, 2026, etc.
-
-### Recurrencia Mensual
-- Aparece en todos los meses del rango seleccionado
+1. **Secretos y Variables de Entorno:**
+   * **PROHIBIDO** dejar valores por defecto o fallbacks hardcodeados para secretos (ej. `process.env.JWT_SECRET || 'secret-key-change-me-in-prod'` es una vulnerabilidad crítica).
+   * Validar la presencia de variables de entorno críticas al arranque en `lib/env.ts`.
+   * El archivo `.env` jamás debe versionarse ni exponerse.
+2. **Control de Acceso y Aislamiento Multitenant (Anti-IDOR):**
+   * En cada Server Action, **es obligatorio** verificar la identidad del usuario en sesión (`requireAuth` / `requireOwnership`).
+   * Al manipular recursos vinculados (ej. `accountId`, `linkedCardId`, `categoryId`, `goalId`), verificar que dichos recursos pertenezcan efectivamente al `profileId` del usuario autenticado para evitar acceso horizontal indebido.
+3. **Validación de Entradas:**
+   * Todo parámetro proveniente del cliente debe validarse mediante esquemas de **Zod** antes de interactuar con la base de datos o lógica financiera.
+   * Rechazar strings no sanitizados, montos negativos, desbordamientos de enteros o tipos erróneos.
+4. **Protección contra Fuerza Bruta:**
+   * Las operaciones críticas (`login`, `register`, `claimProfile`) deben contar con Rate Limiting distribuido (basado en IP y Redis para entornos serverless).
 
 ---
 
-## Metas de Ahorro
+## 4. Estándares Técnicos y de Código
 
-### GoalCard (Componente Extraído)
-- **REGLA:** GoalCard está definido FUERA de GoalsTab como componente de módulo
-- Esto evita re-mount en cada pulsación del input (causa raíz del bug de foco)
-- Estado local (amount, accountId) vive dentro de cada GoalCard
-- Nunca mover GoalCard de vuelta al interior de GoalsTab
+### A. Principios SOLID y Clean Code
+* **Principio de Responsabilidad Única (SRP):** Desacoplar vistas gigantes (como tabs de más de 400 líneas) en subcomponentes atómicos (tarjetas, modales, formularios, calculadoras).
+* **Cero Componentes Anidados:** **NUNCA** declarar componentes funcionales de React dentro del cuerpo de otro componente funcional. Provoca la recreación de la identidad del componente en cada render y destruye el árbol DOM (pérdida de foco en inputs, reseteo de animaciones).
+* **Naming Semántico:** Nombres de funciones que describan la acción exacta (`executeReclaimGoalFunds`, `calculatePanamaIncomeTax`). Evitar abreviaturas ambiguas.
 
-### Input de Fondos
-- Usa SmartMoneyInput (no input HTML nativo)
-- Comportamiento RTL: escribes "123" → muestra "$1.23"
-- Si SmartMoneyInput causa problemas de foco, extrair el componente pero NUNCA usar input nativo
+### B. Manejo Financiero y Matemático
+* **Precisión Decimal:** En JavaScript, el punto flotante binario (`0.1 + 0.2 = 0.30000000000000004`) es inaceptable para dinero. Realizar cálculos monetarios en centavos enteros o utilizar aritmética de precisión (`Decimal.js`).
+* **Atomicidad:** Toda operación que afecte múltiples balances (ej. registrar un gasto y debitar de una cuenta bancaria, o abonar a una tarjeta) **DEBE** ejecutarse dentro de un `prisma.$transaction`.
+* **Inputs de Moneda:** En la interfaz de usuario, utilizar consistentemente `SmartMoneyInput` para mantener el comportamiento RTL decimal con dos decimales y teclado adaptado a móviles.
 
-### Transacciones de Meta
-- DEPOSIT: Agrega fondos a la meta
-- WITHDRAW: Retira fondos (requiere cuenta destino)
-- Las transacciones se registran en GoalTransaction
-
-### Eliminar Meta
-- Si tiene fondos: abre modal de "Romper Alcancía" para reclamar dinero
-- Si no tiene fondos: elimina directamente con confirmación
-- `deleteGoalWithReclaim` transfiere fondos a cuenta seleccionada
+### C. Base de Datos e Integridad Referencial
+* **Indexación:** Cada relación de clave foránea (`profileId`, `accountId`, `categoryId`, `createdAt`) debe contar con un índice explícito (`@@index`) en `prisma/schema.prisma` para optimizar consultas en PostgreSQL.
+* **Eliminaciones y Cascada:** Manejar la eliminación de entidades padre con reglas claras de integridad (`onDelete: Cascade` o validación previa de dependencias con saldo).
 
 ---
 
-## Transferencias
+## 5. Estructura de Directorios Clave
 
-### Cross-Currency
-- Soporta transferencias entre cuentas de diferentes tipos
-- Campo `exchangeRate`: tipo de cambio entre origen y destino
-- Campo `sourceAmount`: monto en moneda origen
-- Campo `destAmount`: monto en moneda destino calculado
-
-### UI de Tipo de Cambio
-- Se muestra cuando origen y destino son de diferentes tipos
-- Calcula automáticamente el monto destino
-
----
-
-## Tarjetas de Crédito
-
-### Balance
-- El balance se actualiza por transacciones, NO por el formulario de edición
-- `updateCreditCardDetails` NO sobrescribe el balance
-- El balance refleja el estado actual de la tarjeta
-
----
-
-## Presupuesto
-
-### Cálculo Mensual
-- Ingresos del mes vs Gastos del mes
-- Incluye suscripciones recurrentes (MONTHLY y ANNUAL en su mes)
-- Incluye cuotas de deudas
-- Incluye cuotas de metas FIXED
-
-### Sin Ingresos
-- Si no hay ingresos: muestra widget "Sin ingresos registrados"
-- Botón "Agregar Primer Ingreso" que abre el wizard
+```text
+Finanzas-Maestras/
+├── .specs/                     # Documentación activa Spec-Driven
+├── app/
+│   ├── (auth)/                 # Rutas públicas de autenticación (login, register)
+│   ├── actions/                # Server Actions organizadas por dominio
+│   │   ├── budget/             # Cuentas, gastos, metas, tarjetas, categorías
+│   │   ├── auth.ts             # Acciones de autenticación y sesión
+│   │   └── salary.ts           # Acciones de salario y cálculo panameño
+│   └── page.tsx                # Dashboard principal y landing condicional
+├── components/
+│   ├── dashboard/              # Componentes del dashboard
+│   │   └── tabs/               # Pestañas de dominio (Accounts, Goals, Debts, etc.)
+│   └── shared/                 # Componentes reutilizables (SmartMoneyInput, Modals)
+├── lib/
+│   ├── auth-utils.ts           # Funciones criptográficas y extracción de sesión
+│   ├── financial-engine.ts     # Motor de cálculo financiero, amortización y fechas
+│   ├── prisma.ts               # Instancia singleton de PrismaClient
+│   ├── repositories/           # Capa de acceso a datos desacoplada
+│   └── strategies/             # Estrategias de cálculo fiscal (Strategy Pattern)
+├── prisma/
+│   └── schema.prisma           # Esquema de base de datos relacional
+└── middleware.ts               # Protección global de rutas en el Edge
+```
 
 ---
 
-## Patrimonio Neto
+## 6. Comandos de Verificación para Agentes
 
-### Tarjeta de Resumen
-- Muestra: Ingresos vs Gastos vs Deudas
-- El patrimonio neto refleja TODAS las cuentas (net worth)
-- Incluye: cuentas bancarias + efectivo + billeteras - deudas
+Antes de dar por concluida cualquier intervención:
+```bash
+# 1. Comprobar errores de tipado TypeScript
+npx tsc --noEmit
 
----
+# 2. Ejecutar linter
+npm run lint
 
-## Dashboard Insights
+# 3. Ejecutar pruebas unitarias
+npm test
 
-### Filtros
-- Acepta `selectedMonth` y `selectedYear` como props
-- Filtra datos por mes y año seleccionado
-- No muestra datos de otros períodos
-
----
-
-## UI/UX
-
-### SmartMoneyInput
-- Componente de entrada monetaria RTL
-- `selectOnFocus`: controla auto-selección al foco
-- Formato: escribes "1234" → "$12.34"
-- Consistente en: gastos, ingresos, metas, tarjetas
-
-### Modales
-- Todos usan overlay oscuro con backdrop-blur
-- Responsive: bottom sheet en móvil
-- `useScrollLock` para evitar scroll del body
-
-### Confirmaciones de Eliminación
-- Usar `confirmDelete` de `@/components/shared/DeleteConfirmation`
-- Nunca eliminar sin confirmación del usuario
-
-### Fechas
-- `parseDateNoon`: almacena fechas a mediodía UTC para correcta comparación local
-- Timezone: Panama (es-PA)
-- Formato de visualización: `es-ES`
+# 4. Validar esquema de Prisma
+npx prisma validate
+```
 
 ---
 
-## Seguridad
+## 7. Protocolo de Comunicación del Agente
 
-### Autenticación
-- JWT con hardcoded fallback en `lib/auth-utils.ts` y `proxy.ts`
-- `requireOwnership` en todas las acciones de escritura
-- Verificación de lockDate en cuentas
-
-### Acciones Protegidas
-- createAccount, updateAccount
-- createCreditCard, updateCreditCard
-- createLoan, payLoan
-- createGoal, updateGoal, deleteGoal
-- createTransfer
-- handleGoalTransaction
-- getAccountTransactions
-
----
-
-## Infraestructura
-
-### Base de Datos
-- Prisma ^5.10.0 con Neon PostgreSQL
-- Schema: `prisma/schema.prisma`
-- No usar migraciones, usar `prisma db push`
-- Deploy: Vercel (auto-deploy en push a main)
-
-### Next.js
-- Versión 16.1.1
-- `proxy.ts` (renombrado de middleware.ts para compatibilidad)
-- Turbopack para desarrollo
-
-### Commits
-- **Los mensajes de commit SIEMPRE deben ser en ESPAÑOL**
-- Formato: `tipo: descripción corta`
-- Tipos: feat, fix, refactor, etc.
-
----
-
-## Comunicación
-
-- El usuario NO es técnico
-- Responder en español
-- Explicaciones simples y directas
-- No asumir conocimiento técnico
+* **Directo y Riguroso (Zero-Fluff):** Sin introducciones vacías ni halagos. Explicar qué falla, por qué falla arquitectónicamente y cómo se corrige.
+* **Proponer soluciones completas:** No parches temporales. Si un componente está mal estructurado, aislarlo y modularizarlo correctamente.
+* **Preguntar ante la ambigüedad:** Si una regla de negocio panameña o financiera no está especificada, consultar antes de asumir.

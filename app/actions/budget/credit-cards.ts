@@ -155,6 +155,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
 
     const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
     if (!card) throw new Error('Tarjeta no encontrada');
+    if (card.profileId !== account.profileId) throw new Error('La tarjeta y la cuenta deben pertenecer al mismo perfil');
     if (amount > Number(card.balance)) throw new Error(`El pago excede el saldo de la tarjeta ($${Number(card.balance).toFixed(2)})`);
 
     try {

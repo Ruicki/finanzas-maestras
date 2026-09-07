@@ -7,6 +7,10 @@ export interface FinancialCreditCard {
     insuranceRate?: number | null;  // Desgravamen mensual %
 }
 
+export function roundToCents(val: number): number {
+    return Math.round(val * 100) / 100;
+}
+
 /**
  * Calculates the best day to buy with a credit card to maximize time before payment.
  * Strategy: The best day is the day IMMEDIATELY after the cutoff day.
@@ -17,45 +21,18 @@ export function getBestPurchaseDay(cutoffDay: number): { date: Date; daysRemaini
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
 
-    // The logic:
-    // If today <= cutoffDay, the cutoff for this month hasn't happened yet.
-    // The "best day" was the day after LAST month's cutoff.
-    // BUT usually users want to know the *next* best day from NOW.
-    // The *absolute* best day is cutoffDay + 1.
-
-    let bestDayDate = new Date(currentYear, currentMonth, cutoffDay + 1);
-
-    // If cutoffDay + 1 is today or in the past, users might want the NEXT month's cutoff + 1?
-    // No, if today is 16th and cutoff was 15th, today IS the best time (early in the cycle).
-
-    // Let's rephrase: We want to tell the user the DATE of the start of the next billing cycle
-    // or if we are currently in the "good zone".
-
-    // Simplification: The "Best Buy Date" is always (Cutoff + 1).
-    // We just need to find the specific Date object typical for "the next occurrence" or "current occurrence".
+    let bestDayDate: Date;
 
     if (currentDay > cutoffDay) {
-        // We are currently IN the best window (start of cycle).
-        // The "Best Day" was this month's cutoff + 1.
-        // We can say "Today" or "Now".
-        // But the function asks for a date. Let's return the start of THIS cycle.
-        bestDayDate = new Date(currentYear, currentMonth, cutoffDay + 1);
+        bestDayDate = new Date(currentYear, currentMonth + 1, cutoffDay + 1);
     } else {
-        // We are near the end of the cycle (before cutoff).
-        // Buying now is bad (payment due very soon).
-        // The "Best Day" is NEXT month's cutoff + 1 (or this month if strict date logic).
-        // If today is 1st and cutoff is 5th. Best day is 6th.
         bestDayDate = new Date(currentYear, currentMonth, cutoffDay + 1);
     }
 
-    // Days remaining until that date (if in future)
     const diffTime = bestDayDate.getTime() - today.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return {
-        date: bestDayDate,
-        daysRemaining
-    };
+    return { date: bestDayDate, daysRemaining };
 }
 
 export function calculateCreditHealth(utilization: number): { status: 'Excellent' | 'Good' | 'Fair' | 'Critical'; color: string } {
@@ -80,12 +57,12 @@ export function calculateMinimumPayment(
     const itbms = interest * itbmsRate;
     let total = interest + insurance + capital + itbms;
     if (minFloor > 0 && total < minFloor) total = minFloor;
-    return Math.round(total * 100) / 100;
+    return roundToCents(total);
 }
 
 export function calculateProjectedInterest(balance: number, monthlyRate: number): number {
     if (!monthlyRate || balance <= 0) return 0;
-    return balance * (monthlyRate / 100);
+    return roundToCents(balance * (monthlyRate / 100));
 }
 
 export function calculateMonthlyCharges(balance: number, monthlyRate: number, insuranceRate: number = 0.25): {
@@ -94,12 +71,12 @@ export function calculateMonthlyCharges(balance: number, monthlyRate: number, in
     total: number;
 } {
     if (balance <= 0) return { interest: 0, insurance: 0, total: 0 };
-    const interest = balance * (monthlyRate / 100);
-    const insurance = balance * (insuranceRate / 100);
+    const interest = roundToCents(balance * (monthlyRate / 100));
+    const insurance = roundToCents(balance * (insuranceRate / 100));
     return {
         interest,
         insurance,
-        total: interest + insurance,
+        total: roundToCents(interest + insurance),
     };
 }
 
@@ -124,7 +101,7 @@ export function getDaysToCutoff(cutoffDay: number): { days: number; date: Date; 
     let status: 'normal' | 'warning' | 'urgent' | 'passed';
     if (days > 7) status = 'normal';
     else if (days > 3) status = 'warning';
-    else if (days > 0) status = 'urgent';
+    else if (days >= 0) status = 'urgent';
     else status = 'passed';
 
     return { days, date: nextCutoffDate, status };

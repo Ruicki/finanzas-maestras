@@ -22,6 +22,9 @@ model AdditionalIncome {
   icon           String    @default("Wallet")
   account        Account?  @relation(fields: [accountId], references: [id])
   profile        Profile   @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
+  @@index([accountId])
 }
 
 model Salary {
@@ -40,6 +43,9 @@ model Salary {
   accountId  Int?
   account    Account? @relation(fields: [accountId], references: [id])
   profile    Profile? @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
+  @@index([accountId])
 }
 
 model Profile {
@@ -80,6 +86,11 @@ model Expense {
   account         Account?  @relation(fields: [accountId], references: [id])
   categoryRel     Category? @relation(fields: [categoryId], references: [id])
   profile         Profile   @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([createdAt])
 }
 
 model Category {
@@ -96,6 +107,8 @@ model Category {
   profile         Profile   @relation(fields: [profileId], references: [id])
   expenses        Expense[]
   budgets         CategoryBudget[]
+
+  @@index([profileId])
 }
 
 model CategoryBudget {
@@ -129,6 +142,8 @@ model Goal {
   createdAt          DateTime  @default(now())
   profile            Profile   @relation(fields: [profileId], references: [id])
   transactions       GoalTransaction[]
+
+  @@index([profileId])
 }
 
 model GoalTransaction {
@@ -140,6 +155,8 @@ model GoalTransaction {
   accountId   Int?
   createdAt   DateTime @default(now())
   goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
 }
 
 model CreditCard {
@@ -161,6 +178,8 @@ model CreditCard {
   bank                 String?
   lateFee              Decimal? @default(25.0) @db.Decimal(10, 2)
   profile              Profile  @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
 }
 
 model Loan {
@@ -179,6 +198,8 @@ model Loan {
   createdAt      DateTime @default(now())
   startDate      DateTime @default(now())
   profile        Profile  @relation(fields: [profileId], references: [id])
+
+  @@index([profileId])
 }
 
 model Account {
@@ -199,6 +220,8 @@ model Account {
   salaries      Salary[]
   transfersTo   Transfer[]         @relation("DestinationAccount")
   transfersFrom Transfer[]         @relation("SourceAccount")
+
+  @@index([profileId])
 }
 
 model Transfer {
@@ -213,6 +236,9 @@ model Transfer {
   destAmount           Decimal?  @db.Decimal(12, 6)
   destinationAccount   Account   @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
   sourceAccount        Account   @relation("SourceAccount", fields: [sourceAccountId], references: [id])
+
+  @@index([sourceAccountId])
+  @@index([destinationAccountId])
 }
 
 model AuditLog {

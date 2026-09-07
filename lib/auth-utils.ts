@@ -1,28 +1,31 @@
-
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { env } from './env';
 
 const SESSION_COOKIE = 'auth_session';
 const IMPERSONATE_COOKIE = 'impersonate_id';
 
-const secretKey = process.env.JWT_SECRET || 'secret-key-change-me-in-prod';
-const key = new TextEncoder().encode(secretKey);
+let cachedKey: ReturnType<typeof TextEncoder.prototype.encode> | null = null;
+function getKey() {
+    if (!cachedKey) cachedKey = new TextEncoder().encode(env.JWT_SECRET);
+    return cachedKey;
+}
 
 export async function signSession(payload: { userId: string, role?: string }) {
     return await new SignJWT(payload)
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
         .setExpirationTime('7d')
-        .sign(key);
+        .sign(getKey());
 }
 
 export async function verifySession(token: string) {
     try {
-        const { payload } = await jwtVerify(token, key, {
+        const { payload } = await jwtVerify(token, getKey(), {
             algorithms: ['HS256'],
         });
         return payload;
-    } catch (error) {
+    } catch {
         return null;
     }
 }

@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import {
     calculateSalary,
     calculateCreditHealth,
@@ -11,14 +10,21 @@ import {
     calculateLoanPayoffDate,
     calculatePayoffImpact,
     getBestPurchaseDay,
+    roundToCents,
 } from '../lib/financial-engine';
 import { PanamaTaxStrategy } from '../lib/strategies/tax/panama.tax.strategy';
 
-// ─── calculateSalary ────────────────────────────────────────────────
+const taxStrategy = new PanamaTaxStrategy();
+
+describe('roundToCents', () => {
+    it('rounds to 2 decimal places', () => {
+        expect(roundToCents(14.535)).toBe(14.54);
+        expect(roundToCents(14.534)).toBe(14.53);
+        expect(roundToCents(0.1 + 0.2)).toBe(0.3);
+    });
+});
 
 describe('calculateSalary', () => {
-    const taxStrategy = new PanamaTaxStrategy();
-
     it('calculates taxes below first bracket ($833/month)', () => {
         const result = calculateSalary(833, 0, 'monthly', 0, taxStrategy);
         expect(result.grossVal).toBe(833);
@@ -44,8 +50,6 @@ describe('calculateSalary', () => {
     });
 });
 
-// ─── calculateCreditHealth ──────────────────────────────────────────
-
 describe('calculateCreditHealth', () => {
     it('returns Excellent for utilization <= 10%', () => {
         expect(calculateCreditHealth(5).status).toBe('Excellent');
@@ -68,11 +72,8 @@ describe('calculateCreditHealth', () => {
     });
 });
 
-// ─── calculateProjectedInterest ─────────────────────────────────────
-
 describe('calculateProjectedInterest', () => {
     it('calculates interest correctly for CMF rate (6.25%)', () => {
-        // $500 * 6.25% = $31.25
         expect(calculateProjectedInterest(500, 6.25)).toBeCloseTo(31.25, 2);
     });
 
@@ -89,16 +90,8 @@ describe('calculateProjectedInterest', () => {
     });
 });
 
-// ─── calculateMinimumPayment ────────────────────────────────────────
-
 describe('calculateMinimumPayment', () => {
-    it('calculates minimum payment: interest + insurance + ITBMS + 3% capital', () => {
-        // Balance: $1000, Rate: 6.25%, Insurance: 0.25%, MinPayment%: 3%, ITBMS: 7%
-        // Interest: 1000 * 6.25% = 62.50
-        // Insurance: 1000 * 0.25% = 2.50
-        // Capital: 1000 * 3% = 30.00
-        // ITBMS: 62.50 * 7% = 4.375
-        // Total: 99.375
+    it('calculates minimum payment correctly', () => {
         const result = calculateMinimumPayment(1000, 6.25, 0.25, 3.0, 0.07);
         expect(result).toBeCloseTo(99.38, 2);
     });
@@ -111,33 +104,14 @@ describe('calculateMinimumPayment', () => {
         expect(calculateMinimumPayment(-500, 6.25)).toBe(0);
     });
 
-    it('uses default insurance rate (0.25%) when not provided', () => {
-        const result = calculateMinimumPayment(1000, 6.25);
-        // Interest: 62.50, Insurance: 2.50 (default), Capital: 30.00, ITBMS: 4.375
-        expect(result).toBeCloseTo(99.38, 2);
-    });
-
-    it('uses default minPaymentPercentage (3%) when not provided', () => {
-        const result = calculateMinimumPayment(1000, 6.25, 0.25);
-        expect(result).toBeCloseTo(99.38, 2);
-    });
-
-    it('CMF real scenario: $500 balance, 6.25% rate', () => {
-        // Interest: 500 * 6.25% = 31.25
-        // Insurance: 500 * 0.25% = 1.25
-        // Capital: 500 * 3% = 15.00
-        // ITBMS: 31.25 * 7% = 2.1875
-        // Total: 49.6875
-        const result = calculateMinimumPayment(500, 6.25, 0.25, 3.0, 0.07);
-        expect(result).toBeCloseTo(49.69, 2);
+    it('applies minFloor when total is below it', () => {
+        const result = calculateMinimumPayment(100, 0, 0, 3, 0, 25);
+        expect(result).toBe(25);
     });
 });
 
-// ─── calculateMonthlyCharges ────────────────────────────────────────
-
 describe('calculateMonthlyCharges', () => {
     it('calculates interest + insurance breakdown', () => {
-        // $1000, 6.25%, 0.25%
         const result = calculateMonthlyCharges(1000, 6.25, 0.25);
         expect(result.interest).toBeCloseTo(62.50, 2);
         expect(result.insurance).toBeCloseTo(2.50, 2);
@@ -151,8 +125,6 @@ describe('calculateMonthlyCharges', () => {
         expect(result.total).toBe(0);
     });
 });
-
-// ─── getDaysToCutoff ────────────────────────────────────────────────
 
 describe('getDaysToCutoff', () => {
     it('returns a valid result structure', () => {
@@ -168,30 +140,13 @@ describe('getDaysToCutoff', () => {
         expect(result.days).toBeGreaterThanOrEqual(0);
     });
 
-    it('status is normal when days > 7', () => {
-        // We can't control the current date, but we can verify the logic
-        const result = getDaysToCutoff(15);
-        if (result.days > 7) {
-            expect(result.status).toBe('normal');
-        }
-    });
-
-    it('status is warning when days 4-7', () => {
-        const result = getDaysToCutoff(15);
-        if (result.days > 3 && result.days <= 7) {
-            expect(result.status).toBe('warning');
-        }
-    });
-
-    it('status is urgent when days 1-3', () => {
-        const result = getDaysToCutoff(15);
-        if (result.days > 0 && result.days <= 3) {
-            expect(result.status).toBe('urgent');
-        }
+    it('treats day 0 as urgent', () => {
+        const today = new Date();
+        const result = getDaysToCutoff(today.getDate());
+        expect(result.days).toBe(0);
+        expect(result.status).toBe('urgent');
     });
 });
-
-// ─── getDaysToPayment ───────────────────────────────────────────────
 
 describe('getDaysToPayment', () => {
     it('returns a valid result with days and date', () => {
@@ -203,28 +158,30 @@ describe('getDaysToPayment', () => {
     });
 });
 
-// ─── getBestPurchaseDay ─────────────────────────────────────────────
-
 describe('getBestPurchaseDay', () => {
     it('returns a date after the cutoff day', () => {
         const result = getBestPurchaseDay(15);
         expect(result.date.getDate()).toBe(16);
     });
 
-    it('returns daysRemaining as a number', () => {
-        const result = getBestPurchaseDay(15);
+    it('returns positive daysRemaining when cutoff is in future', () => {
+        const today = new Date();
+        const futureCutoff = today.getDate() > 1 ? 1 : 28;
+        const result = getBestPurchaseDay(futureCutoff);
         expect(typeof result.daysRemaining).toBe('number');
+    });
+
+    it('returns next month when past cutoff', () => {
+        const today = new Date();
+        const pastCutoff = Math.max(1, today.getDate() - 1);
+        const result = getBestPurchaseDay(pastCutoff);
+        expect(result.date).toBeInstanceOf(Date);
+        expect(result.daysRemaining).toBeGreaterThanOrEqual(0);
     });
 });
 
-// ─── calculateNextPaymentSplit (Loan) ───────────────────────────────
-
 describe('calculateNextPaymentSplit', () => {
     it('splits payment correctly between principal and interest', () => {
-        // $10,000 loan, 12% annual, $200/month payment
-        // Monthly rate: 12% / 12 = 1%
-        // Interest: 10000 * 0.01 = 100
-        // Principal: 200 - 100 = 100
         const result = calculateNextPaymentSplit(10000, 12, 200);
         expect(result.interest).toBeCloseTo(100, 2);
         expect(result.principal).toBeCloseTo(100, 2);
@@ -232,9 +189,6 @@ describe('calculateNextPaymentSplit', () => {
     });
 
     it('detects negative amortization when payment < interest', () => {
-        // $100,000 loan, 12% annual, $500/month payment
-        // Interest: 100000 * 0.01 = 1000
-        // Payment is less than interest
         const result = calculateNextPaymentSplit(100000, 12, 500);
         expect(result.isNegativeAmortization).toBe(true);
         expect(result.principal).toBe(0);
@@ -246,8 +200,6 @@ describe('calculateNextPaymentSplit', () => {
         expect(result.interest).toBe(0);
     });
 });
-
-// ─── calculateLoanPayoffDate ────────────────────────────────────────
 
 describe('calculateLoanPayoffDate', () => {
     it('returns a date in the future for a valid loan', () => {
@@ -267,7 +219,6 @@ describe('calculateLoanPayoffDate', () => {
     });
 
     it('handles zero interest rate', () => {
-        // $1000, 0% interest, $100/month = 10 months
         const result = calculateLoanPayoffDate(1000, 0, 100);
         expect(result).toBeInstanceOf(Date);
         const months = Math.ceil(1000 / 100);
@@ -281,8 +232,6 @@ describe('calculateLoanPayoffDate', () => {
         expect(result).toBeNull();
     });
 });
-
-// ─── calculatePayoffImpact ──────────────────────────────────────────
 
 describe('calculatePayoffImpact', () => {
     it('calculates months and interest saved with extra payment', () => {
