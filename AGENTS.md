@@ -113,11 +113,44 @@ npm test
 
 # 4. Validar esquema de Prisma
 npx prisma validate
+
+# 5. Build de producción
+npx next build
 ```
 
 ---
 
-## 7. Protocolo de Comunicación del Agente
+## 7. Reglas de Seguridad (Obligatorias)
+
+### JWT_SECRET
+- **NUNCA** usar fallback hardcodeado. Usar `lib/env.ts` que valida fail-fast.
+- Mínimo 32 caracteres. Si falta o es corto, la app arranca con redirect a /login.
+
+### Anti-IDOR
+- En cada Server Action que manipule `accountId` o `linkedCardId`, verificar que pertenezcan al mismo `profileId` del usuario autenticado.
+- Ejemplo: `if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil')`.
+
+### Autenticación
+- `proxy.ts` ejecuta RBAC: rutas `/admin` requieren `role === 'ADMIN'`.
+- `getGlobalStats` requiere `requireAuth()` + rol ADMIN.
+- Rate limiting por IP en `lib/rate-limit.ts` (x-forwarded-for).
+
+### Validación de Entradas
+- Usar Zod (`lib/validators/schemas.ts`) para validar todos los inputs antes de tocar la DB.
+- Password policy: 8+ chars, 1 mayúscula, 1 minúscula, 1 número.
+
+### Arquitectura
+- **NUNCA** mutar la DB dentro del render de un Server Component (GET).
+- Usar Server Actions separadas (`app/actions/onboarding.ts`).
+- El render debe ser puro y de solo lectura.
+
+### Base de Datos
+- Todas las FKs deben tener `@@index` en `schema.prisma`.
+- Operaciones financieras dentro de `prisma.$transaction`.
+
+---
+
+## 8. Protocolo de Comunicación del Agente
 
 * **Directo y Riguroso (Zero-Fluff):** Sin introducciones vacías ni halagos. Explicar qué falla, por qué falla arquitectónicamente y cómo se corrige.
 * **Proponer soluciones completas:** No parches temporales. Si un componente está mal estructurado, aislarlo y modularizarlo correctamente.
