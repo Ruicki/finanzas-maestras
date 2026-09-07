@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
+import { requireAuth } from '@/lib/auth-utils';
 
 // ─── PROFILES ──────────────────────────────────────────────────────────────
 
@@ -116,6 +117,9 @@ export async function getProfileById(id: number) {
 }
 
 export async function getGlobalStats() {
+    const auth = await requireAuth();
+    if (auth.role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
+
     const [profilesCount, totalMoney, totalDebt, totalExpenses] = await prisma.$transaction([
         prisma.profile.count(),
         prisma.account.aggregate({ _sum: { balance: true } }),

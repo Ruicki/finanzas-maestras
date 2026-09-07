@@ -1,25 +1,54 @@
-# Decisiones de Diseño y Arquitectura - Refactorización GoalCard
+# Decisiones de Diseño y Arquitectura — Plan Maestro Global
 
-## 1. Arquitectura de Componentes
-### Situación previa
-`GoalsTab.tsx` contenía `function GoalCard(...)` anidada en el cuerpo de `function GoalsTab(...)`. Esta práctica viola el ciclo de renderizado de React:
-- Al mutar `transactionAmount` en el padre, `GoalsTab` se re-renderiza y crea una nueva instancia de la función `GoalCard`.
-- React detecta un tipo de componente nuevo en `<GoalCard key={goal.id} />` y destruye/reconstruye el subárbol del DOM, perdiendo el foco y el estado efímero del input.
+## 1. Arquitectura de Seguridad y Flujo de Peticiones
 
-### Solución Arquitectónica
-1. **Extracción de `GoalCard`:**
-   - Mover la definición de `GoalCard` fuera del alcance de la función `GoalsTab` (en el mismo archivo o modularizada como componente exportado/independiente).
-   - Recibir handlers y datos explícitos como props (`goal`, `accounts`, `onOpenHistory`, `onPause`, `onOpenEdit`, `onSmartDelete`, `onTransaction`).
-2. **Estandarización de Entrada Numérica:**
-   - Reemplazar el `<input type="text">` nativo con `<SmartMoneyInput>` en la sección "Gestionar Fondos".
-   - `SmartMoneyInput` asegura entrada decimal derecha-a-izquierda (RTL), formateo exacto de 2 decimales y compatibilidad móvil unificada.
-3. **Manejo de Estado de Transacción:**
-   - Mantener el control de apertura mediante `expandedGoalId` o aislar el estado de `transactionAmount` y `selectedAccountId` a nivel de tarjeta individual cuando esté expandida, evitando colisiones de estado entre tarjetas.
-
-## 2. Diagrama de Flujo y Jerarquía
 ```mermaid
 graph TD
-    GoalsTab[GoalsTab Component] -->|props: goal, accounts, handlers| GoalCard[GoalCard Component - Nivel Raíz]
-    GoalCard -->|Gestión de Fondos abierta| SmartMoneyInput[SmartMoneyInput RTL]
-    GoalCard -->|Depositar / Retirar| handleTransaction[handleTransaction Action]
+    Client[Cliente / Navegador] --> Edge[middleware.ts en Next.js Edge]
+    Edge -->|Filtro de Rutas y Tokens JWT| Gatekeeper{Evaluación de Ruta}
+    Gatekeeper -->|/admin sin rol ADMIN| HomeRedirect[Redirigir a /]
+    Gatekeeper -->|Ruta privada sin sesión| LoginRedirect[Redirigir a /login]
+    Gatekeeper -->|Ruta permitida| ServerComponent[Server Component / Page]
+    
+    ServerComponent --> ServerAction[Server Action]
+    ServerAction --> ZodLayer[Validación de Esquema Zod]
+    ZodLayer --> AuthCheck[requireOwnership / Anti-IDOR]
+    AuthCheck --> DBTransaction[Prisma Transaction con Índices]
 ```
+
+## 2. Decisiones de Diseño Clave
+
+### A. Módulo de Validación de Entorno (`lib/env.ts`)
+- Implementar validación Fail-Fast: la aplicación no arranca si faltan secretos esenciales o si `JWT_SECRET` es menor a 32 caracteres.
+
+### B. Corrección Algorítmica en el Motor Financiero (`lib/financial-engine.ts`)
+- **Mejor día de compra:**
+  ```typescript
+  if (currentDay > cutoffDay) {
+    // Si ya pasó el corte este mes, el mejor día es el día después del corte del mes siguiente
+    bestDayDate = new Date(currentYear, currentMonth + 1, cutoffDay + 1);
+  } else {
+    // Si el corte aún no ha ocurrido, el mejor día fue o será cutoffDay + 1
+    bestDayDate = new Date(currentYear, currentMonth, cutoffDay + 1);
+  }
+  ```
+
+### C. Desacoplamiento de Mutaciones en Server Components
+- El Server Component `app/page.tsx` debe ser **idempotente y de solo lectura**.
+- La creación de la cuenta 'Efectivo' y categorías iniciales se encapsula en una función de servicio invocada únicamente en `register()` o mediante una Server Action explícita de onboarding.
+
+### D. Indexación en Base de Datos (`prisma/schema.prisma`)
+- En PostgreSQL sobre Neon DB, agregar índices explícitos:
+  - `Expense`: `@@index([profileId])`, `@@index([accountId])`, `@@index([categoryId])`, `@@index([createdAt])`
+  - `Account`: `@@index([profileId])`
+  - `Goal`: `@@index([profileId])`
+  - `CreditCard`: `@@index([profileId])`
+  - `Loan`: `@@index([profileId])`
+  - `Transfer`: `@@index([sourceAccountId])`, `@@index([destinationAccountId])`
+
+### E. Modularización de la UI bajo SRP
+- Subdividir `DebtsTab.tsx` en `components/dashboard/tabs/debts/`:
+  - `LoanCard.tsx`
+  - `CreditCardCard.tsx`
+  - `DebtModal.tsx`
+  - `AmortizationScheduleModal.tsx`

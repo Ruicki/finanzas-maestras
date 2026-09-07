@@ -28,9 +28,16 @@ export async function createExpense(data: CreateExpenseInput) {
     await requireOwnership(data.profileId);
     if (data.accountId) {
         const account = await prisma.account.findUnique({ where: { id: data.accountId } });
-        if (account?.lockDate && new Date(account.lockDate) > new Date()) {
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
+        if (account.lockDate && new Date(account.lockDate) > new Date()) {
             throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
         }
+    }
+    if (data.linkedCardId) {
+        const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
+        if (!card) throw new Error('Tarjeta no encontrada');
+        if (card.profileId !== data.profileId) throw new Error('La tarjeta no pertenece a este perfil');
     }
 
     try {
@@ -82,6 +89,17 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
     const oldExpense = await prisma.expense.findUnique({ where: { id } });
     if (!oldExpense) throw new Error('Gasto no encontrado');
     await requireOwnership(oldExpense.profileId);
+
+    if (data.accountId !== undefined && data.accountId !== null) {
+        const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.profileId !== oldExpense.profileId) throw new Error('La cuenta no pertenece a este perfil');
+    }
+    if (data.linkedCardId !== undefined && data.linkedCardId !== null) {
+        const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
+        if (!card) throw new Error('Tarjeta no encontrada');
+        if (card.profileId !== oldExpense.profileId) throw new Error('La tarjeta no pertenece a este perfil');
+    }
 
     try {
         await prisma.$transaction(async (tx) => {

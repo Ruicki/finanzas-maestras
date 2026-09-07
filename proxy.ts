@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-export default async function proxy(request: NextRequest) {
-    const secretKey = process.env.JWT_SECRET || 'secret-key-change-me-in-prod';
+export default async function middleware(request: NextRequest) {
+    const secretKey = process.env.JWT_SECRET;
+    if (!secretKey || secretKey.length < 32) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
     const key = new TextEncoder().encode(secretKey);
 
     const session = request.cookies.get('auth_session');
@@ -12,26 +15,30 @@ export default async function proxy(request: NextRequest) {
     const isHomePage = path === '/';
     const isPublicAsset = path.startsWith('/_next') ||
         path.startsWith('/api') ||
-        path.includes('.'); // files like favicon.ico
+        path.includes('.');
 
-    let isValidSession = false;
+    let payload: Record<string, unknown> | null = null;
 
     if (session && session.value) {
         try {
-            await jwtVerify(session.value, key, { algorithms: ['HS256'] });
-            isValidSession = true;
-        } catch (e) {
-            isValidSession = false;
+            const verified = await jwtVerify(session.value, key, { algorithms: ['HS256'] });
+            payload = verified.payload as Record<string, unknown>;
+        } catch {
+            payload = null;
         }
     }
 
-    // Si no hay sesión válida, redirigir a login (EXCEPTO si es auth, home o asset)
+    const isValidSession = payload !== null;
+
     if (!isValidSession && !isAuthPage && !isHomePage && !isPublicAsset) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Si hay sesión válida y está en páginas de Auth (login/register), redirigir al dashboard
     if (isValidSession && isAuthPage) {
+        return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    if (path.startsWith('/admin') && (!payload || payload.role !== 'ADMIN')) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 

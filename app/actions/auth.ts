@@ -8,6 +8,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signSession, verifySession } from '@/lib/auth-utils';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { validate, authSchema } from '@/lib/validators/schemas';
+import { z } from 'zod';
 
 const SESSION_COOKIE = 'auth_session';
 const IMPERSONATE_COOKIE = 'impersonate_id';
@@ -73,9 +75,8 @@ export async function register(formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    if (!name || !email || !password) {
-        return { error: 'Todos los campos son obligatorios' };
-    }
+    const validation = validate(authSchema, { name, email, password });
+    if (!validation.success) return { error: validation.error };
 
     const rateLimit = checkRateLimit(`register:${email}`);
     if (!rateLimit.allowed) {
@@ -240,9 +241,8 @@ export async function claimProfile(formData: FormData) {
 }
 
 export async function resetPassword(profileId: number, newPassword: string) {
-    if (!newPassword || newPassword.length < 4) {
-        return { error: 'La contraseña debe tener al menos 4 caracteres' };
-    }
+    const pwdValidation = validate(z.object({ password: z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/) }), { password: newPassword });
+    if (!pwdValidation.success) return { error: pwdValidation.error };
 
     try {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
