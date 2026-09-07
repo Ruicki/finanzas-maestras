@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { ProfileWithData } from '@/types';
-import { formatMoney } from '@/lib/utils';
 
 type Goal = ProfileWithData['goals'][number];
 type Account = ProfileWithData['accounts'][number];
@@ -11,7 +10,7 @@ import { createGoal, deleteGoal, handleGoalTransaction, updateGoal, deleteGoalWi
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalculatorIcon, PlusIcon, EyeIcon, EyeOffIcon, CalendarIcon, PauseIcon, PlayIcon, HistoryIcon, FlagIcon, CarIcon, HouseIcon, BookOpenIcon, HeartIcon, RocketIcon, ShieldCheckIcon, WalletIcon } from '@animateicons/react/lucide';
+import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalculatorIcon, PlusIcon, CalendarIcon, PauseIcon, PlayIcon, HistoryIcon, FlagIcon, CarIcon, HouseIcon, BookOpenIcon, HeartIcon, RocketIcon, ShieldCheckIcon, WalletIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 const GOAL_CATEGORIES = [
@@ -35,6 +34,206 @@ function getStage(percentage: number): { label: string; color: string } {
     if (percentage >= 50) return { label: 'En progreso', color: 'text-blue-500' };
     if (percentage >= 25) return { label: 'Construyendo', color: 'text-amber-500' };
     return { label: 'Empezando', color: 'text-zinc-400' };
+}
+
+interface GoalCardProps {
+    goal: Goal;
+    accounts: Account[];
+    isExpanded: boolean;
+    onToggleExpand: (goalId: number | null) => void;
+    onOpenHistory: (goal: Goal) => void;
+    onPause: (goal: Goal) => void;
+    onOpenEdit: (goal: Goal) => void;
+    onSmartDelete: (goal: Goal) => void;
+    onRefresh: () => void;
+}
+
+function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, onPause, onOpenEdit, onSmartDelete, onRefresh }: GoalCardProps) {
+    const [amount, setAmount] = useState('');
+    const [accountId, setAccountId] = useState<string>(
+        goal.type === 'FIXED' && goal.sourceAccountId ? goal.sourceAccountId.toString() : ''
+    );
+
+    const percentage = goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0;
+    const catInfo = getCategoryInfo((goal as any).category);
+    const CatIcon = catInfo.icon;
+    const stage = getStage(percentage);
+    const priorityColors: Record<string, string> = {
+        'HIGH': 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
+        'MEDIUM': 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
+        'LOW': 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    };
+    const priorityLabel: Record<string, string> = { 'HIGH': 'Alta', 'MEDIUM': 'Media', 'LOW': 'Baja' };
+
+    function resetForm() {
+        setAmount('');
+        setAccountId(goal.type === 'FIXED' && goal.sourceAccountId ? goal.sourceAccountId.toString() : '');
+    }
+
+    async function handleTransaction(type: 'DEPOSIT' | 'WITHDRAW') {
+        const parsed = parseFloat(amount);
+        if (!parsed || parsed <= 0) { toast.error("Monto inválido"); return; }
+        if (type === 'WITHDRAW' && parsed > goal.currentAmount) { toast.error("Fondos insuficientes"); return; }
+        if (type === 'WITHDRAW' && !accountId) { toast.error("Selecciona cuenta destino"); return; }
+
+        try {
+            await handleGoalTransaction(goal.id, parsed, type, accountId ? parseInt(accountId) : undefined);
+            toast.success(type === 'DEPOSIT' ? "¡Depósito registrado! 🚀" : "Retiro registrado 📉");
+            resetForm();
+            onToggleExpand(null);
+            onRefresh();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error en transacción");
+        }
+    }
+
+    return (
+        <div className={`bg-white dark:bg-zinc-900/50 border ${goal.isPaused ? 'border-zinc-300 dark:border-zinc-700 opacity-70' : percentage >= 100 ? 'border-emerald-500/50 shadow-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[2.5rem] relative overflow-hidden group shadow-sm hover:shadow-md transition-all`}>
+            {goal.isPaused && (
+                <div className="absolute top-4 right-4 z-10">
+                    <span className="text-[10px] font-black bg-zinc-200 dark:bg-zinc-700 text-zinc-500 px-2 py-1 rounded-full uppercase">Pausada</span>
+                </div>
+            )}
+
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catInfo.color}`}>
+                        <CatIcon size={18} />
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{goal.name}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${priorityColors[goal.priority || 'MEDIUM']}`}>
+                                {priorityLabel[goal.priority || 'MEDIUM']}
+                            </span>
+                            <span className={`text-[10px] font-bold ${stage.color}`}>{stage.label}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex gap-1">
+                    <button onClick={() => onOpenHistory(goal)} className="p-2 text-zinc-400 hover:text-indigo-500 transition-colors" title="Historial">
+                        <HistoryIcon size={16} />
+                    </button>
+                    <button onClick={() => onPause(goal)} className="p-2 text-zinc-400 hover:text-amber-500 transition-colors" title={goal.isPaused ? "Reanudar" : "Pausar"}>
+                        {goal.isPaused ? <PlayIcon size={16} /> : <PauseIcon size={16} />}
+                    </button>
+                    <button onClick={() => onOpenEdit(goal)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><PencilIcon size={16} /></button>
+                    <button onClick={() => onSmartDelete(goal)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><Trash2Icon size={16} /></button>
+                </div>
+            </div>
+
+            <div className="flex items-end gap-3 mb-4">
+                <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                    <PiggyBankIcon size={28} />
+                </div>
+                <div>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ahorrado</p>
+                    <span className="text-2xl font-black text-zinc-900 dark:text-white">${goal.currentAmount.toFixed(2)}</span>
+                    <span className="text-sm text-zinc-400 ml-1">/ ${goal.targetAmount.toFixed(0)}</span>
+                </div>
+            </div>
+
+            <div className="mb-4">
+                <div className="flex justify-between text-xs font-bold mb-2">
+                    {percentage >= 100 ? (
+                        <span className="text-emerald-500">¡COMPLETADA! 🏆</span>
+                    ) : (
+                        <span className="text-zinc-500">{percentage.toFixed(0)}%</span>
+                    )}
+                </div>
+                <div className="relative h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full transition-all duration-1000 ease-out ${percentage >= 100 ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-linear-to-r from-pink-500 to-rose-500'}`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                    />
+                    {[25, 50, 75].map(milestone => (
+                        <div
+                            key={milestone}
+                            className={`absolute top-0 h-full w-0.5 ${percentage >= milestone ? 'bg-white/50' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+                            style={{ left: `${milestone}%` }}
+                        />
+                    ))}
+                </div>
+                <div className="flex justify-between mt-1">
+                    {['25%', '50%', '75%', '100%'].map((m, i) => (
+                        <span key={m} className={`text-[8px] font-bold ${percentage >= [25, 50, 75, 100][i] ? 'text-pink-500' : 'text-zinc-300 dark:text-zinc-600'}`}>{m}</span>
+                    ))}
+                </div>
+            </div>
+
+            {(goal as any).notes && (
+                <p className="text-xs text-zinc-400 mb-3 italic">"{(goal as any).notes}"</p>
+            )}
+
+            {percentage < 100 && goal.deadline && (
+                <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 mb-4">
+                    <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    {(() => {
+                        const remaining = goal.targetAmount - goal.currentAmount;
+                        const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                        if (daysLeft > 0 && remaining > 0) {
+                            return <span className="text-zinc-500">${(remaining / daysLeft).toFixed(2)}/día</span>;
+                        }
+                        return <span className="text-red-500">Tiempo agotado</span>;
+                    })()}
+                </div>
+            )}
+
+            {percentage >= 100 && (
+                <button onClick={() => onSmartDelete(goal)} className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-teal-500 text-white font-black hover:scale-105 transition-all shadow-lg animate-pulse flex items-center justify-center gap-2 mb-3">
+                    🎉 ¡Reclamar!
+                </button>
+            )}
+
+            {percentage < 100 && !goal.isPaused && (
+                isExpanded ? (
+                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-3xl animate-in fade-in slide-in-from-top-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-xs font-bold text-zinc-500 uppercase">Gestionar Fondos</span>
+                            <button onClick={() => { onToggleExpand(null); resetForm(); }} className="p-1 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:text-zinc-800"><XIcon size={14} /></button>
+                        </div>
+                        <div className="mb-3">
+                            <SmartMoneyInput value={amount} onMoneyChange={setAmount} className="w-full bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700 font-bold text-lg outline-none" placeholder="0.00" />
+                        </div>
+                        <div className="mb-3">
+                            {goal.type === 'FIXED' && goal.sourceAccountId ? (
+                                <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex justify-between items-center opacity-75">
+                                    <span className="text-xs font-bold text-zinc-400">De: {accounts.find(a => a.id === goal.sourceAccountId)?.name}</span>
+                                    <span className="text-[10px] bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-500">Vinculada</span>
+                                </div>
+                            ) : (
+                                <select value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
+                                    <option value="">Cuenta...</option>
+                                    {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
+                                </select>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => handleTransaction('DEPOSIT')} className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all">Depositar</button>
+                            <button onClick={() => handleTransaction('WITHDRAW')} className="p-3 bg-white dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all">Retirar</button>
+                        </div>
+                    </div>
+                ) : (
+                    goal.type === 'FIXED' && goal.contributionAmount ? (
+                        <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onRefresh(); }).catch((err: any) => toast.error(err.message)); } else { onToggleExpand(goal.id); setAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                                <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
+                                <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
+                            </button>
+                            <button onClick={() => { onToggleExpand(goal.id); setAmount(''); if (goal.sourceAccountId) setAccountId(goal.sourceAccountId.toString()); }} className="py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 font-bold text-sm transition-all flex flex-col items-center gap-1 border border-dashed border-zinc-200 dark:border-zinc-700">
+                                <span className="flex items-center gap-1.5"><PlusIcon size={14} /> Abonar Extra</span>
+                                <span className="text-xs opacity-80">Otra cantidad</span>
+                            </button>
+                        </div>
+                    ) : (
+                        <button onClick={() => { onToggleExpand(goal.id); setAmount(''); }} className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 font-bold text-sm transition-all flex items-center justify-center gap-2 border border-dashed border-zinc-200 dark:border-zinc-700">
+                            <PlusIcon size={18} /> Agregar / Retirar
+                        </button>
+                    )
+                )
+            )}
+        </div>
+    );
 }
 
 interface GoalsTabProps {
@@ -69,12 +268,9 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
     const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null);
-    const [transactionAmount, setTransactionAmount] = useState('');
-    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
     const [reclaimAccountId, setReclaimAccountId] = useState('');
     const [isReclaiming, setIsReclaiming] = useState(false);
 
-    // Calculator
     const [recommended, setRecommended] = useState<{ monthly: number; biweekly: number; weekly: number } | null>(null);
 
     useEffect(() => {
@@ -181,23 +377,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         }, "¿Borrar meta?", "Esta acción no se puede deshacer");
     }
 
-    async function handleTransaction(goalId: number, currentAmount: number, type: 'DEPOSIT' | 'WITHDRAW') {
-        const amount = parseFloat(transactionAmount);
-        if (!amount || amount <= 0) { toast.error("Monto inválido"); return; }
-        if (type === 'WITHDRAW' && amount > currentAmount) { toast.error("Fondos insuficientes"); return; }
-        if (type === 'WITHDRAW' && !selectedAccountId) { toast.error("Selecciona cuenta destino"); return; }
-
-        try {
-            await handleGoalTransaction(goalId, amount, type, selectedAccountId ? parseInt(selectedAccountId) : undefined);
-            toast.success(type === 'DEPOSIT' ? "¡Depósito registrado! 🚀" : "Retiro registrado 📉");
-            setTransactionAmount('');
-            setExpandedGoalId(null);
-            onUpdate();
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Error en transacción");
-        }
-    }
-
     async function handleSmartDelete(goal: Goal) {
         if (goal.currentAmount > 0) {
             setReclaimModal({ isOpen: true, goal });
@@ -238,182 +417,8 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         }
     }
 
-    // ─── GOAL CARD ────────────────────────────────────────────────────
-    function GoalCard({ goal }: { goal: Goal }) {
-        const percentage = goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0;
-        const catInfo = getCategoryInfo((goal as any).category);
-        const CatIcon = catInfo.icon;
-        const stage = getStage(percentage);
-        const priorityColors: Record<string, string> = {
-            'HIGH': 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
-            'MEDIUM': 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
-            'LOW': 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
-        };
-        const priorityLabel: Record<string, string> = { 'HIGH': 'Alta', 'MEDIUM': 'Media', 'LOW': 'Baja' };
-
-        return (
-            <div className={`bg-white dark:bg-zinc-900/50 border ${goal.isPaused ? 'border-zinc-300 dark:border-zinc-700 opacity-70' : percentage >= 100 ? 'border-emerald-500/50 shadow-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[2.5rem] relative overflow-hidden group shadow-sm hover:shadow-md transition-all`}>
-                {/* Paused overlay */}
-                {goal.isPaused && (
-                    <div className="absolute top-4 right-4 z-10">
-                        <span className="text-[10px] font-black bg-zinc-200 dark:bg-zinc-700 text-zinc-500 px-2 py-1 rounded-full uppercase">Pausada</span>
-                    </div>
-                )}
-
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catInfo.color}`}>
-                            <CatIcon size={18} />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{goal.name}</h4>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${priorityColors[goal.priority || 'MEDIUM']}`}>
-                                    {priorityLabel[goal.priority || 'MEDIUM']}
-                                </span>
-                                <span className={`text-[10px] font-bold ${stage.color}`}>{stage.label}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex gap-1">
-                        <button onClick={() => openHistory(goal)} className="p-2 text-zinc-400 hover:text-indigo-500 transition-colors" title="Historial">
-                            <HistoryIcon size={16} />
-                        </button>
-                        <button onClick={() => handlePause(goal)} className="p-2 text-zinc-400 hover:text-amber-500 transition-colors" title={goal.isPaused ? "Reanudar" : "Pausar"}>
-                            {goal.isPaused ? <PlayIcon size={16} /> : <PauseIcon size={16} />}
-                        </button>
-                        <button onClick={() => openEditGoalModal(goal)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><PencilIcon size={16} /></button>
-                        <button onClick={() => handleSmartDelete(goal)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><Trash2Icon size={16} /></button>
-                    </div>
-                </div>
-
-                {/* Amount */}
-                <div className="flex items-end gap-3 mb-4">
-                    <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                        <PiggyBankIcon size={28} />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ahorrado</p>
-                        <span className="text-2xl font-black text-zinc-900 dark:text-white">${goal.currentAmount.toFixed(2)}</span>
-                        <span className="text-sm text-zinc-400 ml-1">/ ${goal.targetAmount.toFixed(0)}</span>
-                    </div>
-                </div>
-
-                {/* Progress bar with milestones */}
-                <div className="mb-4">
-                    <div className="flex justify-between text-xs font-bold mb-2">
-                        {percentage >= 100 ? (
-                            <span className="text-emerald-500">¡COMPLETADA! 🏆</span>
-                        ) : (
-                            <span className="text-zinc-500">{percentage.toFixed(0)}%</span>
-                        )}
-                    </div>
-                    <div className="relative h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-1000 ease-out ${percentage >= 100 ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-linear-to-r from-pink-500 to-rose-500'}`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                        />
-                        {/* Milestones */}
-                        {[25, 50, 75].map(milestone => (
-                            <div
-                                key={milestone}
-                                className={`absolute top-0 h-full w-0.5 ${percentage >= milestone ? 'bg-white/50' : 'bg-zinc-300 dark:bg-zinc-600'}`}
-                                style={{ left: `${milestone}%` }}
-                            />
-                        ))}
-                    </div>
-                    <div className="flex justify-between mt-1">
-                        {['25%', '50%', '75%', '100%'].map((m, i) => (
-                            <span key={m} className={`text-[8px] font-bold ${percentage >= [25, 50, 75, 100][i] ? 'text-pink-500' : 'text-zinc-300 dark:text-zinc-600'}`}>{m}</span>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Notes */}
-                {(goal as any).notes && (
-                    <p className="text-xs text-zinc-400 mb-3 italic">"{(goal as any).notes}"</p>
-                )}
-
-                {/* Deadline */}
-                {percentage < 100 && goal.deadline && (
-                    <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 mb-4">
-                        <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        {(() => {
-                            const remaining = goal.targetAmount - goal.currentAmount;
-                            const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                            if (daysLeft > 0 && remaining > 0) {
-                                return <span className="text-zinc-500">${(remaining / daysLeft).toFixed(2)}/día</span>;
-                            }
-                            return <span className="text-red-500">Tiempo agotado</span>;
-                        })()}
-                    </div>
-                )}
-
-                {/* Completed button */}
-                {percentage >= 100 && (
-                    <button onClick={() => handleSmartDelete(goal)} className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-teal-500 text-white font-black hover:scale-105 transition-all shadow-lg animate-pulse flex items-center justify-center gap-2 mb-3">
-                        🎉 ¡Reclamar!
-                    </button>
-                )}
-
-                {/* Actions */}
-                {percentage < 100 && !goal.isPaused && (
-                    expandedGoalId === goal.id ? (
-                        <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-3xl animate-in fade-in slide-in-from-top-4">
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-xs font-bold text-zinc-500 uppercase">Gestionar Fondos</span>
-                                <button onClick={() => setExpandedGoalId(null)} className="p-1 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:text-zinc-800"><XIcon size={14} /></button>
-                            </div>
-                            <div className="flex items-center gap-2 mb-3 bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700">
-                                <span className="text-zinc-400 font-bold pl-2">$</span>
-                                <input placeholder="0.00" inputMode="decimal" autoComplete="off" className="w-full bg-transparent outline-none font-bold text-lg text-zinc-900 dark:text-white" type="text" value={transactionAmount} onChange={e => setTransactionAmount(e.target.value)} />
-                            </div>
-                            <div className="mb-3">
-                                {goal.type === 'FIXED' && goal.sourceAccountId ? (
-                                    <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex justify-between items-center opacity-75">
-                                        <span className="text-xs font-bold text-zinc-400">De: {accounts.find(a => a.id === goal.sourceAccountId)?.name}</span>
-                                        <span className="text-[10px] bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-500">Vinculada</span>
-                                    </div>
-                                ) : (
-                                    <select value={selectedAccountId} onChange={e => setSelectedAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
-                                        <option value="">Cuenta...</option>
-                                        {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
-                                    </select>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => handleTransaction(goal.id, goal.currentAmount, 'DEPOSIT')} className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all">Depositar</button>
-                                <button onClick={() => handleTransaction(goal.id, goal.currentAmount, 'WITHDRAW')} className="p-3 bg-white dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all">Retirar</button>
-                            </div>
-                        </div>
-                    ) : (
-                        goal.type === 'FIXED' && goal.contributionAmount ? (
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onUpdate(); }).catch((err: any) => toast.error(err.message)); } else { setExpandedGoalId(goal.id); setTransactionAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
-                                    <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
-                                    <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
-                                </button>
-                                <button onClick={() => { setExpandedGoalId(goal.id); setTransactionAmount(''); if (goal.sourceAccountId) setSelectedAccountId(goal.sourceAccountId.toString()); }} className="py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 font-bold text-sm transition-all flex flex-col items-center gap-1 border border-dashed border-zinc-200 dark:border-zinc-700">
-                                    <span className="flex items-center gap-1.5"><PlusIcon size={14} /> Abonar Extra</span>
-                                    <span className="text-xs opacity-80">Otra cantidad</span>
-                                </button>
-                            </div>
-                        ) : (
-                            <button onClick={() => { setExpandedGoalId(goal.id); setTransactionAmount(''); }} className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 font-bold text-sm transition-all flex items-center justify-center gap-2 border border-dashed border-zinc-200 dark:border-zinc-700">
-                                <PlusIcon size={18} /> Agregar / Retirar
-                            </button>
-                        )
-                    )
-                )}
-            </div>
-        );
-    }
-
-    // ─── MAIN RETURN ──────────────────────────────────────────────────
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-6">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-[#FF62BB] to-[#FF97D0] dark:from-[#3a1528] dark:to-[#2a1020] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-pink-200 dark:border-pink-900/40">
                 <div className="relative z-10 text-center md:text-left">
                     <h2 className="text-3xl font-black mb-2">Tus Metas</h2>
@@ -425,9 +430,21 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                 <PiggyBankIcon className="absolute -bottom-6 -right-6 w-48 h-48 text-white opacity-10 rotate-12" />
             </div>
 
-            {/* Goals grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {goals.map(goal => <GoalCard key={goal.id} goal={goal} />)}
+                {goals.map(goal => (
+                    <GoalCard
+                        key={goal.id}
+                        goal={goal}
+                        accounts={accounts}
+                        isExpanded={expandedGoalId === goal.id}
+                        onToggleExpand={setExpandedGoalId}
+                        onOpenHistory={openHistory}
+                        onPause={handlePause}
+                        onOpenEdit={openEditGoalModal}
+                        onSmartDelete={handleSmartDelete}
+                        onRefresh={onUpdate}
+                    />
+                ))}
                 {goals.length === 0 && (
                     <div className="col-span-full py-20 text-center text-zinc-400">
                         <PiggyBankIcon size={64} className="mx-auto mb-4 opacity-20" />
@@ -525,7 +542,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                         </div>
 
                         <div className="space-y-5">
-                            {/* Category */}
                             <div>
                                 <label className="text-xs font-bold text-zinc-500 uppercase ml-2 mb-2 block">Categoría</label>
                                 <div className="grid grid-cols-4 gap-2">
@@ -541,7 +557,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                             </div>
 
-                            {/* Name + Amount */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Nombre</label>
@@ -553,7 +568,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                             </div>
 
-                            {/* Priority + Type */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-zinc-500 uppercase ml-2 mb-1 block">Prioridad</label>
@@ -574,13 +588,11 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                             </div>
 
-                            {/* Notes */}
                             <div>
                                 <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Notas</label>
                                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full bg-zinc-50 dark:bg-zinc-900 border-transparent focus:border-pink-500 rounded-2xl px-5 py-3 font-bold text-sm outline-none transition-all mt-1 resize-none" rows={2} placeholder="¿Para qué es esta meta?" />
                             </div>
 
-                            {/* Calculator preview */}
                             {form.targetAmount && form.deadline && recommended && (
                                 <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-3xl border border-indigo-100 dark:border-indigo-800/30">
                                     <div className="flex items-center gap-2 mb-2 text-indigo-600 dark:text-indigo-400">
@@ -595,7 +607,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                             )}
 
-                            {/* FIXED options */}
                             {form.type === 'FIXED' && (
                                 <div className="p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-3xl space-y-3 animate-in fade-in">
                                     <p className="text-xs font-bold text-zinc-400 uppercase">Ahorro Automático</p>
@@ -630,7 +641,6 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 </div>
                             )}
 
-                            {/* Deadline */}
                             <div>
                                 <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Fecha Límite</label>
                                 <input type="date" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} className="w-full bg-zinc-50 dark:bg-zinc-900 border-transparent rounded-2xl px-5 py-3 font-bold text-lg outline-none mt-1" />
