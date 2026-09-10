@@ -97,6 +97,17 @@ export async function deleteAccount(id: number): Promise<void> {
             where: { OR: [{ sourceAccountId: id }, { destinationAccountId: id }] },
         });
         await tx.account.delete({ where: { id } });
+
+        await tx.auditLog.create({
+            data: {
+                action: 'ACCOUNT_DELETE',
+                details: `Cuenta eliminada: ${account.name} (${account.type})`,
+                targetId: id,
+                profileId: account.profileId,
+                oldBalance: account.balance,
+                newBalance: 0,
+            },
+        });
     });
 
     revalidatePath('/budget');
@@ -240,7 +251,7 @@ export async function createTransfer(
 
     try {
         await prisma.$transaction(async (tx) => {
-            await tx.account.update({
+            const updatedSource = await tx.account.update({
                 where: { id: sourceAccountId },
                 data: { balance: { decrement: amount } },
             });
@@ -248,7 +259,7 @@ export async function createTransfer(
                 where: { id: destinationAccountId },
                 data: { balance: { increment: effectiveDestAmount } },
             });
-            await tx.transfer.create({
+            const transfer = await tx.transfer.create({
                 data: {
                     amount,
                     sourceAccountId,
@@ -258,6 +269,17 @@ export async function createTransfer(
                     exchangeRate: isCrossCurrency ? exchangeRate! : null,
                     sourceAmount: isCrossCurrency ? effectiveSourceAmount : null,
                     destAmount: isCrossCurrency ? effectiveDestAmount : null,
+                },
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    action: 'TRANSFER',
+                    details: `Transferencia #${transfer.id}: ${amount} de cuenta ${sourceAccountId} a cuenta ${destinationAccountId}${description ? ` (${description})` : ''}`,
+                    targetId: transfer.id,
+                    profileId: sourceAccount.profileId,
+                    oldBalance: sourceAccount.balance,
+                    newBalance: updatedSource.balance,
                 },
             });
         });
