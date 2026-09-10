@@ -8,6 +8,8 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
     "release": "prisma migrate deploy && next start"
   },
   "dependencies": {
