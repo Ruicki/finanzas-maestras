@@ -22,6 +22,10 @@ describe('roundToCents', () => {
         expect(roundToCents(14.534)).toBe(14.53);
         expect(roundToCents(0.1 + 0.2)).toBe(0.3);
     });
+
+    it('rounds 1.005 correctly (Math.round(1.005*100)/100 da 1 por error de punto flotante)', () => {
+        expect(roundToCents(1.005)).toBe(1.01);
+    });
 });
 
 describe('calculateSalary', () => {
