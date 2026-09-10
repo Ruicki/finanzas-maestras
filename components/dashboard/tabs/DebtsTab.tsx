@@ -76,9 +76,11 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     // --- MANEJADORES DE EDICIÓN ---
     function openEditLoan(loan: Loan) {
         setEditingId(loan.id);
-        const isFriend = loan.type === 'PERSONAL' || loan.lender !== loan.name; // Simple heuristic
+        // Misma regla que usa la lista para decidir BankLoanCard vs FriendLoanCard,
+        // para que el editor abra en el modo que realmente corresponde a esta deuda.
+        const isBank = Number(loan.interestRate) > 0;
         setWizardType('LOAN');
-        setLoanWizardMode(isFriend ? 'FRIEND' : 'BANK');
+        setLoanWizardMode(isBank ? 'BANK' : 'FRIEND');
         setFriendHasInterest(Number(loan.interestRate) > 0);
 
         setLoanForm({
@@ -615,8 +617,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                     onChange={e => setPaymentAccountId(e.target.value)}
                                     className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold"
                                 >
-                                    <option value="">Seleccionar Cuenta...</option>
-                                    <option value="">-- Pago Externo / Otro --</option>
+                                    <option value="">-- Pago Externo / Efectivo (sin cuenta) --</option>
                                     {accounts.filter(acc => (acc as any).purpose !== 'SAVINGS').map(acc => (
                                         <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>
                                     ))}
