@@ -109,18 +109,20 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         return iso.startsWith(targetMonth);
     };
 
-    // Filtered Lists — monthly recurring appear in ALL months;
-    // annual recurring appear only in their billing month (creation month);
-    // one-time expenses only in their creation month
+    // Filtered Lists — annual recurring appear only in their billing month (creation
+    // month, every year); one-time expenses AND monthly recurring templates only in
+    // their creation month. Monthly recurring templates are NOT repeated here in later
+    // months: processRecurringExpenses() (cron) creates a real isOneTime copy on each
+    // due date, and that copy is what represents the charge in those later months.
+    // Showing the template unconditionally every month used to double-count it
+    // alongside that copy.
     const expensesList = activeProfile?.expenses?.filter((e) => {
         if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
-        if (e.isRecurring && e.recurrenceType === 'MONTHLY') return true; // monthly: every month
         if (e.isRecurring && e.recurrenceType === 'ANNUAL') {
             // Annual: appears every year in the same month as creation
             const created = new Date(e.createdAt);
-            return (created.getMonth() + 1) === selectedMonth;
+            return created.getMonth() === selectedMonth;
         }
-        // one-time: only in their creation month
         return isInSelectedMonth(e.createdAt);
     }) || [];
 
