@@ -112,7 +112,7 @@ export default function SystemPage() {
                         onClick={handleMaintenance}
                         className={`relative z-10 w-full py-4 font-black rounded-xl transition-all flex items-center justify-center gap-2 border-2 ${maintenance ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'}`}
                     >
-                        {maintenance ? "DESACTIVAR BLOG" : "ACTIVAR MANTENIMIENTO"}
+                        {maintenance ? "DESACTIVAR MANTENIMIENTO" : "ACTIVAR MANTENIMIENTO"}
                     </button>
                 </div>
 
