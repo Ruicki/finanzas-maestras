@@ -16,6 +16,7 @@ export const expenseSchema = z.object({
     category: z.string().min(1),
     profileId: z.number().int().positive(),
     dueDate: z.number().int().min(1).max(31).optional(),
+    graceDays: z.number().int().min(0).max(60).optional(),
     isRecurring: z.boolean().optional(),
     isOneTime: z.boolean().optional(),
     recurrenceType: z.string().optional(),

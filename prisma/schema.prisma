@@ -74,6 +74,7 @@ model Expense {
   category        String
   categoryId      Int?
   dueDate         Int?
+  graceDays       Int?
   isRecurring     Boolean   @default(true)
   isOneTime       Boolean   @default(false)
   recurrenceType  String?   @default("MONTHLY")

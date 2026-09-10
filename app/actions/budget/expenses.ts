@@ -14,6 +14,7 @@ export interface CreateExpenseInput {
     category: string;
     profileId: number;
     dueDate?: number;
+    graceDays?: number;
     isRecurring?: boolean;
     isOneTime?: boolean;
     recurrenceType?: string;
@@ -49,6 +50,7 @@ export async function createExpense(data: CreateExpenseInput) {
                     category: data.category,
                     profileId: data.profileId,
                     dueDate: data.dueDate,
+                    graceDays: data.graceDays,
                     isRecurring: data.isRecurring ?? true,
                     isOneTime: data.isOneTime ?? false,
                     recurrenceType: data.recurrenceType ?? 'MONTHLY',
@@ -142,6 +144,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     amount: newAmount,
                     category: data.category,
                     dueDate: data.dueDate,
+                    graceDays: data.graceDays,
                     isRecurring: data.isRecurring,
                     isOneTime: data.isOneTime,
                     recurrenceType: data.recurrenceType,

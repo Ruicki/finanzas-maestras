@@ -10,6 +10,7 @@ import { PieChart } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { deleteExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
+import { getSubscriptionStatus } from '@/lib/subscription-status';
 import { toast } from 'sonner';
 
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -25,10 +26,7 @@ function normalizeToMonthly(amount: number, type?: string | null): number {
 }
 
 function isPaidThisMonth(exp: any): boolean {
-    if (!exp.lastPaidAt) return false;
-    const paid = new Date(exp.lastPaidAt);
-    const now = new Date();
-    return paid.getMonth() === now.getMonth() && paid.getFullYear() === now.getFullYear();
+    return getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt) === 'PAID';
 }
 
 interface BudgetsTabProps {
@@ -314,13 +312,18 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
-                                                        {isPaidThisMonth(exp) ? (
-                                                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">Pagado</span>
-                                                        ) : (
-                                                            <span className="text-[9px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Pendiente</span>
-                                                        )}
+                                                        {(() => {
+                                                            const status = getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt);
+                                                            if (status === 'PAID') {
+                                                                return <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">Pagado</span>;
+                                                            }
+                                                            if (status === 'OVERDUE') {
+                                                                return <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-500/20 px-2 py-0.5 rounded-full">Vencido</span>;
+                                                            }
+                                                            return <span className="text-[9px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Pendiente</span>;
+                                                        })()}
                                                         <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-[10px] font-bold text-zinc-500">
-                                                            Día {exp.dueDate || '1'}
+                                                            Día {exp.dueDate || '1'}{exp.graceDays ? ` (+${exp.graceDays}d gracia)` : ''}
                                                         </div>
                                                     </div>
                                                 </div>
