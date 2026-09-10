@@ -104,7 +104,8 @@ describe('SmartMoneyInput RTL parsing', () => {
         });
 
         test('Number(undefined || 0).toFixed(2) → "0.00"', () => {
-            expect(Number(undefined || 0).toFixed(2)).toBe('0.00');
+            const value: number | undefined = undefined;
+            expect(Number(value || 0).toFixed(2)).toBe('0.00');
         });
 
         test('con select(), importa que el display muestre decimales para que el cursor esté bien', () => {
