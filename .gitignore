@@ -46,3 +46,9 @@ next-env.d.ts
 /app/generated/prisma
 
 .vercel
+
+# local db dumps / debug output (pueden contener datos reales de usuarios)
+*.db
+*.db.old
+error_log.txt
+output.txt
