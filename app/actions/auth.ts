@@ -23,7 +23,7 @@ export async function login(formData: FormData) {
         return { error: 'Por favor ingrese correo y contraseña' };
     }
 
-    const rateLimit = checkRateLimit(`login:${email}`);
+    const rateLimit = await checkRateLimit(`login:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
@@ -79,7 +79,7 @@ export async function register(formData: FormData) {
     const validation = validate(authSchema, { name, email, password });
     if (!validation.success) return { error: validation.error };
 
-    const rateLimit = checkRateLimit(`register:${email}`);
+    const rateLimit = await checkRateLimit(`register:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
@@ -186,7 +186,7 @@ export async function claimProfile(formData: FormData) {
         return { error: 'Todos los campos son obligatorios' };
     }
 
-    const rateLimit = checkRateLimit(`claim:${email}`);
+    const rateLimit = await checkRateLimit(`claim:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }

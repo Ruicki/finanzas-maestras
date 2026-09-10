@@ -4,10 +4,10 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS_PER_IDENTIFIER = 10;
 const MAX_ATTEMPTS_PER_IP = 30;
 
-function getClientIp(): string {
+async function getClientIp(): Promise<string> {
     try {
-        const { headers } = require('next/headers');
-        const h = headers();
+        const { headers } = await import('next/headers');
+        const h = await headers();
         return h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip') || 'unknown';
     } catch {
         return 'unknown';
@@ -37,8 +37,8 @@ function bump(key: string, max: number): { allowed: boolean; retryAfterMs: numbe
  * para que no se pueda evadir el limite rotando el identificador (ej. probando un
  * accessCode distinto con un email nuevo en cada intento).
  */
-export function checkRateLimit(key: string): { allowed: boolean; retryAfterMs: number } {
-    const ip = getClientIp();
+export async function checkRateLimit(key: string): Promise<{ allowed: boolean; retryAfterMs: number }> {
+    const ip = await getClientIp();
     const action = key.split(':')[0] ?? key;
 
     const perIp = bump(`${ip}:${action}`, MAX_ATTEMPTS_PER_IP);
