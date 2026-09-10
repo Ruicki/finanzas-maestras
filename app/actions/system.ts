@@ -62,7 +62,13 @@ export async function exportDatabase() {
 export async function toggleMaintenanceMode(enabled: boolean) {
     const session = await getSession();
     if (!session) throw new Error("Unauthorized");
-    // TODO: Implement actual storage
-    await logAction('SYSTEM_MAINTENANCE', `Modo mantenimiento ${enabled ? 'ACTIVADO' : 'DESACTIVADO'}`, session);
+
+    const profile = await prisma.profile.findUnique({ where: { id: session } });
+    if (profile?.role !== 'ADMIN') throw new Error("Forbidden");
+
+    // NOTA: esta funcion todavia NO bloquea el acceso de verdad. No existe un modelo
+    // Config ni un chequeo en el middleware que lea este estado -- solo se guarda en el
+    // AuditLog. El boton "Modo Mantenimiento" del panel admin hoy es cosmetico.
+    await logAction('SYSTEM_MAINTENANCE', `Modo mantenimiento ${enabled ? 'ACTIVADO' : 'DESACTIVADO'} (no aplicado aun, ver TODO)`, session);
     return { success: true, mode: enabled };
 }

@@ -151,7 +151,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                     {item.absentDays > 0 && (
                                         <div className="flex justify-between text-red-500 dark:text-red-400 pl-4">
                                             <span>- Ausencias ({item.absentDays} día{item.absentDays > 1 ? 's' : ''})</span>
-                                            <span>-${(Number(item.grossVal) - (Number(item.grossVal) - (Number(item.socialSec) + Number(item.eduIns) + Number(item.incomeTax)) - Number(item.netVal) + Number(item.bonus))).toFixed(2)}</span>
+                                            <span>-${(Number(item.grossVal) - (Number(item.netVal) - Number(item.bonus) + Number(item.taxes))).toFixed(2)}</span>
                                         </div>
                                     )}
 
