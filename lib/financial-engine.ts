@@ -1,3 +1,5 @@
+import { Decimal, DecimalValue, toMoney } from './decimal';
+
 export interface FinancialCreditCard {
     limit: number;
     balance: number;
@@ -8,7 +10,7 @@ export interface FinancialCreditCard {
 }
 
 export function roundToCents(val: number): number {
-    return Math.round(val * 100) / 100;
+    return toMoney(val);
 }
 
 /**
@@ -42,6 +44,11 @@ export function calculateCreditHealth(utilization: number): { status: 'Excellent
     return { status: 'Critical', color: 'text-red-500' };
 }
 
+function projectedInterestDecimal(balance: DecimalValue, monthlyRate: number): DecimalValue {
+    if (!monthlyRate || balance.lessThanOrEqualTo(0)) return new Decimal(0);
+    return balance.times(monthlyRate).dividedBy(100);
+}
+
 export function calculateMinimumPayment(
     balance: number,
     monthlyRate: number,
@@ -51,18 +58,18 @@ export function calculateMinimumPayment(
     minFloor: number = 0,
 ): number {
     if (balance <= 0) return 0;
-    const interest = calculateProjectedInterest(balance, monthlyRate);
-    const insurance = balance * (insuranceRate / 100);
-    const capital = balance * (percentage / 100);
-    const itbms = interest * itbmsRate;
-    let total = interest + insurance + capital + itbms;
-    if (minFloor > 0 && total < minFloor) total = minFloor;
-    return roundToCents(total);
+    const balanceD = new Decimal(balance);
+    const interest = projectedInterestDecimal(balanceD, monthlyRate);
+    const insurance = balanceD.times(insuranceRate).dividedBy(100);
+    const capital = balanceD.times(percentage).dividedBy(100);
+    const itbms = interest.times(itbmsRate);
+    let total = interest.plus(insurance).plus(capital).plus(itbms);
+    if (minFloor > 0 && total.lessThan(minFloor)) total = new Decimal(minFloor);
+    return toMoney(total);
 }
 
 export function calculateProjectedInterest(balance: number, monthlyRate: number): number {
-    if (!monthlyRate || balance <= 0) return 0;
-    return roundToCents(balance * (monthlyRate / 100));
+    return toMoney(projectedInterestDecimal(new Decimal(balance), monthlyRate));
 }
 
 export function calculateMonthlyCharges(balance: number, monthlyRate: number, insuranceRate: number = 0.25): {
@@ -71,12 +78,13 @@ export function calculateMonthlyCharges(balance: number, monthlyRate: number, in
     total: number;
 } {
     if (balance <= 0) return { interest: 0, insurance: 0, total: 0 };
-    const interest = roundToCents(balance * (monthlyRate / 100));
-    const insurance = roundToCents(balance * (insuranceRate / 100));
+    const balanceD = new Decimal(balance);
+    const interest = projectedInterestDecimal(balanceD, monthlyRate);
+    const insurance = balanceD.times(insuranceRate).dividedBy(100);
     return {
-        interest,
-        insurance,
-        total: roundToCents(interest + insurance),
+        interest: toMoney(interest),
+        insurance: toMoney(insurance),
+        total: toMoney(interest.plus(insurance)),
     };
 }
 
@@ -137,19 +145,20 @@ export function calculateNextPaymentSplit(balance: number, annualRate: number, m
     if (balance <= 0) return { principal: 0, interest: 0 };
 
     // Monthly Interest Rate = Annual / 12 / 100
-    const monthlyRate = (annualRate / 100) / 12;
-    const interestPayment = balance * monthlyRate;
+    const monthlyRate = new Decimal(annualRate).dividedBy(100).dividedBy(12);
+    const interestPayment = new Decimal(balance).times(monthlyRate);
+    const monthlyPaymentD = new Decimal(monthlyPayment);
 
     // Principal is whatever is left of the payment
-    const principalPayment = Math.max(monthlyPayment - interestPayment, 0);
+    const principalPayment = Decimal.max(monthlyPaymentD.minus(interestPayment), 0);
 
     // If interest is higher than payment, debt grows (bad!)
     // If payment > balance + interest, we cap it.
 
     return {
-        interest: interestPayment,
-        principal: principalPayment,
-        isNegativeAmortization: interestPayment > monthlyPayment
+        interest: toMoney(interestPayment),
+        principal: toMoney(principalPayment),
+        isNegativeAmortization: interestPayment.greaterThan(monthlyPaymentD)
     };
 }
 
@@ -160,11 +169,13 @@ export function calculateLoanPayoffDate(balance: number, annualRate: number, mon
     if (balance <= 0) return new Date();
     if (monthlyPayment <= 0) return null; // Never
 
-    const monthlyRate = (annualRate / 100) / 12;
+    const monthlyRate = new Decimal(annualRate).dividedBy(100).dividedBy(12);
+    const balanceD = new Decimal(balance);
+    const monthlyPaymentD = new Decimal(monthlyPayment);
 
-    if (monthlyRate === 0) {
+    if (monthlyRate.isZero()) {
         // Simple division
-        const months = Math.ceil(balance / monthlyPayment);
+        const months = Math.ceil(balanceD.dividedBy(monthlyPaymentD).toNumber());
         const date = new Date();
         date.setMonth(date.getMonth() + months);
         return date;
@@ -173,13 +184,13 @@ export function calculateLoanPayoffDate(balance: number, annualRate: number, mon
     // Amortization Formula: n = -log(1 - (r*PV) / PMT) / log(1 + r)
     // If (r*PV) / PMT >= 1, it never pays off (Infinite)
 
-    const numeratorInner = 1 - (monthlyRate * balance) / monthlyPayment;
-    if (numeratorInner <= 0) return null; // Forever debt
+    const numeratorInner = new Decimal(1).minus(monthlyRate.times(balanceD).dividedBy(monthlyPaymentD));
+    if (numeratorInner.lessThanOrEqualTo(0)) return null; // Forever debt
 
-    const nMonths = -Math.log(numeratorInner) / Math.log(1 + monthlyRate);
+    const nMonths = numeratorInner.ln().negated().dividedBy(new Decimal(1).plus(monthlyRate).ln());
 
     const date = new Date();
-    date.setMonth(date.getMonth() + Math.ceil(nMonths));
+    date.setMonth(date.getMonth() + Math.ceil(nMonths.toNumber()));
     return date;
 }
 
@@ -193,27 +204,28 @@ export function calculatePayoffImpact(balance: number, annualRate: number, month
     if (!regularPayoff || !boostedPayoff) return null;
 
     const today = new Date();
+    const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30;
 
     // Calculate regular interest
     // Simplification: Total Paid = NumPayments * MonthlyPayment
     // Total Interest = Total Paid - Principal
 
-    const timeSavedMonths = (regularPayoff.getTime() - boostedPayoff.getTime()) / (1000 * 60 * 60 * 24 * 30);
-    const regularMonths = (regularPayoff.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30);
-    const boostedMonths = (boostedPayoff.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30);
+    const timeSavedMonths = new Decimal(regularPayoff.getTime() - boostedPayoff.getTime()).dividedBy(MS_PER_MONTH);
+    const regularMonths = new Decimal(regularPayoff.getTime() - today.getTime()).dividedBy(MS_PER_MONTH);
+    const boostedMonths = new Decimal(boostedPayoff.getTime() - today.getTime()).dividedBy(MS_PER_MONTH);
 
-    const totalPaidRegular = regularMonths * monthlyPayment;
-    const totalPaidBoosted = boostedMonths * (monthlyPayment + extraPayment);
+    const totalPaidRegular = regularMonths.times(monthlyPayment);
+    const totalPaidBoosted = boostedMonths.times(monthlyPayment + extraPayment);
 
-    const interestRegular = Math.max(0, totalPaidRegular - balance);
-    const interestBoosted = Math.max(0, totalPaidBoosted - balance);
+    const interestRegular = Decimal.max(0, totalPaidRegular.minus(balance));
+    const interestBoosted = Decimal.max(0, totalPaidBoosted.minus(balance));
 
-    const interestSaved = Math.max(0, interestRegular - interestBoosted);
+    const interestSaved = Decimal.max(0, interestRegular.minus(interestBoosted));
 
     return {
         newDate: boostedPayoff,
-        monthsSaved: Math.round(timeSavedMonths),
-        interestSaved: interestSaved
+        monthsSaved: Math.round(timeSavedMonths.toNumber()),
+        interestSaved: toMoney(interestSaved)
     };
 }
 
@@ -230,27 +242,27 @@ export function calculateSalary(
     taxStrategy: ITaxStrategy
 ): SalaryCalculationResult & { grossVal: number, bonus: number } {
 
-    const monthlyGrossForCalc = frequency === 'biweekly' ? grossVal * 2 : grossVal;
+    const grossValD = new Decimal(grossVal);
     const daysInPeriod = frequency === 'biweekly' ? 15 : 30;
-    const dailyRate = grossVal / daysInPeriod;
+    const dailyRate = grossValD.dividedBy(daysInPeriod);
 
-    const absenceDeduction = dailyRate * absentDays;
-    const grossAfterAbsence = Math.max(0, grossVal - absenceDeduction);
+    const absenceDeduction = dailyRate.times(absentDays);
+    const grossAfterAbsenceD = Decimal.max(0, grossValD.minus(absenceDeduction));
 
     // We pass the "After Absence" adjusted monthly gross to the tax strategy for a fair calculation
-    const monthlyGrossAfterAbsence = frequency === 'biweekly' ? grossAfterAbsence * 2 : grossAfterAbsence;
+    const monthlyGrossAfterAbsence = frequency === 'biweekly' ? grossAfterAbsenceD.times(2) : grossAfterAbsenceD;
 
     // Use Strategy to get tax breakdown
-    const taxBreakdown = taxStrategy.calculateTaxes(monthlyGrossAfterAbsence, frequency);
+    const taxBreakdown = taxStrategy.calculateTaxes(monthlyGrossAfterAbsence.toNumber(), frequency);
 
-    // Final calculations 
+    // Final calculations
     const totalDeductions = taxBreakdown.totalTaxes;
-    const netVal = (grossAfterAbsence + bonus) - totalDeductions;
+    const netVal = grossAfterAbsenceD.plus(bonus).minus(totalDeductions);
 
     return {
         ...taxBreakdown,
-        netVal,
-        grossAfterAbsence,
+        netVal: toMoney(netVal),
+        grossAfterAbsence: toMoney(grossAfterAbsenceD),
         grossVal,
         bonus
     };
