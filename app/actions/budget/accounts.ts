@@ -16,11 +16,12 @@ export async function createAccount(
     lockDate?: Date,
     purpose: string = 'SPENDING',
     symbol?: string,
+    isDefault: boolean = false,
 ) {
     await requireOwnership(profileId);
     if (balance < 0) throw new Error('El saldo no puede ser negativo');
     const account = await prisma.account.create({
-        data: { name, type, balance, profileId, lockDate, purpose, symbol: symbol || null },
+        data: { name, type, balance, profileId, lockDate, purpose, symbol: symbol || null, isDefault },
     });
     revalidatePath('/budget');
     return { ...account, balance: toNum(account.balance) };
@@ -87,6 +88,19 @@ export async function deleteAccount(id: number): Promise<void> {
     await requireOwnership(account.profileId);
     if (account.name === 'Efectivo' && account.isDefault) {
         throw new Error('No se puede eliminar la cuenta principal de Efectivo.');
+    }
+
+    // Las metas referencian sourceAccountId/destinationAccountId como simples
+    // números (sin foreign key en el schema), así que si no se bloquea aquí,
+    // borrar la cuenta las deja apuntando a un id inexistente sin ningún aviso.
+    const linkedGoals = await prisma.goal.findMany({
+        where: { OR: [{ sourceAccountId: id }, { destinationAccountId: id }] },
+        select: { name: true },
+    });
+    if (linkedGoals.length > 0) {
+        throw new Error(
+            `No se puede eliminar esta cuenta: está vinculada a la(s) meta(s) "${linkedGoals.map((g) => g.name).join(', ')}". Elimina o reasigna esas metas primero.`,
+        );
     }
 
     await prisma.$transaction(async (tx) => {

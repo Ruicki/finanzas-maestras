@@ -19,8 +19,8 @@ export interface CreateExpenseInput {
     isOneTime?: boolean;
     recurrenceType?: string;
     paymentMethod?: string;
-    linkedCardId?: number;
-    accountId?: number;
+    linkedCardId?: number | null;
+    accountId?: number | null;
     categoryId?: number;
     date?: Date | string;
 }

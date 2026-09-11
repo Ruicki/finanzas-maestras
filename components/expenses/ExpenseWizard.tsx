@@ -149,8 +149,8 @@ export default function ExpenseWizard({
             isOneTime: !isRecurring,
             recurrenceType: isRecurring ? recurrenceType : 'MONTHLY',
             paymentMethod,
-            accountId: paymentMethod === 'CASH' ? Number(accountId) : undefined,
-            linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : undefined,
+            accountId: paymentMethod === 'CASH' ? Number(accountId) : null,
+            linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : null,
             date: `${date}T12:00:00`
         };
 

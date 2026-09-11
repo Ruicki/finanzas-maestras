@@ -342,11 +342,11 @@ export default function AccountHistoryModal({
                                     type="text"
                                     value={editName}
                                     onChange={e => setEditName(e.target.value)}
-                                    disabled={account.name === 'Efectivo'}
+                                    disabled={account.name === 'Efectivo' && account.isDefault}
                                     className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 text-lg font-bold outline-none focus:border-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                     placeholder="Ej: Banco General"
                                 />
-                                {account.name === 'Efectivo' && (
+                                {account.name === 'Efectivo' && account.isDefault && (
                                     <p className="text-xs text-amber-500">
                                         El nombre de la cuenta de efectivo no se puede cambiar.
                                     </p>

@@ -16,7 +16,7 @@ export async function ensureProfileIntegrity(profileId: number): Promise<void> {
 
         const hasCashAccount = profile.accounts.some((a) => a.name === 'Efectivo');
         if (!hasCashAccount) {
-            await createAccount('Efectivo', 'CASH', 0, profileId);
+            await createAccount('Efectivo', 'CASH', 0, profileId, undefined, 'SPENDING', undefined, true);
         }
 
         if (profile.categories.length === 0) {
