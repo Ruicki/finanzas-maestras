@@ -34,6 +34,9 @@ export async function createExpense(data: CreateExpenseInput) {
         if (account.lockDate && new Date(account.lockDate) > new Date()) {
             throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
         }
+        if (Number(account.balance) < data.amount) {
+            throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+        }
     }
     if (data.linkedCardId) {
         const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
@@ -103,6 +106,24 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
         if (card.profileId !== oldExpense.profileId) throw new Error('La tarjeta no pertenece a este perfil');
     }
 
+    const newAmount = data.amount !== undefined ? data.amount : Number(oldExpense.amount);
+    const newAccountId = data.accountId !== undefined ? data.accountId : oldExpense.accountId;
+    const newCardId = data.linkedCardId !== undefined ? data.linkedCardId : oldExpense.linkedCardId;
+
+    if (newAccountId) {
+        const targetAccount = await prisma.account.findUnique({ where: { id: newAccountId } });
+        if (!targetAccount) throw new Error('Cuenta no encontrada');
+        // Si es la misma cuenta que ya tenía, primero se revierte el monto viejo
+        // (igual que hace la transacción de abajo) antes de aplicar el nuevo.
+        const projectedBalance =
+            Number(targetAccount.balance) +
+            (oldExpense.accountId === newAccountId ? Number(oldExpense.amount) : 0) -
+            newAmount;
+        if (projectedBalance < 0) {
+            throw new Error(`Fondos insuficientes en la cuenta "${targetAccount.name}" (disponible: $${Number(targetAccount.balance).toFixed(2)})`);
+        }
+    }
+
     try {
         await prisma.$transaction(async (tx) => {
             // Revertir impacto anterior
@@ -118,11 +139,6 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     data: { balance: { decrement: oldExpense.amount } },
                 });
             }
-
-            const newAmount = data.amount !== undefined ? data.amount : Number(oldExpense.amount);
-            const newAccountId = data.accountId !== undefined ? data.accountId : oldExpense.accountId;
-            const newCardId =
-                data.linkedCardId !== undefined ? data.linkedCardId : oldExpense.linkedCardId;
 
             if (newAccountId) {
                 await tx.account.update({
@@ -277,6 +293,12 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                     // Check if account is locked
                     if (expense.account?.lockDate && new Date(expense.account.lockDate) > today) {
                         result.errors.push(`Cuenta bloqueada para gasto "${expense.name}"`);
+                        continue;
+                    }
+
+                    // No dejar la cuenta en negativo por un cobro automático
+                    if (expense.account && Number(expense.account.balance) < Number(expense.amount)) {
+                        result.errors.push(`Fondos insuficientes en "${expense.account.name}" para cobrar "${expense.name}"`);
                         continue;
                     }
 

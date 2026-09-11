@@ -196,6 +196,7 @@ model Loan {
   monthlyPayment Decimal? @db.Decimal(10, 2)
   paymentDay     Int?
   isAutomatic    Boolean  @default(false)
+  lastInterestAppliedAt DateTime?
   profileId      Int
   createdAt      DateTime @default(now())
   startDate      DateTime @default(now())
