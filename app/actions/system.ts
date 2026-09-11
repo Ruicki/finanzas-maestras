@@ -17,7 +17,14 @@ export async function exportDatabase() {
 
     // Fetch all data in parallel
     const [profiles, salaries, incomes, expenses, accounts, cards, loans, goals, logs] = await Promise.all([
-        prisma.profile.findMany(),
+        prisma.profile.findMany({
+            select: {
+                id: true, name: true, createdAt: true, role: true,
+                customDeductions: true, email: true, onboardingSeenAt: true,
+                // password y accessCode excluidos a propósito: no hace falta
+                // exponer hashes de contraseña ni códigos de invitación en el backup
+            },
+        }),
         prisma.salary.findMany(),
         prisma.additionalIncome.findMany(),
         prisma.expense.findMany(),
