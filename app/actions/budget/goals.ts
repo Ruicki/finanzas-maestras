@@ -35,24 +35,46 @@ function serializeGoal(goal: any) {
 
 export async function createGoal(data: CreateGoalInput) {
     await requireOwnership(data.profileId);
-    const goal = await prisma.goal.create({
-        data: {
-            name: data.name,
-            targetAmount: data.targetAmount,
-            currentAmount: data.currentAmount ?? 0,
-            deadline: data.deadline,
-            profileId: data.profileId,
-            type: data.type,
-            frequency: data.frequency,
-            contributionAmount: data.contributionAmount,
-            priority: data.priority,
-            category: data.category,
-            notes: data.notes,
-            isPaused: data.isPaused ?? false,
-            sourceAccountId: data.sourceAccountId,
-            destinationAccountId: data.destinationAccountId,
-        },
+    const initialAmount = data.currentAmount ?? 0;
+
+    const goal = await prisma.$transaction(async (tx) => {
+        // Toda meta debe estar respaldada por una cuenta real (para que el dinero
+        // ahorrado se vea reflejado en Cuentas, no solo como un numero dentro de la
+        // meta). Si no se eligio una cuenta existente, se crea una dedicada.
+        let destinationAccountId = data.destinationAccountId;
+        if (!destinationAccountId) {
+            const savingsAccount = await tx.account.create({
+                data: {
+                    name: `Ahorro: ${data.name}`,
+                    type: 'SAVINGS',
+                    purpose: 'SAVINGS',
+                    balance: initialAmount,
+                    profileId: data.profileId,
+                },
+            });
+            destinationAccountId = savingsAccount.id;
+        }
+
+        return tx.goal.create({
+            data: {
+                name: data.name,
+                targetAmount: data.targetAmount,
+                currentAmount: initialAmount,
+                deadline: data.deadline,
+                profileId: data.profileId,
+                type: data.type,
+                frequency: data.frequency,
+                contributionAmount: data.contributionAmount,
+                priority: data.priority,
+                category: data.category,
+                notes: data.notes,
+                isPaused: data.isPaused ?? false,
+                sourceAccountId: data.sourceAccountId,
+                destinationAccountId,
+            },
+        });
     });
+
     revalidatePath('/budget');
     return serializeGoal(goal);
 }
