@@ -22,6 +22,7 @@ import AccountsTab from '@/components/dashboard/tabs/AccountsTab';
 import InsightsTab from '@/components/dashboard/tabs/InsightsTab';
 import UserSettingsModal from '@/components/dashboard/modals/UserSettingsModal';
 import ProfileManagerModal from '@/components/dashboard/modals/ProfileManagerModal';
+import OnboardingIntro from '@/components/shared/OnboardingIntro';
 
 interface BudgetDashboardProps {
     initialProfile: ProfileWithData;
@@ -38,6 +39,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const [activeProfile, setActiveProfile] = useState<ProfileWithData>(initialProfile);
     const [showUserSettings, setShowUserSettings] = useState(false);
     const [showProfileManager, setShowProfileManager] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(!initialProfile.onboardingSeenAt);
     const [isPrivateMode, setIsPrivateMode] = useState(false);
 
     // Date State (New)
@@ -287,6 +289,13 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                     isOpen={showProfileManager}
                     onClose={() => setShowProfileManager(false)}
                     currentUser={activeProfile}
+                />
+            )}
+            {showOnboarding && !isImpersonating && (
+                <OnboardingIntro
+                    profileId={activeProfile.id}
+                    onClose={() => setShowOnboarding(false)}
+                    onNavigate={(tab) => { setShowOnboarding(false); updateTab(tab); }}
                 />
             )}
 
