@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 const SESSION_COOKIE = 'auth_session';
 const IMPERSONATE_COOKIE = 'impersonate_id';
+const BCRYPT_ROUNDS = 12;
 
 export async function login(formData: FormData) {
     const email = formData.get('email') as string;
@@ -22,7 +23,7 @@ export async function login(formData: FormData) {
         return { error: 'Por favor ingrese correo y contraseña' };
     }
 
-    const rateLimit = checkRateLimit(`login:${email}`);
+    const rateLimit = await checkRateLimit(`login:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
@@ -78,7 +79,7 @@ export async function register(formData: FormData) {
     const validation = validate(authSchema, { name, email, password });
     if (!validation.success) return { error: validation.error };
 
-    const rateLimit = checkRateLimit(`register:${email}`);
+    const rateLimit = await checkRateLimit(`register:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
@@ -87,7 +88,7 @@ export async function register(formData: FormData) {
         const existing = await prisma.profile.findUnique({ where: { email } });
         if (existing) return { error: 'Este correo ya está registrado' };
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         const newProfile = await prisma.profile.create({
             data: {
@@ -142,7 +143,7 @@ export async function updateProfile(profileId: number, formData: FormData) {
             data.email = email;
         }
         if (password) {
-            data.password = await bcrypt.hash(password, 10);
+            data.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
         }
 
         await prisma.profile.update({
@@ -159,8 +160,9 @@ export async function updateProfile(profileId: number, formData: FormData) {
 
 export async function generateAccessCode(profileId: number) {
     try {
-        const bytes = crypto.randomBytes(4);
-        const code = bytes.toString('base64url').substring(0, 8).toUpperCase();
+        // 8 bytes (64 bits) para que el código no sea adivinable por fuerza bruta
+        const bytes = crypto.randomBytes(8);
+        const code = bytes.toString('base64url').toUpperCase();
 
         await prisma.profile.update({
             where: { id: profileId },
@@ -184,7 +186,7 @@ export async function claimProfile(formData: FormData) {
         return { error: 'Todos los campos son obligatorios' };
     }
 
-    const rateLimit = checkRateLimit(`claim:${email}`);
+    const rateLimit = await checkRateLimit(`claim:${email}`);
     if (!rateLimit.allowed) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
@@ -207,7 +209,7 @@ export async function claimProfile(formData: FormData) {
             return { error: 'Este correo ya está en uso por otro usuario.' };
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         await prisma.profile.update({
             where: { id: profile.id },
@@ -245,7 +247,7 @@ export async function resetPassword(profileId: number, newPassword: string) {
     if (!pwdValidation.success) return { error: pwdValidation.error };
 
     try {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
         await prisma.profile.update({
             where: { id: profileId },
             data: { password: hashedPassword }

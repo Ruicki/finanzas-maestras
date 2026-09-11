@@ -634,11 +634,17 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Ahorro Destino</label>
                                         <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
-                                            <option value="">Sin destino</option>
+                                            <option value="">Crear cuenta de ahorro automáticamente</option>
                                             {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                 </div>
+                            )}
+
+                            {form.type === 'VARIABLE' && !editingGoalId && (
+                                <p className="text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-2xl">
+                                    💡 Se creará automáticamente una cuenta de ahorro dedicada para esta meta, así el dinero que deposites se ve reflejado en Cuentas.
+                                </p>
                             )}
 
                             <div>

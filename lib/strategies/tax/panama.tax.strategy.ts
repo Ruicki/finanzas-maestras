@@ -1,5 +1,6 @@
 import { ITaxStrategy } from './tax.strategy';
 import { TaxBreakdown } from '@/types/finance';
+import { Decimal, toMoney } from '@/lib/decimal';
 
 export class PanamaTaxStrategy implements ITaxStrategy {
     // Panama standard rates
@@ -14,28 +15,29 @@ export class PanamaTaxStrategy implements ITaxStrategy {
     private readonly RATE_25 = 0.25;
 
     calculateTaxes(monthlyGross: number, frequency: 'monthly' | 'biweekly'): TaxBreakdown {
-        const socialSec = monthlyGross * this.SOCIAL_SEC_RATE;
-        const eduIns = monthlyGross * this.EDU_INS_RATE;
+        const monthlyGrossD = new Decimal(monthlyGross);
+        const socialSec = monthlyGrossD.times(this.SOCIAL_SEC_RATE);
+        const eduIns = monthlyGrossD.times(this.EDU_INS_RATE);
 
         // Income Tax (ISR) is based on annualized salary
-        const baseMonthlyForISR = frequency === 'biweekly' ? monthlyGross * 2 : monthlyGross;
-        const annualSalary = baseMonthlyForISR * 12;
-        let annualTax = 0;
+        const baseMonthlyForISR = frequency === 'biweekly' ? monthlyGrossD.times(2) : monthlyGrossD;
+        const annualSalary = baseMonthlyForISR.times(12);
+        let annualTax = new Decimal(0);
 
-        if (annualSalary > this.BRACKET_1_LIMIT && annualSalary <= this.BRACKET_2_LIMIT) {
-            annualTax = (annualSalary - this.BRACKET_1_LIMIT) * this.RATE_15;
-        } else if (annualSalary > this.BRACKET_2_LIMIT) {
-            annualTax = this.BRACKET_2_BASE_TAX + (annualSalary - this.BRACKET_2_LIMIT) * this.RATE_25;
+        if (annualSalary.greaterThan(this.BRACKET_1_LIMIT) && annualSalary.lessThanOrEqualTo(this.BRACKET_2_LIMIT)) {
+            annualTax = annualSalary.minus(this.BRACKET_1_LIMIT).times(this.RATE_15);
+        } else if (annualSalary.greaterThan(this.BRACKET_2_LIMIT)) {
+            annualTax = new Decimal(this.BRACKET_2_BASE_TAX).plus(annualSalary.minus(this.BRACKET_2_LIMIT).times(this.RATE_25));
         }
 
-        const monthlyIncomeTax = annualTax / 12;
-        const finalIncomeTax = frequency === 'biweekly' ? monthlyIncomeTax / 2 : monthlyIncomeTax;
+        const monthlyIncomeTax = annualTax.dividedBy(12);
+        const finalIncomeTax = frequency === 'biweekly' ? monthlyIncomeTax.dividedBy(2) : monthlyIncomeTax;
 
         return {
-            socialSec,
-            eduIns,
-            incomeTax: finalIncomeTax,
-            totalTaxes: socialSec + eduIns + finalIncomeTax
+            socialSec: toMoney(socialSec),
+            eduIns: toMoney(eduIns),
+            incomeTax: toMoney(finalIncomeTax),
+            totalTaxes: toMoney(socialSec.plus(eduIns).plus(finalIncomeTax))
         };
     }
 }

@@ -58,6 +58,7 @@ export default function ExpenseWizard({
     });
     const [isRecurring, setIsRecurring] = useState(false);
     const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
+    const [graceDays, setGraceDays] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Filtered name suggestions
@@ -74,6 +75,7 @@ export default function ExpenseWizard({
             setDate(initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
             setIsRecurring(initialData.isRecurring || false);
             setRecurrenceType(initialData.recurrenceType || 'MONTHLY');
+            setGraceDays(initialData.graceDays != null ? initialData.graceDays.toString() : '');
 
             if (initialData.linkedCardId) {
                 setPaymentMethod('CREDIT');
@@ -142,6 +144,7 @@ export default function ExpenseWizard({
             categoryId: categoryId,
             profileId,
             dueDate: isRecurring ? parseDateNoon(date).getDate() : undefined,
+            graceDays: isRecurring && graceDays ? parseInt(graceDays, 10) : undefined,
             isRecurring,
             isOneTime: !isRecurring,
             recurrenceType: isRecurring ? recurrenceType : 'MONTHLY',
@@ -371,6 +374,24 @@ export default function ExpenseWizard({
                                     {opt.label}
                                 </button>
                             ))}
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">
+                                Días de gracia (opcional)
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                max={60}
+                                value={graceDays}
+                                onChange={e => setGraceDays(e.target.value)}
+                                placeholder="Ej. 16 (ej. factura de datos: cobra el 22, pagas hasta el 7-9)"
+                                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 ring-purple-500/50 transition-all"
+                            />
+                            <p className="text-[11px] text-zinc-400 mt-1.5">
+                                Días extra para pagar sin que se marque como vencido. Déjalo vacío si se cobra directo (ej. Netflix).
+                            </p>
                         </div>
                     </div>
                 )}

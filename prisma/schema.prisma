@@ -57,6 +57,7 @@ model Profile {
   email            String?            @unique
   password         String?
   accessCode       String?            @unique
+  onboardingSeenAt DateTime?
   accounts         Account[]
   incomes          AdditionalIncome[]
   categories       Category[]
@@ -74,6 +75,7 @@ model Expense {
   category        String
   categoryId      Int?
   dueDate         Int?
+  graceDays       Int?
   isRecurring     Boolean   @default(true)
   isOneTime       Boolean   @default(false)
   recurrenceType  String?   @default("MONTHLY")

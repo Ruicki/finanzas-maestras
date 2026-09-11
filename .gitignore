@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-# .env*
+# env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
 
 # vercel
 .vercel
@@ -43,3 +46,9 @@ next-env.d.ts
 /app/generated/prisma
 
 .vercel
+
+# local db dumps / debug output (pueden contener datos reales de usuarios)
+*.db
+*.db.old
+error_log.txt
+output.txt

@@ -14,6 +14,7 @@ export interface CreateExpenseInput {
     category: string;
     profileId: number;
     dueDate?: number;
+    graceDays?: number;
     isRecurring?: boolean;
     isOneTime?: boolean;
     recurrenceType?: string;
@@ -49,6 +50,7 @@ export async function createExpense(data: CreateExpenseInput) {
                     category: data.category,
                     profileId: data.profileId,
                     dueDate: data.dueDate,
+                    graceDays: data.graceDays,
                     isRecurring: data.isRecurring ?? true,
                     isOneTime: data.isOneTime ?? false,
                     recurrenceType: data.recurrenceType ?? 'MONTHLY',
@@ -142,6 +144,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     amount: newAmount,
                     category: data.category,
                     dueDate: data.dueDate,
+                    graceDays: data.graceDays,
                     isRecurring: data.isRecurring,
                     isOneTime: data.isOneTime,
                     recurrenceType: data.recurrenceType,
@@ -199,19 +202,29 @@ export interface ProcessRecurringResult {
     errors: string[];
 }
 
+function isPaidThisCycle(lastPaidAt: Date | null, today: Date): boolean {
+    if (!lastPaidAt) return false;
+    return lastPaidAt.getMonth() === today.getMonth() && lastPaidAt.getFullYear() === today.getFullYear();
+}
+
 /**
  * Processes all recurring expenses that are due today.
  * This function should be called daily via a cron job or manually.
- * 
+ *
  * Logic:
  * - Finds all expenses where isRecurring = true AND isOneTime = false
  * - For each expense with a dueDate, checks if today is the due date
- * - If due, creates a new expense entry (copy) and deducts from the linked account
+ *   (dueDate se recorta al ultimo dia del mes si el mes es mas corto, ej. 31 en febrero)
+ * - Si el usuario ya lo marco "Pagado" este mes (lastPaidAt), NO se cobra de nuevo:
+ *   se asume que ya lo pago manualmente y el cron no debe duplicar el cargo.
+ * - Si se procesa automaticamente, se marca lastPaidAt = hoy para que el estado
+ *   Pagado/Pendiente en la UI quede sincronizado con el cobro real.
  */
 export async function processRecurringExpenses(): Promise<ProcessRecurringResult> {
     const today = new Date();
     const currentDay = today.getDate();
-    
+    const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
     const result: ProcessRecurringResult = {
         processed: 0,
         created: 0,
@@ -234,8 +247,12 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
         for (const expense of recurringExpenses) {
             result.processed++;
 
-            // Check if today is the due date
-            if (expense.dueDate === currentDay) {
+            // Check if today is the due date (recortado al ultimo dia del mes si aplica)
+            const effectiveDueDay = Math.min(expense.dueDate!, daysInCurrentMonth);
+            if (effectiveDueDay === currentDay) {
+                // Si ya se marco como pagado manualmente este mes, no duplicar el cobro
+                if (isPaidThisCycle(expense.lastPaidAt, today)) continue;
+
                 // Check if this frequency should fire this month
                 const freq = expense.recurrenceType || 'MONTHLY';
                 const createdMonth = expense.createdAt.getMonth(); // 0-11
@@ -312,6 +329,12 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                                 data: { balance: { increment: expense.amount } },
                             });
                         }
+
+                        // Sincronizar el estado Pagado/Pendiente de la UI con el cobro automatico
+                        await tx.expense.update({
+                            where: { id: expense.id },
+                            data: { lastPaidAt: today },
+                        });
                     });
 
                     result.created++;
