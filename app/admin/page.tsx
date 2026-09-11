@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
                     title="Usuarios Totales"
                     value={stats.users.toString()}
                     icon={Users}
-                    trend="+2 this week"
+                    trend="Todos los perfiles"
                     color="text-indigo-400"
                     bg="bg-indigo-500/10"
                 />

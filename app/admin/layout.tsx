@@ -4,11 +4,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
     LayoutDashboard,
-    Users,
-    ShieldAlert,
     Database,
     ServerCrash,
-    Megaphone
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -22,12 +19,12 @@ export default async function AdminLayout({
     const profile = await prisma.profile.findUnique({ where: { id: session } });
     if (!profile || profile.role !== 'ADMIN') redirect("/");
 
+    // Nota: "Usuarios" y "Auditoría" ya viven en el modal de Gestión de Perfiles
+    // del dashboard principal (components/profiles/ProfileManager.tsx), no aquí.
+    // No se listan páginas de Admin que todavía no existen (evita links muertos).
     const navItems = [
         { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        { name: "Usuarios", href: "/admin/users", icon: Users },
-        { name: "Auditoría", href: "/admin/audit", icon: ShieldAlert },
         { name: "Sistema & Backups", href: "/admin/system", icon: Database },
-        { name: "Anuncios", href: "/admin/announcements", icon: Megaphone },
     ];
 
     return (

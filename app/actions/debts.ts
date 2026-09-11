@@ -157,3 +157,91 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
 
     revalidatePath('/budget');
 }
+
+// ─── INTERÉS AUTOMÁTICO ─────────────────────────────────────────────────────
+
+export interface ProcessLoanInterestResult {
+    processed: number;
+    applied: number;
+    errors: string[];
+}
+
+function isInterestAppliedThisCycle(lastInterestAppliedAt: Date | null, today: Date): boolean {
+    if (!lastInterestAppliedAt) return false;
+    return (
+        lastInterestAppliedAt.getMonth() === today.getMonth() &&
+        lastInterestAppliedAt.getFullYear() === today.getFullYear()
+    );
+}
+
+/**
+ * Aplica el interés mensual (interestRate se interpreta como tasa ANUAL,
+ * igual que en lib/financial-engine.ts) al saldo de cada préstamo, el día
+ * de pago del préstamo (mismo campo paymentDay que ya usa el cron de gastos
+ * recurrentes, recortado al último día del mes si es más corto).
+ *
+ * No depende de si el usuario pagó ese mes o no: el interés se acumula sobre
+ * el saldo pendiente igual que en un préstamo real, y los pagos (payLoan)
+ * siguen restando directamente del saldo por separado.
+ */
+export async function processLoanInterest(): Promise<ProcessLoanInterestResult> {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+    const result: ProcessLoanInterestResult = { processed: 0, applied: 0, errors: [] };
+
+    try {
+        const loans = await prisma.loan.findMany({
+            where: {
+                paymentDay: { not: null },
+                interestRate: { gt: 0 },
+                currentBalance: { gt: 0 },
+            },
+        });
+
+        for (const loan of loans) {
+            result.processed++;
+
+            const effectiveDay = Math.min(loan.paymentDay!, daysInCurrentMonth);
+            if (effectiveDay !== currentDay) continue;
+            if (isInterestAppliedThisCycle(loan.lastInterestAppliedAt, today)) continue;
+
+            try {
+                const monthlyInterest = Number(loan.currentBalance) * (Number(loan.interestRate) / 100 / 12);
+                if (monthlyInterest <= 0) continue;
+
+                await prisma.$transaction(async (tx) => {
+                    const updated = await tx.loan.update({
+                        where: { id: loan.id },
+                        data: {
+                            currentBalance: { increment: monthlyInterest },
+                            lastInterestAppliedAt: today,
+                        },
+                    });
+
+                    await tx.auditLog.create({
+                        data: {
+                            action: 'LOAN_INTEREST_ACCRUED',
+                            details: `Interés mensual de "${loan.name}": +$${monthlyInterest.toFixed(2)}`,
+                            targetId: loan.id,
+                            profileId: loan.profileId,
+                            oldBalance: loan.currentBalance,
+                            newBalance: updated.currentBalance,
+                        },
+                    });
+                });
+
+                result.applied++;
+            } catch (error) {
+                result.errors.push(`Error aplicando interés a "${loan.name}": ${error}`);
+            }
+        }
+
+        revalidatePath('/budget');
+    } catch (error) {
+        result.errors.push(`Error general: ${error}`);
+    }
+
+    return result;
+}

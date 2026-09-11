@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { processRecurringExpenses } from '@/app/actions/budget/expenses';
+import { processLoanInterest } from '@/app/actions/debts';
 
 function isValidCronSecret(authHeader: string | null, cronSecret: string): boolean {
     if (!authHeader) return false;
@@ -22,12 +23,20 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await processRecurringExpenses();
+    const expensesResult = await processRecurringExpenses();
+    const loanInterestResult = await processLoanInterest();
 
     return NextResponse.json({
         success: true,
-        processed: result.processed,
-        created: result.created,
-        errors: result.errors,
+        expenses: {
+            processed: expensesResult.processed,
+            created: expensesResult.created,
+            errors: expensesResult.errors,
+        },
+        loanInterest: {
+            processed: loanInterestResult.processed,
+            applied: loanInterestResult.applied,
+            errors: loanInterestResult.errors,
+        },
     });
 }
