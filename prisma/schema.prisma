@@ -57,6 +57,7 @@ model Profile {
   email            String?            @unique
   password         String?
   accessCode       String?            @unique
+  onboardingSeenAt DateTime?
   accounts         Account[]
   incomes          AdditionalIncome[]
   categories       Category[]
