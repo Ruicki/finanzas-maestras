@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { Category } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { requireOwnership } from "@/lib/auth-utils";
 
 // Configuración de Categorías Predeterminadas
 const DEFAULT_CATEGORIES = [
@@ -18,6 +19,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export async function initializeDefaultCategories(profileId: number) {
+    await requireOwnership(profileId);
     // Verificar si el usuario ya tiene categorías
     const count = await prisma.category.count({ where: { profileId } });
     if (count > 0) return;
@@ -44,6 +46,7 @@ const serializeCategory = (cat: Category) => ({
 });
 
 export async function getCategories(profileId: number) {
+    await requireOwnership(profileId);
     let categories = await prisma.category.findMany({
         where: { profileId },
         orderBy: { name: 'asc' }
@@ -62,6 +65,7 @@ export async function getCategories(profileId: number) {
 }
 
 export async function createCategory(profileId: number, name: string, icon: string, color: string, type: string) {
+    await requireOwnership(profileId);
     const category = await prisma.category.create({
         data: {
             name,
@@ -76,6 +80,10 @@ export async function createCategory(profileId: number, name: string, icon: stri
 }
 
 export async function updateCategory(id: number, name: string, icon: string, color: string, type: string) {
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new Error('Categoría no encontrada');
+    await requireOwnership(existing.profileId);
+
     const category = await prisma.category.update({
         where: { id },
         data: {
@@ -90,6 +98,10 @@ export async function updateCategory(id: number, name: string, icon: string, col
 }
 
 export async function deleteCategory(id: number) {
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new Error('Categoría no encontrada');
+    await requireOwnership(existing.profileId);
+
     await prisma.expense.updateMany({
         where: { categoryId: id },
         data: { categoryId: null }
@@ -100,6 +112,10 @@ export async function deleteCategory(id: number) {
 }
 
 export async function updateCategoryLimit(id: number, limit: number | null) {
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new Error('Categoría no encontrada');
+    await requireOwnership(existing.profileId);
+
     await prisma.category.update({
         where: { id },
         data: { monthlyLimit: limit }
