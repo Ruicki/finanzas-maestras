@@ -1,7 +1,7 @@
 'use client';
 
 import { exportDatabase, toggleMaintenanceMode } from "@/app/actions/system";
-import { Database, Download, ShieldAlert, Lock, Upload, Server, FileJson } from "lucide-react";
+import { Database, Download, ShieldAlert, Lock, Upload, FileJson } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -42,7 +42,7 @@ export default function SystemPage() {
             toast.message(newState ? "Modo Mantenimiento ACTIVADO" : "Modo Mantenimiento DESACTIVADO", {
                 description: newState ? "Solo los administradores pueden acceder." : "El acceso es público nuevamente."
             });
-        } catch (error) {
+        } catch {
             toast.error("Error al cambiar estado");
         }
     };

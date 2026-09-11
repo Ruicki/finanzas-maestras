@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { login } from '@/app/actions/auth';
 import { toast } from 'sonner';
 import { ArrowRightIcon, LockIcon, MailIcon, EyeIcon, EyeOffIcon } from '@animateicons/react/lucide';
@@ -26,7 +25,7 @@ export default function LoginPage() {
                 // Usar window.location como respaldo para asegurar recarga completa si es necesario
                 window.location.href = '/';
             }
-        } catch (err) {
+        } catch {
             toast.error('Ocurrió un error inesperado');
             setLoading(false);
         }

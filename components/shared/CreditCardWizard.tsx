@@ -5,13 +5,14 @@ import { BANK_PRESETS, BANK_OPTIONS } from '@/lib/credit-card-presets';
 import { XIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { CreateCreditCardInput } from '@/app/actions/budget';
 
 interface CreditCardWizardProps {
     profileId: number;
     onClose: () => void;
     onSuccess: () => void;
-    onCreate: (data: any) => Promise<any>;
-    onUpdate?: (id: number, data: any) => Promise<any>;
+    onCreate: (data: CreateCreditCardInput) => Promise<unknown>;
+    onUpdate?: (id: number, data: Partial<CreateCreditCardInput>) => Promise<unknown>;
     editingCard?: {
         id: number;
         name: string;
@@ -80,8 +81,8 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 cutoffDay: parseInt(cutoffDay) || 1,
                 paymentDay: parseInt(paymentDay) || 1,
                 annualFee: hasAnnualFee ? (parseFloat(annualFee) || 0) : 0,
-                annualFeeMonth: hasAnnualFee ? (parseInt(annualFeeMonth) || null) : null,
-                bank: bank || null,
+                annualFeeMonth: hasAnnualFee ? (parseInt(annualFeeMonth) || undefined) : undefined,
+                bank: bank || undefined,
                 profileId,
             };
             

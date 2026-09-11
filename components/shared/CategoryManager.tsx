@@ -67,7 +67,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
             }
             onUpdate();
             setView('list');
-        } catch (e) {
+        } catch {
             toast.error("Error guardando categoría");
         }
     }

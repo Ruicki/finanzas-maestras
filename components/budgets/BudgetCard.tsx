@@ -7,9 +7,24 @@ import { PencilIcon } from '@animateicons/react/lucide';
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
+interface BudgetCategory {
+    id: number;
+    name: string;
+    color?: string | null;
+    monthlyLimit?: number | null;
+    budgets?: { year: number; month: number; limit: number }[];
+}
+
+interface BudgetExpense {
+    id: number;
+    categoryId?: number | null;
+    category: string;
+    amount: number;
+}
+
 interface BudgetCardProps {
-    category: any;
-    expenses: any[];
+    category: BudgetCategory;
+    expenses: BudgetExpense[];
     year: number;
     month: number; // 1-12
     rollover?: number;
@@ -25,7 +40,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
     const total = catExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
     // Límite del mes seleccionado: presupuesto específico del mes, o fallback al límite global
-    const monthBudget = category.budgets?.find((b: any) => b.year === year && b.month === month);
+    const monthBudget = category.budgets?.find((b) => b.year === year && b.month === month);
     const limit = monthBudget
         ? Number(monthBudget.limit)
         : category.monthlyLimit ? Number(category.monthlyLimit) : 0;
@@ -38,8 +53,9 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
     const remaining = Math.max(0, effectiveLimit - total);
 
     useEffect(() => {
-        const mb = category.budgets?.find((b: any) => b.year === year && b.month === month);
+        const mb = category.budgets?.find((b) => b.year === year && b.month === month);
         const lim = mb ? Number(mb.limit) : category.monthlyLimit ? Number(category.monthlyLimit) : 0;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- resincroniza el input al cambiar de categoría/mes seleccionado
         setLimitInput(lim > 0 ? lim.toString() : '');
     }, [category, year, month]);
 

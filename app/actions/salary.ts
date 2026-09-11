@@ -248,9 +248,6 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
         let finalIncomeTax = 0;
 
         let grossAfterAbsence = data.grossVal;
-        let annualISRBase = 0;
-        let annualISRTax = 0;
-        let isrRateUsed = 0;
         let isDecimoIncluded = false;
         let decimoGross = 0;
         let decimoNet = 0;
@@ -272,12 +269,6 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
 
             const isr = calculateISR(monthlyGross);
             finalIncomeTax = isr.monthlyISR;
-            annualISRBase = Math.max(0, isr.annualIncome - ISR_EXEMPTION);
-            annualISRTax = isr.annualTax;
-
-            if (annualISRBase > 0) {
-                isrRateUsed = isr.annualIncome > ISR_BRACKET_2_LIMIT ? ISR_RATE_25 : ISR_RATE_15;
-            }
 
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
             const selectedDay = parseInt(data.paymentDate.split('-')[2]);

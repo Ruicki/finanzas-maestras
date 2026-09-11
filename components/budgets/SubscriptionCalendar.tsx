@@ -3,8 +3,15 @@
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
 
+interface Subscription {
+    name: string;
+    amount: number;
+    dueDate?: number | null;
+    recurrenceType?: string | null;
+}
+
 interface SubscriptionCalendarProps {
-    subscriptions: any[];
+    subscriptions: Subscription[];
 }
 
 const RECURRENCE_LABELS: Record<string, string> = {
@@ -18,7 +25,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
     const today = new Date().getDate();
 
     // Group by day (each subscription individually)
-    const subsByDay: Record<number, any[]> = {};
+    const subsByDay: Record<number, Subscription[]> = {};
     subscriptions.forEach(sub => {
         const day = sub.dueDate || 1;
         if (!subsByDay[day]) subsByDay[day] = [];
@@ -70,7 +77,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
                                         ? 'bg-zinc-100 dark:bg-zinc-700/50 border border-zinc-300 dark:border-zinc-600'
                                         : 'bg-zinc-50 dark:bg-zinc-800/50'
                             }`}
-                            title={hasSubs ? `${day}: ${subsByDay[day].map(s => `${s.name} (${RECURRENCE_LABELS[s.recurrenceType] || 'Mensual'})`).join(', ')} - ${formatMoney(dayTotal)}/mes` : `Día ${day}`}
+                            title={hasSubs ? `${day}: ${subsByDay[day].map(s => `${s.name} (${RECURRENCE_LABELS[s.recurrenceType ?? ''] || 'Mensual'})`).join(', ')} - ${formatMoney(dayTotal)}/mes` : `Día ${day}`}
                         >
                             <span className={`text-[10px] font-bold mb-0.5 ${hasSubs ? 'text-indigo-600 dark:text-indigo-400' : isToday ? 'text-zinc-900 dark:text-white' : 'text-zinc-400'}`}>
                                 {day}
@@ -90,7 +97,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
                         {activeDays.slice(0, 8).map(day => (
                             <div key={day} className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-2 py-1 rounded-lg">
                                 <span className="text-[10px] font-bold text-indigo-500">Día {day}</span>
-                                <span className="text-[10px] text-zinc-500">{subsByDay[day].map((s: any) => s.name).join(', ')}</span>
+                                <span className="text-[10px] text-zinc-500">{subsByDay[day].map((s) => s.name).join(', ')}</span>
                                 <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">{formatMoney(totalPerDay[day])}</span>
                             </div>
                         ))}

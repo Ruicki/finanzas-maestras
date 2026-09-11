@@ -1,15 +1,18 @@
 'use client';
 
 import { formatMoney } from '@/lib/utils';
-import { ArrowUpRightIcon, UserIcon, CalendarIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
+import { ArrowUpRightIcon, UserIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
+import { ProfileWithData } from '@/types';
+
+type Loan = ProfileWithData['loans'][number];
 
 interface FriendLoanCardProps {
-    loan: any;
-    onPay: (loan: any) => void;
+    loan: Loan;
+    onPay: (loan: Loan) => void;
     onDelete: (id: number) => void;
-    onQuickPay: (loan: any, amount: number) => void;
-    onEdit?: (loan: any) => void;
+    onQuickPay: (loan: Loan, amount: number) => void;
+    onEdit?: (loan: Loan) => void;
 }
 
 export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEdit }: FriendLoanCardProps) {

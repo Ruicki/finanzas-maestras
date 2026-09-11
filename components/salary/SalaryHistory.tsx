@@ -6,16 +6,20 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { ProfileWithData } from "@/types";
 
 import { confirmDelete } from "@/components/shared/DeleteConfirmation";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
 
+type Salary = ProfileWithData['salaries'][number];
+type AdditionalIncome = ProfileWithData['incomes'][number];
+type HistoryItem = (Salary & { type: 'SALARY' }) | (AdditionalIncome & { type: 'INCOME' });
 
 interface IncomeHistoryProps {
-    salaries: any[];
-    incomes: any[];
+    salaries: Salary[];
+    incomes: AdditionalIncome[];
     onDataChange?: () => void;
-    onEdit?: (item: any) => void;
+    onEdit?: (item: HistoryItem) => void;
 }
 
 export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit }: IncomeHistoryProps) {
@@ -24,7 +28,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const ITEMS_PER_PAGE = 5;
 
-    const allItems = [
+    const allItems: HistoryItem[] = [
         ...salaries.map(s => ({ ...s, type: 'SALARY' as const })),
         ...incomes.map(i => ({ ...i, type: 'INCOME' as const }))
     ].sort((a, b) => {
@@ -50,7 +54,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                 toast.success("Salario eliminado");
                 if (onDataChange) onDataChange();
                 router.refresh();
-            } catch (error) {
+            } catch {
                 toast.error("Error al eliminar");
             }
         });
@@ -63,7 +67,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                 toast.success("Ingreso eliminado");
                 if (onDataChange) onDataChange();
                 router.refresh();
-            } catch (error) {
+            } catch {
                 toast.error("Error al eliminar");
             }
         });
@@ -90,7 +94,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                             >
                                 <div className="flex items-center gap-4 w-full md:w-auto">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold shrink-0 ${isSalary ? 'bg-emerald-500/10 text-emerald-400' : 'bg-cyan-500/10 text-cyan-400'}`}>
-                                        <CategoryIcon iconName={isSalary ? 'Building' : (item as any).icon || 'Wallet'} size={24} />
+                                        <CategoryIcon iconName={item.type === 'SALARY' ? 'Building' : item.icon || 'Wallet'} size={24} />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="font-bold text-zinc-800 dark:text-zinc-200 text-lg truncate">
@@ -128,7 +132,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                             </button>
                                         )}
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); isSalary ? handleDeleteSalary(item.id) : handleDeleteIncome(item.id); }}
+                                            onClick={(e) => { e.stopPropagation(); if (isSalary) { handleDeleteSalary(item.id); } else { handleDeleteIncome(item.id); } }}
                                             className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                                             title="Eliminar"
                                         >

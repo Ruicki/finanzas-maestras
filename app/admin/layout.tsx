@@ -7,9 +7,6 @@ import {
     Users,
     ShieldAlert,
     Database,
-    LogOut,
-    Menu,
-    X,
     ServerCrash,
     Megaphone
 } from "lucide-react";

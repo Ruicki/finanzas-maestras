@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { ArrowRightIcon, SmartphoneIcon, WalletIcon } from '@animateicons/react/lucide';
-import { CheckCheckIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
-import { BarChart3, PieChart } from 'lucide-react';
+import { ArrowRightIcon, WalletIcon } from '@animateicons/react/lucide';
+import { BarChart3 } from 'lucide-react';
 
 export default function LandingPage() {
     return (

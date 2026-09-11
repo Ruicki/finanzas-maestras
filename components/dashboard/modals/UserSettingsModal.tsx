@@ -67,14 +67,6 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
         }
     };
 
-    const getStrengthColor = (index: number) => {
-        if (strength === 0) return 'bg-zinc-200 dark:bg-zinc-800';
-        if (strength <= 1) return 'bg-red-500';
-        if (strength === 2) return index <= 2 ? 'bg-yellow-500' : 'bg-zinc-200 dark:bg-zinc-800';
-        if (strength === 3) return index <= 3 ? 'bg-blue-500' : 'bg-zinc-200 dark:bg-zinc-800';
-        return 'bg-green-500';
-    };
-
     // Helper for bar coloring logic
     const getBarColor = (barIndex: number) => {
         if (strength === 0) return 'bg-zinc-200 dark:bg-zinc-700';

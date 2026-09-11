@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 // Context to handle open state
 const DropdownContext = React.createContext<{ open: boolean; setOpen: (o: boolean) => void }>({ open: false, setOpen: () => { } });
 
-const DropdownMenu = ({ children }: any) => {
+const DropdownMenu = ({ children }: { children: React.ReactNode }) => {
     const [open, setOpen] = React.useState(false);
     return (
         <DropdownContext.Provider value={{ open, setOpen }}>
@@ -16,7 +16,7 @@ const DropdownMenu = ({ children }: any) => {
     )
 }
 
-const DropdownMenuTrigger = ({ children, asChild }: any) => {
+const DropdownMenuTrigger = ({ children }: { children: React.ReactNode; asChild?: boolean }) => {
     const { open, setOpen } = React.useContext(DropdownContext);
     return (
         <div onClick={() => setOpen(!open)} className="cursor-pointer">
@@ -25,7 +25,7 @@ const DropdownMenuTrigger = ({ children, asChild }: any) => {
     )
 }
 
-const DropdownMenuContent = ({ className, align, children }: any) => {
+const DropdownMenuContent = ({ className, align, children }: { className?: string; align?: 'start' | 'end'; children: React.ReactNode }) => {
     const { open, setOpen } = React.useContext(DropdownContext);
     const ref = React.useRef<HTMLDivElement>(null);
 
@@ -55,7 +55,7 @@ const DropdownMenuContent = ({ className, align, children }: any) => {
     )
 }
 
-const DropdownMenuItem = ({ className, onClick, children, ...props }: any) => {
+const DropdownMenuItem = ({ className, onClick, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
     const { setOpen } = React.useContext(DropdownContext);
     return (
         <div
@@ -74,13 +74,13 @@ const DropdownMenuItem = ({ className, onClick, children, ...props }: any) => {
     )
 }
 
-const DropdownMenuLabel = ({ className, children }: any) => (
+const DropdownMenuLabel = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <div className={cn("px-2 py-1.5 text-sm font-semibold", className)}>
         {children}
     </div>
 )
 
-const DropdownMenuSeparator = ({ className }: any) => (
+const DropdownMenuSeparator = ({ className }: { className?: string }) => (
     <div className={cn("-mx-1 my-1 h-px bg-zinc-100 dark:bg-zinc-800", className)} />
 )
 

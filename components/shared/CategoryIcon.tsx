@@ -1,4 +1,4 @@
-import { ZapIcon, SmartphoneIcon, WifiIcon, CreditCardIcon, WalletIcon, DollarSignIcon, PiggyBankIcon, TriangleAlertIcon, CheckCheckIcon, ShieldCheckIcon, BadgePercentIcon, ArrowLeftRightIcon, ShieldXIcon, PencilIcon, LoaderIcon, MessageCircleMoreIcon } from '@animateicons/react/lucide';
+import { ZapIcon, SmartphoneIcon, WifiIcon, CreditCardIcon, WalletIcon, DollarSignIcon, PiggyBankIcon } from '@animateicons/react/lucide';
 import { Home, ShoppingBag, Car, Coffee, HeartPulse, GraduationCap, Plane, Dumbbell, Gamepad, Gift, Scissors, Shirt, Watch, Music, Briefcase, Baby, HelpCircle, Building, Landmark, Bitcoin } from 'lucide-react';
 
 interface CategoryIconProps {
@@ -7,7 +7,9 @@ interface CategoryIconProps {
     className?: string;
 }
 
-const IconMap: Record<string, any> = {
+type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
+
+const IconMap: Record<string, IconComponent> = {
     'Home': Home,
     'ShoppingBag': ShoppingBag,
     'Car': Car,

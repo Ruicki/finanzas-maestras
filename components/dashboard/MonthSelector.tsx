@@ -10,7 +10,10 @@ interface MonthSelectorProps {
 
 export default function MonthSelector({ currentDate, onMonthChange }: MonthSelectorProps) {
     const [now, setNow] = useState<Date | null>(null);
-    useEffect(() => setNow(new Date()), []);
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- valor solo conocido en cliente, evita mismatch de hidratación SSR
+        setNow(new Date());
+    }, []);
 
     const safeDate = currentDate ?? now;
 

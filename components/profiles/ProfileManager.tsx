@@ -3,24 +3,28 @@ import { Profile } from '@prisma/client';
 import { createProfile, deleteProfile, getProfiles, resetProfileData, getGlobalStats } from '@/app/actions/budget';
 import { generateAccessCode, resetPassword } from '@/app/actions/auth';
 import { toast } from 'sonner';
-import { Trash2Icon, UserPlusIcon, KeyRoundIcon, EyeIcon, LockIcon, UsersIcon, DollarSignIcon, CreditCardIcon, TrendingUpIcon, FileTextIcon, HistoryIcon } from '@animateicons/react/lucide';
+import { Trash2Icon, UserPlusIcon, KeyRoundIcon, EyeIcon, LockIcon, UsersIcon, DollarSignIcon, CreditCardIcon, TrendingUpIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { TriangleAlertIcon, ShieldXIcon, LoaderIcon } from '@animateicons/react/lucide';
 import { getAuditLogs } from '@/app/actions/audit';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 
+type ProfileRow = Profile & { role: string; email?: string | null };
+type GlobalStats = Awaited<ReturnType<typeof getGlobalStats>>;
+type AuditLogEntry = Awaited<ReturnType<typeof getAuditLogs>>[number];
+
 interface ProfileManagerProps {
-    profiles: (Profile & { role: string; email?: string | null })[];
+    profiles: ProfileRow[];
     currentProfileId: number | null;
     onUpdate: () => void;
     onClose: () => void;
-    onImpersonate?: (profile: any) => void;
+    onImpersonate?: (profile: ProfileRow) => void;
 }
 
-export default function ProfileManager({ profiles: initialProfiles, currentProfileId, onUpdate, onClose, onImpersonate }: ProfileManagerProps) {
+export default function ProfileManager({ profiles: initialProfiles, currentProfileId, onClose, onImpersonate }: ProfileManagerProps) {
     // INICIO: Lógica de Obtención
-    const [profiles, setProfiles] = useState<any[]>(initialProfiles);
-    const [stats, setStats] = useState<any>(null);
-    const [logs, setLogs] = useState<any[]>([]);
+    const [profiles, setProfiles] = useState<ProfileRow[]>(initialProfiles);
+    const [stats, setStats] = useState<GlobalStats | null>(null);
+    const [logs, setLogs] = useState<AuditLogEntry[]>([]);
     const [showLogs, setShowLogs] = useState(false);
     const [loading, setLoading] = useState(true);
     const [newProfileName, setNewProfileName] = useState('');
@@ -57,7 +61,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
             await fetchProfiles(); // Actualizar lista local
             setNewProfileName('');
             toast.success("Perfil creado exitosamente");
-        } catch (error) {
+        } catch {
             toast.error("Error creando perfil");
         }
     }
@@ -73,7 +77,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                 await deleteProfile(id);
                 await fetchProfiles(); // Actualizar lista local
                 toast.success("Perfil y todos sus datos eliminados");
-            } catch (error) {
+            } catch {
                 toast.error("Error eliminando perfil");
             }
         });
@@ -280,11 +284,11 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                         {Number(profile.id) !== currentIdNum && !profile.email && (
                                             <button
                                                 onClick={async () => {
-                                                    // @ts-ignore
                                                     const res = await generateAccessCode(profile.id);
-                                                    if (res.code) {
-                                                        const msg = `CÓDIGO DE INVITACIÓN:\n\n${res.code}\n\nComparte este código con el usuario.`;
+                                                    if ('code' in res) {
                                                         window.prompt("Copia este código:", res.code);
+                                                    } else {
+                                                        toast.error(res.error);
                                                     }
                                                 }}
                                                 className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-500 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-amber-100 dark:border-amber-500/20"
@@ -361,7 +365,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                     <td className="p-3 font-bold text-zinc-700 dark:text-zinc-300">
                                                         {log.action}
                                                     </td>
-                                                    <td className="p-3 text-zinc-600 dark:text-zinc-400 truncate max-w-[200px]" title={log.details}>
+                                                    <td className="p-3 text-zinc-600 dark:text-zinc-400 truncate max-w-[200px]" title={log.details || undefined}>
                                                         {log.details || '-'}
                                                     </td>
                                                     <td className="p-3 text-right text-zinc-400 font-mono">
@@ -382,7 +386,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
     );
 }
 
-function StatCard({ icon, label, value, bg }: { icon: any, label: string, value: string | number, bg: string }) {
+function StatCard({ icon, label, value, bg }: { icon: React.ReactNode, label: string, value: string | number, bg: string }) {
     return (
         <div className={`${bg} p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center gap-1`}>
             <div className="bg-white dark:bg-zinc-800 p-2 rounded-full shadow-sm mb-1">

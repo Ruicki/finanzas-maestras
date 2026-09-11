@@ -1,8 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { getSession, getImpersonatedId } from '@/lib/auth-utils';
-import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/auth-utils';
 
 export async function logAction(action: string, details?: string, targetId?: number) {
     try {

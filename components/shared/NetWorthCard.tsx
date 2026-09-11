@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
 interface NetWorthCardProps {
     accounts: { balance: number }[];

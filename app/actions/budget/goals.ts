@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma';
+import { Goal } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { toNum, toNumOrNull } from './serializers';
 import { requireOwnership } from '@/lib/auth-utils';
@@ -24,7 +25,7 @@ export interface CreateGoalInput {
     destinationAccountId?: number;
 }
 
-function serializeGoal(goal: any) {
+function serializeGoal<T extends Goal>(goal: T) {
     return {
         ...goal,
         targetAmount: toNum(goal.targetAmount),

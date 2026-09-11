@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createAccount } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { Landmark, Wallet, Banknote, PiggyBank, ArrowRight, X } from "lucide-react";
+import { Landmark, Wallet, PiggyBank, ArrowRight, X } from "lucide-react";
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 
 interface AccountWizardProps {

@@ -4,10 +4,6 @@ import { ProfileWithData } from '@/types';
 type AdditionalIncome = ProfileWithData['incomes'][number];
 type Salary = ProfileWithData['salaries'][number];
 type Account = ProfileWithData['accounts'][number];
-import { deleteIncome } from '@/app/actions/budget'; // Eliminada importación createIncome ya que se maneja por Wizard
-import { toast } from 'sonner';
-import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import SalaryCalculator from '@/components/salary/SalaryCalculator';
 import IncomeHistory from '@/components/salary/SalaryHistory';
 import IncomeWizard from '@/components/incomes/IncomeWizard';
 import { PlusIcon } from '@animateicons/react/lucide';
@@ -21,23 +17,9 @@ interface IncomesTabProps {
     onUpdate: () => void;
 }
 
-export default function IncomesTab({ incomes, salaries, accounts, profileId, customDeductions, onUpdate }: IncomesTabProps) {
+export default function IncomesTab({ incomes, salaries, accounts, profileId, onUpdate }: IncomesTabProps) {
     const [showIncomeWizard, setShowIncomeWizard] = useState(false);
-    const [incomeToEdit, setIncomeToEdit] = useState<any | null>(null);
-
-    const latestSalary = salaries && salaries.length > 0 ? salaries[0] : null;
-
-    async function handleDelete(id: number) {
-        confirmDelete(async () => {
-            try {
-                await deleteIncome(id);
-                onUpdate();
-                toast.success("Ingreso eliminado");
-            } catch (error) {
-                toast.error("Error eliminando ingreso");
-            }
-        });
-    }
+    const [incomeToEdit, setIncomeToEdit] = useState<AdditionalIncome | Salary | null>(null);
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-4 pt-6">

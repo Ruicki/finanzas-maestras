@@ -4,13 +4,16 @@ import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges
 import { formatMoney } from '@/lib/utils';
 import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, MessageCircleMoreIcon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
 import React from 'react';
+import { ProfileWithData } from '@/types';
+
+type CreditCard = ProfileWithData['creditCards'][number];
 
 interface UltimateCreditCardProps {
-    card: any;
-    onPay: (card: any) => void;
+    card: CreditCard;
+    onPay: (card: CreditCard) => void;
     onDelete: (id: number) => void;
     cardholderName?: string;
-    onEdit?: (card: any) => void;
+    onEdit?: (card: CreditCard) => void;
 }
 
 export default function UltimateCreditCard({ card, onPay, onDelete, cardholderName = 'USUARIO', onEdit }: UltimateCreditCardProps) {
@@ -18,7 +21,6 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
     const hasRate = Number(card.interestRate) > 0;
     const effectiveRate = hasRate ? Number(card.interestRate) : 2.0;
     const insuranceRate = Number(card.insuranceRate) || 0.25;
-    const desgravamen = Number(card.balance) * (insuranceRate / 100);
 
     // Available = Limit - Balance - Desgravamen (matches bank's calculation)
     const utilization = (Number(card.balance) / Number(card.limit)) * 100;

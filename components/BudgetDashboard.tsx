@@ -46,6 +46,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- valor solo conocido en cliente, evita mismatch de hidratación SSR
         setSelectedDate(new Date());
     }, []);
 
@@ -60,6 +61,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     // Sync state with props (Server Actions + router.refresh())
     useEffect(() => {
         if (initialProfile) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- resincroniza el estado local editable cuando cambia el prop del servidor
             setActiveProfile(initialProfile);
         }
     }, [initialProfile]);
@@ -92,11 +94,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
-    // Normalize recurring expense amount — ANNUAL shows full amount in billing month
-    const normalizeToMonthly = (amount: number, type?: string | null): number => {
-        // ANNUAL: full amount in billing month (not divided)
-        return amount;
-    };
+    // Normalize recurring expense amount — ANNUAL shows full amount in billing month (not divided)
+    const normalizeToMonthly = (amount: number): number => amount;
 
     // Helper: Filter by selected month
     // Helper: Filter by selected month using ISO String (UTC) to match database storage
@@ -131,7 +130,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     // Monthly Totals (Filtered) — recurring expenses normalized to monthly
     const totalExpenses = expensesList.reduce((sum, exp) => {
         const monthly = exp.isRecurring
-            ? normalizeToMonthly(Number(exp.amount), exp.recurrenceType)
+            ? normalizeToMonthly(Number(exp.amount))
             : Number(exp.amount);
         return sum + monthly;
     }, 0);

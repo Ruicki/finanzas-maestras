@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     getAccountTransactions,
     adjustAccountBalance,
@@ -11,9 +11,22 @@ import { ArrowDownLeftIcon, ArrowLeftRightIcon, ListOrderedIcon, SlidersHorizont
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { ProfileWithData } from '@/types';
+
+type Account = ProfileWithData['accounts'][number];
+
+interface AccountTransaction {
+    id: number;
+    amount: number;
+    description: string;
+    type: 'EXPENSE' | 'INCOME' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'SALARY';
+    date: Date | string;
+    name?: string;
+    relatedAccountName?: string;
+}
 
 interface AccountHistoryModalProps {
-    account: any;
+    account: Account;
     initialTab?: 'movements' | 'settings';
     onClose: () => void;
     onUpdate: () => void;
@@ -28,7 +41,7 @@ export default function AccountHistoryModal({
     const [activeTab, setActiveTab] = useState<'movements' | 'settings'>(initialTab);
 
     // ── Movimientos ────────────────────────────────────────────────────────
-    const [transactions, setTransactions] = useState<any[]>([]);
+    const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
 
     // ── Corrección de saldo ────────────────────────────────────────────────
@@ -46,11 +59,7 @@ export default function AccountHistoryModal({
 
     useScrollLock(true);
 
-    useEffect(() => {
-        loadHistory();
-    }, [account.id]);
-
-    async function loadHistory() {
+    const loadHistory = useCallback(async () => {
         setLoadingHistory(true);
         try {
             const data = await getAccountTransactions(account.id);
@@ -60,7 +69,11 @@ export default function AccountHistoryModal({
         } finally {
             setLoadingHistory(false);
         }
-    }
+    }, [account.id]);
+
+    useEffect(() => {
+        loadHistory();
+    }, [loadHistory]);
 
     async function handleAdjustBalance() {
         const val = parseFloat(newBalance);
@@ -101,7 +114,7 @@ export default function AccountHistoryModal({
         }
     }
 
-    const formatDate = (date: Date) =>
+    const formatDate = (date: Date | string) =>
         new Date(date).toLocaleDateString('es-ES', {
             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         });
@@ -149,13 +162,13 @@ export default function AccountHistoryModal({
                                      account.type === 'CASH' ? 'Efectivo' :
                                      account.type === 'WALLET' ? 'Billetera' : 'Ahorro'}
                                 </p>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${(account as any).purpose === 'SAVINGS' ? 'bg-pink-500/30 text-pink-100' : 'bg-white/20 text-white'}`}>
-                                    {(account as any).purpose === 'SAVINGS' ? 'Ahorro' : 'Uso diario'}
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${account.purpose === 'SAVINGS' ? 'bg-pink-500/30 text-pink-100' : 'bg-white/20 text-white'}`}>
+                                    {account.purpose === 'SAVINGS' ? 'Ahorro' : 'Uso diario'}
                                 </span>
                             </div>
                             <h2 className="text-2xl font-black mb-1">{account.name}</h2>
                             <p className="text-3xl font-black">
-                                {(account as any).symbol || '$'}{Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                {account.symbol || '$'}{Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
                         <button
@@ -381,7 +394,7 @@ export default function AccountHistoryModal({
                             </div>
 
                             {/* Fecha de bloqueo — solo cuentas de ahorro */}
-                            {(account as any).purpose === 'SAVINGS' && (
+                            {account.purpose === 'SAVINGS' && (
                                 <div className="space-y-1.5 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-2xl border border-pink-100 dark:border-pink-900/30">
                                     <label className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider">
                                         🔒 Bloquear retiros hasta

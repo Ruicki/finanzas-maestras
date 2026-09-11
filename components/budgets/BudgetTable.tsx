@@ -2,12 +2,27 @@
 
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
-import { TrendingUpIcon, ArrowUpRightIcon, ArrowDownRightIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { PiggyBankIcon } from '@animateicons/react/lucide';
 import { TriangleAlertIcon } from '@animateicons/react/lucide';
 
+interface BudgetTableCategory {
+    id: number;
+    name: string;
+    color?: string | null;
+    monthlyLimit?: number | null;
+    isRollover?: boolean;
+    rolloverBalance?: number;
+}
+
+interface BudgetTableExpense {
+    categoryId?: number | null;
+    createdAt: string | Date;
+    amount: number;
+}
+
 interface BudgetTableProps {
-    categories: any[];
-    expenses: any[];
+    categories: BudgetTableCategory[];
+    expenses: BudgetTableExpense[];
     currentMonth: number;
     currentYear: number;
     currency: string;
@@ -37,7 +52,6 @@ export default function BudgetTable({ categories, expenses, currentMonth, curren
     const totalAssigned = categoryStats.reduce((sum, c) => sum + c.effectiveLimit, 0);
     const totalSpent = categoryStats.reduce((sum, c) => sum + c.spent, 0);
     const totalRollover = categoryStats.reduce((sum, c) => sum + c.rollover, 0);
-    const overallRemaining = totalAssigned - totalSpent;
 
     // Top 3 spending categories
     const topSpenders = [...categoryStats]

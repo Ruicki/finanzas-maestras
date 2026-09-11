@@ -12,29 +12,35 @@ import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { deleteExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
 import { getSubscriptionStatus } from '@/lib/subscription-status';
 import { toast } from 'sonner';
+import { ProfileWithData } from '@/types';
 
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
+
+type Category = ProfileWithData['categories'][number];
+type Expense = ProfileWithData['expenses'][number];
+type CreditCard = ProfileWithData['creditCards'][number];
+type Account = ProfileWithData['accounts'][number];
 
 const RECURRENCE_LABELS: Record<string, string> = {
     MONTHLY: 'Mensual',
     ANNUAL: 'Anual',
 };
 
-function normalizeToMonthly(amount: number, type?: string | null): number {
+function normalizeToMonthly(amount: number): number {
     // ANNUAL: full amount in billing month (not divided)
     return amount;
 }
 
-function isPaidThisMonth(exp: any): boolean {
+function isPaidThisMonth(exp: Expense): boolean {
     return getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt) === 'PAID';
 }
 
 interface BudgetsTabProps {
-    categories: any[];
-    expenses: any[];
-    allExpenses?: any[];
-    creditCards?: any[];
-    accounts?: any[];
+    categories: Category[];
+    expenses: Expense[];
+    allExpenses?: Expense[];
+    creditCards?: CreditCard[];
+    accounts?: Account[];
     profileId?: number;
     currency?: string;
     totalIncome: number;
@@ -48,19 +54,17 @@ interface BudgetsTabProps {
 
 type SubTab = 'resumen' | 'categorias' | 'suscripciones';
 
-export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, currency = 'USD', totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
+export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
-    const [expandedSub, setExpandedSub] = useState<string | null>(null);
     const [showWizard, setShowWizard] = useState(false);
-    const [editingSub, setEditingSub] = useState<any | null>(null);
+    const [editingSub, setEditingSub] = useState<Partial<Expense> | null>(null);
 
     // Subscriptions sorted by due date (each one individually)
     const subscriptions = expenses
         .filter(e => e.isRecurring)
         .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
 
-    const totalSubscriptions = subscriptions.reduce((s, e) => s + normalizeToMonthly(Number(e.amount), e.recurrenceType), 0);
-    const subscriptionCount = subscriptions.length;
+    const totalSubscriptions = subscriptions.reduce((s, e) => s + normalizeToMonthly(Number(e.amount)), 0);
     const nextDueDay = subscriptions.length > 0 ? Math.min(...subscriptions.map(s => s.dueDate || 1)) : null;
     const subscriptionPctOfIncome = totalIncome > 0 ? (totalSubscriptions / totalIncome) * 100 : 0;
     const annualCost = subscriptions.reduce((s, e) => {
@@ -120,13 +124,13 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {(() => {
                             // Helper: get the budget limit for a specific month
-                            const getMonthLimit = (cat: any, year: number, month1: number) => {
-                                const mb = cat.budgets?.find((b: any) => b.year === year && b.month === month1);
+                            const getMonthLimit = (cat: Category, year: number, month1: number) => {
+                                const mb = cat.budgets?.find((b) => b.year === year && b.month === month1);
                                 return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
                             };
 
                             // Helper: calculate rollover from previous month
-                            const getRollover = (cat: any) => {
+                            const getRollover = (cat: Category) => {
                                 let prevMonth = currentMonth; // 0-indexed current
                                 let prevYear = currentYear;
                                 prevMonth -= 1;
@@ -148,11 +152,11 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             };
 
                             // Límite del mes seleccionado por categoría (presupuesto específico o fallback global)
-                            const getCategoryLimit = (cat: any) => {
+                            const getCategoryLimit = (cat: Category) => {
                                 return getMonthLimit(cat, currentYear, currentMonth + 1);
                             };
 
-                            const getCategoryRollover = (cat: any) => {
+                            const getCategoryRollover = (cat: Category) => {
                                 return getRollover(cat);
                             };
 
@@ -162,7 +166,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                         const d = new Date(e.createdAt);
                                         return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                                     })
-                                    .reduce((sum, e) => sum + normalizeToMonthly(Number(e.amount), e.recurrenceType), 0);
+                                    .reduce((sum, e) => sum + normalizeToMonthly(Number(e.amount)), 0);
                                 const rollover = getCategoryRollover(cat);
                                 const limit = getCategoryLimit(cat);
                                 const effective = limit + rollover;
@@ -217,7 +221,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             let prevY = currentYear;
                             prevM -= 1;
                             if (prevM < 0) { prevM = 11; prevY -= 1; }
-                            const prevMb = categoryObj.budgets?.find((b: any) => b.year === prevY && b.month === prevM + 1);
+                            const prevMb = categoryObj.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
                             const prevLimit = prevMb ? Number(prevMb.limit) : (Number(categoryObj.monthlyLimit) || 0);
                             const prevSpent = allExpenses
                                 .filter(e => e.categoryId === categoryObj.id)
@@ -351,7 +355,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                                     toast.success("Marcado como pagado");
                                                                 }
                                                                 if (onUpdate) onUpdate();
-                                                            } catch (err) {
+                                                            } catch {
                                                                 toast.error("Error al actualizar");
                                                             }
                                                         }}

@@ -6,9 +6,12 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { ArrowRightLeft, ChevronRight, X, ArrowDown, ArrowRight } from "lucide-react";
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { ProfileWithData } from '@/types';
+
+type Account = ProfileWithData['accounts'][number];
 
 interface TransferModalProps {
-    accounts: any[];
+    accounts: Account[];
     onClose: () => void;
     onSuccess: () => void;
 }

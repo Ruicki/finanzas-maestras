@@ -55,7 +55,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
     );
 
     const percentage = goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0;
-    const catInfo = getCategoryInfo((goal as any).category);
+    const catInfo = getCategoryInfo(goal.category);
     const CatIcon = catInfo.icon;
     const stage = getStage(percentage);
     const priorityColors: Record<string, string> = {
@@ -161,8 +161,8 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                 </div>
             </div>
 
-            {(goal as any).notes && (
-                <p className="text-xs text-zinc-400 mb-3 italic">"{(goal as any).notes}"</p>
+            {goal.notes && (
+                <p className="text-xs text-zinc-400 mb-3 italic">&quot;{goal.notes}&quot;</p>
             )}
 
             {percentage < 100 && goal.deadline && (
@@ -170,6 +170,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                     <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     {(() => {
                         const remaining = goal.targetAmount - goal.currentAmount;
+                        // eslint-disable-next-line react-hooks/purity -- solo afecta el texto mostrado, se recalcula en cada render sin causar efectos secundarios
                         const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                         if (daysLeft > 0 && remaining > 0) {
                             return <span className="text-zinc-500">${(remaining / daysLeft).toFixed(2)}/día</span>;
@@ -204,7 +205,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                             ) : (
                                 <select value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
                                     <option value="">Cuenta...</option>
-                                    {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
+                                    {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                 </select>
                             )}
                         </div>
@@ -216,7 +217,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                 ) : (
                     goal.type === 'FIXED' && goal.contributionAmount ? (
                         <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onRefresh(); }).catch((err: any) => toast.error(err.message)); } else { onToggleExpand(goal.id); setAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                            <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onRefresh(); }).catch((err) => toast.error(err instanceof Error ? err.message : 'Error al pagar cuota')); } else { onToggleExpand(goal.id); setAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
                                 <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
                                 <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
                             </button>
@@ -238,16 +239,23 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
 
 interface GoalsTabProps {
     goals: Goal[];
-    accounts: any[];
+    accounts: Account[];
     profileId: number;
     onUpdate: () => void;
+}
+
+interface GoalTransactionRow {
+    id: number;
+    type: string;
+    amount: number;
+    createdAt: string | Date;
 }
 
 export default function GoalsTab({ goals, accounts, profileId, onUpdate }: GoalsTabProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [reclaimModal, setReclaimModal] = useState<{ isOpen: boolean; goal: Goal | null }>({ isOpen: false, goal: null });
     const [historyModal, setHistoryModal] = useState<{ isOpen: boolean; goal: Goal | null }>({ isOpen: false, goal: null });
-    const [transactions, setTransactions] = useState<any[]>([]);
+    const [transactions, setTransactions] = useState<GoalTransactionRow[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     useScrollLock(isModalOpen || reclaimModal.isOpen || historyModal.isOpen);
@@ -310,10 +318,10 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             frequency: goal.frequency || 'MONTHLY',
             contributionAmount: Number(goal.contributionAmount || 0).toFixed(2),
             priority: goal.priority || 'MEDIUM',
-            category: (goal as any).category || 'SAVINGS',
-            notes: (goal as any).notes || '',
+            category: goal.category || 'SAVINGS',
+            notes: goal.notes || '',
             sourceAccountId: goal.sourceAccountId?.toString() || '',
-            destinationAccountId: (goal as any).destinationAccountId?.toString() || ''
+            destinationAccountId: goal.destinationAccountId?.toString() || ''
         });
         setIsModalOpen(true);
     }
@@ -360,7 +368,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             }
             setIsModalOpen(false);
             onUpdate();
-        } catch (error) {
+        } catch {
             toast.error("Error al guardar");
         }
     }
@@ -519,7 +527,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                             <label className="text-xs font-bold text-zinc-500 uppercase ml-2 mb-2 block">¿A dónde?</label>
                             <select value={reclaimAccountId} onChange={e => setReclaimAccountId(e.target.value)} className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold outline-none">
                                 <option value="">Cuenta...</option>
-                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
+                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                             </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -628,14 +636,14 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Origen</label>
                                         <select value={form.sourceAccountId} onChange={e => setForm({ ...form, sourceAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Seleccionar...</option>
-                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
+                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Ahorro Destino</label>
                                         <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Crear cuenta de ahorro automáticamente</option>
-                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>)}
+                                            {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                 </div>

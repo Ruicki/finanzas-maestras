@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Account } from '@prisma/client';
+import { ProfileWithData } from '@/types';
 import { createIncome, updateIncome } from '@/app/actions/budget';
 import { createSalary, updateSalary } from '@/app/actions/salary';
 import { DollarSignIcon, WalletIcon, SaveIcon } from '@animateicons/react/lucide';
@@ -13,12 +13,20 @@ import { parseDateNoon } from '@/lib/utils';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { CategoryIcon, AVAILABLE_ICONS } from '@/components/shared/CategoryIcon';
 
+type Account = ProfileWithData['accounts'][number];
+type AdditionalIncome = ProfileWithData['incomes'][number];
+type Salary = ProfileWithData['salaries'][number];
+type IncomeEditData = Partial<Omit<AdditionalIncome, 'profileId'> & Omit<Salary, 'profileId'>> & {
+    profileId?: number | null;
+    isManualCalculation?: boolean;
+};
+
 interface IncomeWizardProps {
-    accounts: any[];
+    accounts: Account[];
     profileId: number;
     onClose: () => void;
     onSuccess: () => void;
-    initialData?: any;
+    initialData?: IncomeEditData | null;
     isEditing?: boolean;
 }
 
@@ -44,6 +52,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
     // Cargar datos iniciales al editar
     useEffect(() => {
         if (isEditing && initialData) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- carga los valores del ingreso a editar una sola vez al abrir el wizard
             setAmount(initialData.amount?.toString() || '');
             setDescription(initialData.name || '');
             setSelectedAccountId(initialData.accountId || null);
@@ -109,7 +118,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     await updateSalary(initialData.id, {
                         grossVal: val,
                         bonus: initialData.bonus ?? 0,
-                        frequency: initialData.frequency || 'monthly',
+                        frequency: (initialData.frequency as 'monthly' | 'biweekly') || 'monthly',
                         paymentDate: date,
                         absentDays: initialData.absentDays ?? 0,
                         company: description || initialData.company || 'Salario',

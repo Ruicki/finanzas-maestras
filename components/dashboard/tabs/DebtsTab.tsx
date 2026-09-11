@@ -6,7 +6,7 @@ import { ProfileWithData } from '@/types';
 type CreditCard = ProfileWithData['creditCards'][number];
 type Loan = ProfileWithData['loans'][number];
 type Account = ProfileWithData['accounts'][number];
-import { PlusIcon, CreditCardIcon as CardIcon, FlagIcon, XIcon, CalendarIcon, TrendingDownIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { PlusIcon, CreditCardIcon as CardIcon, FlagIcon, XIcon } from '@animateicons/react/lucide';
 import { Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { createLoan, deleteLoan, payLoan, updateLoan, CreateLoanInput } from '@/app/actions/debts';
@@ -242,7 +242,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                 else await deleteLoan(id);
                 onUpdate();
                 toast.success("Eliminado correctamente");
-            } catch (error) { toast.error("Error al eliminar"); }
+            } catch { toast.error("Error al eliminar"); }
         });
     }
 
@@ -270,7 +270,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             setPaymentModal(null);
             setPaymentAmount('');
             toast.success("Pago registrado");
-        } catch (error) {
+        } catch {
             toast.error("Error en el pago");
         } finally {
             setSubmitting(false);
@@ -618,8 +618,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                     className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl outline-none font-bold"
                                 >
                                     <option value="">-- Pago Externo / Efectivo (sin cuenta) --</option>
-                                    {accounts.filter(acc => (acc as any).purpose !== 'SAVINGS').map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name} ({(acc as any).symbol || '$'}{acc.balance})</option>
+                                    {accounts.filter(acc => acc.purpose !== 'SAVINGS').map(acc => (
+                                        <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>
                                     ))}
                                 </select>
                             </div>

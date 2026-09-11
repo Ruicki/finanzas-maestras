@@ -2,10 +2,10 @@
 "use client";
 
 import { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, CartesianGrid } from 'recharts';
-import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, TrendingDownIcon, DollarSignIcon, WalletIcon, CalendarIcon } from '@animateicons/react/lucide';
+import { AreaChart, Area, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { TrendingUpIcon, WalletIcon } from '@animateicons/react/lucide';
 import { TriangleAlertIcon } from '@animateicons/react/lucide';
-import { Target, PieChart } from 'lucide-react';
+import { PieChart } from 'lucide-react';
 import { ProfileWithData } from '@/types';
 
 type Expense = ProfileWithData['expenses'][number];
@@ -30,7 +30,6 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
-        totalIncome,
         totalExpense,
         netSavings,
         savingsRate,
@@ -81,7 +80,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             let prevY = currentYear;
             prevM -= 1;
             if (prevM < 0) { prevM = 11; prevY -= 1; }
-            const prevMb = cat.budgets?.find((b: any) => b.year === prevY && b.month === prevM + 1);
+            const prevMb = cat.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
             const prevLimit = prevMb ? Number(prevMb.limit) : Number(cat.monthlyLimit || 0);
             const prevSpent = allExpenses
                 .filter(e => e.categoryId === cat.id)
@@ -114,7 +113,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             budgetComparison,
             topCategories
         };
-    }, [expenses, allExpenses, categories, incomes, salaries]);
+    }, [expenses, allExpenses, categories, incomes, salaries, selectedMonth, selectedYear]);
 
 
     return (

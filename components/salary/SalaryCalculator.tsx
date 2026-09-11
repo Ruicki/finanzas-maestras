@@ -2,8 +2,10 @@
 
 import { useState, ChangeEvent, useEffect } from 'react';
 import { createSalary } from '@/app/actions/salary';
-import { Account } from '@prisma/client';
+import { ProfileWithData } from '@/types';
 import { toast } from "sonner";
+
+type Account = ProfileWithData['accounts'][number];
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 

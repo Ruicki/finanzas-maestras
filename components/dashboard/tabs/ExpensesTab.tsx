@@ -9,13 +9,12 @@ type CreditCard = ProfileWithData['creditCards'][number];
 type Account = ProfileWithData['accounts'][number];
 type Category = ProfileWithData['categories'][number];
 
-import { createExpense, deleteExpense } from '@/app/actions/budget';
+import { deleteExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
-import { updateCategoryLimit } from '@/app/actions/categories';
 import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon } from '@animateicons/react/lucide';
 
 interface ExpensesTabProps {
@@ -53,7 +52,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 await deleteExpense(id);
                 onUpdate();
                 toast.success("Gasto eliminado");
-            } catch (error) {
+            } catch {
                 toast.error("Error eliminando gasto");
             }
         });
@@ -162,7 +161,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     <ArrowUpDownIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
+                        onChange={(e) => setSortBy(e.target.value as 'date' | 'amount' | 'name')}
                         className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
                     >
                         <option value="date">Más reciente</option>

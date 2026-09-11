@@ -6,9 +6,7 @@ import { ProfileWithData } from '@/types';
 import { createExpense, updateExpense } from '@/app/actions/budget';
 import { getCategories } from '@/app/actions/categories';
 import { toast } from 'sonner';
-import * as LucideIcons from 'lucide-react';
 import { CreditCardIcon, WalletIcon, CalendarIcon, SaveIcon, XIcon } from '@animateicons/react/lucide';
-import { HelpCircle } from 'lucide-react';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -17,6 +15,7 @@ import { parseDateNoon } from '@/lib/utils';
 type Account = ProfileWithData['accounts'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
 type Category = ProfileWithData['categories'][number];
+type Expense = ProfileWithData['expenses'][number];
 
 interface ExpenseWizardProps {
     accounts: Account[];
@@ -26,7 +25,7 @@ interface ExpenseWizardProps {
     onClose: () => void;
     onSuccess: () => void;
     onInit?: () => void;
-    initialData?: any; // New prop for editing
+    initialData?: Partial<Expense> | null; // New prop for editing
     isEditing?: boolean;
     recentNames?: string[];
 }
@@ -69,8 +68,9 @@ export default function ExpenseWizard({
     // Load Initial Data
     useEffect(() => {
         if (isEditing && initialData) {
-            setAmount(initialData.amount.toString());
-            setName(initialData.name);
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- carga los valores del gasto a editar una sola vez al abrir el wizard
+            setAmount(initialData.amount?.toString() ?? '');
+            setName(initialData.name ?? '');
             setCategoryId(initialData.categoryId || null);
             setDate(initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
             setIsRecurring(initialData.isRecurring || false);

@@ -43,7 +43,7 @@ export const generateTransactionsCSV = (profile: ProfileWithData): string => {
 
     // 1. Incomes (Salaries + Additional)
     if (profile.salaries) {
-        profile.salaries.forEach((s: any) => {
+        profile.salaries.forEach((s) => {
             rows.push([
                 formatDate(s.createdAt),
                 "Salario",
@@ -57,36 +57,36 @@ export const generateTransactionsCSV = (profile: ProfileWithData): string => {
     }
 
     if (profile.incomes) {
-        profile.incomes.forEach((inc: any) => {
+        profile.incomes.forEach((inc) => {
             rows.push([
-                formatDate(inc.createdAt),
+                formatDate(inc.createdAt ?? new Date()),
                 "Ingreso Extra",
-                inc.source || "Otros",
+                inc.name || "Otros",
                 inc.amount,
                 inc.frequency === 'ONE_TIME' ? 'Puntual' : `Recurrente (${inc.frequency})`,
                 "Depósito",
-                profile.accounts?.find(a => a.id === inc.destinationAccountId)?.name || "Cuenta Desconocida"
+                profile.accounts?.find(a => a.id === inc.accountId)?.name || "Cuenta Desconocida"
             ].map(escapeCSV).join(","));
         });
     }
 
     // 2. Expenses
     if (profile.expenses) {
-        profile.expenses.forEach((exp: any) => {
+        profile.expenses.forEach((exp) => {
             // Find payment source name
             let paymentMethod = "Desconocido";
             if (exp.accountId) {
                 paymentMethod = profile.accounts?.find(a => a.id === exp.accountId)?.name || "Cuenta";
-            } else if (exp.creditCardId) {
-                paymentMethod = profile.creditCards?.find(c => c.id === exp.creditCardId)?.name || "Tarjeta Crédito";
+            } else if (exp.linkedCardId) {
+                paymentMethod = profile.creditCards?.find(c => c.id === exp.linkedCardId)?.name || "Tarjeta Crédito";
             }
 
             rows.push([
                 formatDate(exp.createdAt),
                 "Gasto",
-                profile.categories?.find((c: any) => c.id === exp.categoryId)?.name || "Sin Categoría",
+                profile.categories?.find((c) => c.id === exp.categoryId)?.name || "Sin Categoría",
                 -exp.amount, // Negative for expenses
-                exp.description || "",
+                exp.name || "",
                 paymentMethod,
                 exp.accountId ? (profile.accounts?.find(a => a.id === exp.accountId)?.name || "") : ""
             ].map(escapeCSV).join(","));

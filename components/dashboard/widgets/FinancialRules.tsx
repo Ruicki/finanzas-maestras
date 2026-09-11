@@ -3,18 +3,25 @@
 import React from 'react';
 import { formatMoney } from '@/lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { ShieldCheckIcon, TrendingUpIcon, CalculatorIcon, ArrowRightIcon, DollarSignIcon, PiggyBankIcon } from '@animateicons/react/lucide';
+import { ShieldCheckIcon, TrendingUpIcon, CalculatorIcon, ArrowRightIcon, DollarSignIcon } from '@animateicons/react/lucide';
 import { Target } from 'lucide-react';
+
+interface RuleExpense {
+    name?: string;
+    category?: string;
+    amount: number;
+    categoryRel?: { type?: string | null } | null;
+}
 
 interface FinancialRulesProps {
     income: number;
-    expenses: any[];
+    expenses: RuleExpense[];
     debtsPayment: number;
     totalSavings: number;
     totalCash: number;
 }
 
-export default function FinancialRules({ income, expenses, debtsPayment, totalSavings, totalCash }: FinancialRulesProps) {
+export default function FinancialRules({ income, expenses, debtsPayment, totalCash }: FinancialRulesProps) {
     if (income === 0) {
         return (
             <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
@@ -48,7 +55,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     }
 
     // --- RULE 1: 50/30/20 ---
-    const getType = (e: any): string => {
+    const getType = (e: RuleExpense): string => {
         if (e.categoryRel?.type) return e.categoryRel.type;
         const name = (e.category || e.name || '').toLowerCase();
         if (['alquiler', 'arriendo', 'servicio', 'servicios', 'internet', 'teléfono', 'teléfono celular', 'seguro', 'educación', 'colegio', 'matrícula', 'hipoteca', 'préstamo', 'loan'].some(k => name.includes(k))) return 'FIXED';
@@ -179,7 +186,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: any) => formatMoney(Number(value))}
+                                    formatter={(value?: number) => formatMoney(value ?? 0)}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                             </PieChart>

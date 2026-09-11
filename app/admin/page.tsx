@@ -60,7 +60,16 @@ export default async function AdminDashboard() {
     );
 }
 
-function StatCard({ title, value, icon: Icon, trend, color, bg }: any) {
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    icon: React.ComponentType<{ size?: number }>;
+    trend: string;
+    color: string;
+    bg: string;
+}
+
+function StatCard({ title, value, icon: Icon, trend, color, bg }: StatCardProps) {
     return (
         <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all group">
             <div className="flex justify-between items-start mb-4">

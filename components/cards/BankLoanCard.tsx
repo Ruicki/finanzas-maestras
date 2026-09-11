@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { calculateNextPaymentSplit, calculatePayoffImpact } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { ZapIcon, ChevronDownIcon, TrendingDownIcon, CalendarIcon, PencilIcon } from '@animateicons/react/lucide';
+import { ZapIcon, TrendingDownIcon, CalendarIcon, PencilIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { Landmark } from 'lucide-react';
+import { ProfileWithData } from '@/types';
+
+type Loan = ProfileWithData['loans'][number];
 
 interface BankLoanCardProps {
-    loan: any;
-    onPay: (loan: any) => void;
+    loan: Loan;
+    onPay: (loan: Loan) => void;
     onDelete: (id: number) => void;
-    onEdit?: (loan: any) => void;
+    onEdit?: (loan: Loan) => void;
 }
 
 export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoanCardProps) {

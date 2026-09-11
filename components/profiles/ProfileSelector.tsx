@@ -1,7 +1,6 @@
 'use client';
 
 import { Profile } from '@prisma/client';
-import { User, Plus, Settings } from "lucide-react";
 
 interface ProfileSelectorProps {
     profiles: Profile[];
@@ -9,7 +8,7 @@ interface ProfileSelectorProps {
     onManage: () => void;
 }
 
-export default function ProfileSelector({ profiles, onSelect, onManage }: ProfileSelectorProps) {
+export default function ProfileSelector({ profiles, onSelect }: ProfileSelectorProps) {
     return (
         <div className="fixed inset-0 bg-zinc-900 z-50 flex flex-col items-center justify-center p-8 animate-in fade-in duration-500">
             <h1 className="text-4xl md:text-5xl font-black text-white mb-12 tracking-tight text-center">

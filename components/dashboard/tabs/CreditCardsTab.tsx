@@ -25,8 +25,8 @@ interface CreditCardsTabProps {
 
 export default function CreditCardsTab({ creditCards, accounts, profileId, profileName, onUpdate }: CreditCardsTabProps) {
     const [showWizard, setShowWizard] = useState(false);
-    const [payingCard, setPayingCard] = useState<any | null>(null);
-    const [editingCard, setEditingCard] = useState<any | null>(null);
+    const [payingCard, setPayingCard] = useState<CreditCard | null>(null);
+    const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
 
     // Strategy
     const [strategy, setStrategy] = useState<'SNOWBALL' | 'AVALANCHE'>('SNOWBALL');
@@ -212,7 +212,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         itbmsRate: Number(payingCard.itbmsRate) || 0.07,
                         minPaymentFloor: Number(payingCard.minPaymentFloor) || 0,
                     }}
-                    accounts={accounts.filter(a => (a as any).purpose !== 'SAVINGS').map(a => ({
+                    accounts={accounts.filter(a => a.purpose !== 'SAVINGS').map(a => ({
                         id: a.id,
                         name: a.name,
                         balance: Number(a.balance),
