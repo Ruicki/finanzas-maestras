@@ -59,6 +59,7 @@ export default function ExpenseWizard({
     const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
     const [graceDays, setGraceDays] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isProjected, setIsProjected] = useState(false);
 
     // Filtered name suggestions
     const filteredNames = name.length > 0
@@ -76,6 +77,7 @@ export default function ExpenseWizard({
             setIsRecurring(initialData.isRecurring || false);
             setRecurrenceType(initialData.recurrenceType || 'MONTHLY');
             setGraceDays(initialData.graceDays != null ? initialData.graceDays.toString() : '');
+            setIsProjected(initialData.isProjected || false);
 
             if (initialData.linkedCardId) {
                 setPaymentMethod('CREDIT');
@@ -151,7 +153,8 @@ export default function ExpenseWizard({
             paymentMethod,
             accountId: paymentMethod === 'CASH' ? Number(accountId) : null,
             linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : null,
-            date: `${date}T12:00:00`
+            date: `${date}T12:00:00`,
+            isProjected: !isRecurring && isProjected,
         };
 
         try {
@@ -222,6 +225,14 @@ export default function ExpenseWizard({
                     })()}
                 </div>
             </div>
+
+            {isEditing && isProjected && (
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl px-5 py-3 text-center">
+                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                        Esto es una proyección: aún no ha descontado el saldo. Para confirmarlo como pagado, usa el botón &quot;Confirmar&quot; en la lista de gastos.
+                    </p>
+                </div>
+            )}
 
             {/* Input Principal */}
             <div className="text-center space-y-4">
@@ -341,18 +352,35 @@ export default function ExpenseWizard({
                     />
                 </div>
 
-                <div className="flex items-center justify-between bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
-                    <div className="flex flex-col">
-                        <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Gasto recurrente</span>
-                        <span className="text-xs text-zinc-400">Se repite automáticamente</span>
+                {!isProjected && (
+                    <div className="flex items-center justify-between bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
+                        <div className="flex flex-col">
+                            <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Gasto recurrente</span>
+                            <span className="text-xs text-zinc-400">Se repite automáticamente</span>
+                        </div>
+                        <button
+                            onClick={() => setIsRecurring(!isRecurring)}
+                            className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${isRecurring ? 'bg-purple-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+                        >
+                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${isRecurring ? 'left-7' : 'left-1'}`} />
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setIsRecurring(!isRecurring)}
-                        className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${isRecurring ? 'bg-purple-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
-                    >
-                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${isRecurring ? 'left-7' : 'left-1'}`} />
-                    </button>
-                </div>
+                )}
+
+                {!isRecurring && !isEditing && (
+                    <div className="flex items-center justify-between bg-white dark:bg-zinc-800 border border-amber-200 dark:border-amber-500/30 rounded-2xl px-5 py-4">
+                        <div className="flex flex-col pr-4">
+                            <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Es una proyección</span>
+                            <span className="text-xs text-zinc-400">Aún no ha pasado: no descuenta el saldo hasta que lo confirmes.</span>
+                        </div>
+                        <button
+                            onClick={() => setIsProjected(!isProjected)}
+                            className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${isProjected ? 'bg-amber-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+                        >
+                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${isProjected ? 'left-7' : 'left-1'}`} />
+                        </button>
+                    </div>
+                )}
 
                 {isRecurring && (
                     <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-5 py-4">
@@ -403,7 +431,7 @@ export default function ExpenseWizard({
                     className="w-full md:w-auto md:max-w-[240px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                     <SaveIcon className="w-5 h-5" />
-                    Guardar
+                    {!isEditing && isProjected ? 'Guardar Proyección' : 'Guardar'}
                 </button>
             </div>
         </div>

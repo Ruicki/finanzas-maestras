@@ -23,25 +23,32 @@ export interface CreateExpenseInput {
     accountId?: number | null;
     categoryId?: number;
     date?: Date | string;
+    isProjected?: boolean;
 }
 
 export async function createExpense(data: CreateExpenseInput) {
     await requireOwnership(data.profileId);
-    if (data.accountId) {
-        const account = await prisma.account.findUnique({ where: { id: data.accountId } });
-        if (!account) throw new Error('Cuenta no encontrada');
-        if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
-        if (account.lockDate && new Date(account.lockDate) > new Date()) {
-            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+    const isProjected = data.isProjected ?? false;
+
+    // Un gasto proyectado es solo un plan a futuro: no mueve dinero real,
+    // así que tampoco necesita validar fondos todavía (se valida al confirmarlo).
+    if (!isProjected) {
+        if (data.accountId) {
+            const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+            if (!account) throw new Error('Cuenta no encontrada');
+            if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
+            if (account.lockDate && new Date(account.lockDate) > new Date()) {
+                throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            }
+            if (Number(account.balance) < data.amount) {
+                throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+            }
         }
-        if (Number(account.balance) < data.amount) {
-            throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+        if (data.linkedCardId) {
+            const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
+            if (!card) throw new Error('Tarjeta no encontrada');
+            if (card.profileId !== data.profileId) throw new Error('La tarjeta no pertenece a este perfil');
         }
-    }
-    if (data.linkedCardId) {
-        const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
-        if (!card) throw new Error('Tarjeta no encontrada');
-        if (card.profileId !== data.profileId) throw new Error('La tarjeta no pertenece a este perfil');
     }
 
     try {
@@ -62,21 +69,24 @@ export async function createExpense(data: CreateExpenseInput) {
                     accountId: data.accountId,
                     categoryId: data.categoryId,
                     createdAt: data.date ? new Date(data.date) : undefined,
+                    isProjected,
                 },
             });
 
-            if (data.linkedCardId) {
-                await tx.creditCard.update({
-                    where: { id: data.linkedCardId },
-                    data: { balance: { increment: data.amount } },
-                });
-            }
+            if (!isProjected) {
+                if (data.linkedCardId) {
+                    await tx.creditCard.update({
+                        where: { id: data.linkedCardId },
+                        data: { balance: { increment: data.amount } },
+                    });
+                }
 
-            if (data.accountId) {
-                await tx.account.update({
-                    where: { id: data.accountId },
-                    data: { balance: { decrement: data.amount } },
-                });
+                if (data.accountId) {
+                    await tx.account.update({
+                        where: { id: data.accountId },
+                        data: { balance: { decrement: data.amount } },
+                    });
+                }
             }
 
             return created;
@@ -110,7 +120,10 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
     const newAccountId = data.accountId !== undefined ? data.accountId : oldExpense.accountId;
     const newCardId = data.linkedCardId !== undefined ? data.linkedCardId : oldExpense.linkedCardId;
 
-    if (newAccountId) {
+    // Un gasto todavía proyectado nunca movió dinero real, así que editarlo
+    // (monto, cuenta, etc.) tampoco debe mover ni validar fondos — eso pasa
+    // recién al confirmarlo con confirmExpense().
+    if (!oldExpense.isProjected && newAccountId) {
         const targetAccount = await prisma.account.findUnique({ where: { id: newAccountId } });
         if (!targetAccount) throw new Error('Cuenta no encontrada');
         // Si es la misma cuenta que ya tenía, primero se revierte el monto viejo
@@ -126,31 +139,33 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
 
     try {
         await prisma.$transaction(async (tx) => {
-            // Revertir impacto anterior
-            if (oldExpense.accountId) {
-                await tx.account.update({
-                    where: { id: oldExpense.accountId },
-                    data: { balance: { increment: oldExpense.amount } },
-                });
-            }
-            if (oldExpense.linkedCardId) {
-                await tx.creditCard.update({
-                    where: { id: oldExpense.linkedCardId },
-                    data: { balance: { decrement: oldExpense.amount } },
-                });
-            }
+            if (!oldExpense.isProjected) {
+                // Revertir impacto anterior
+                if (oldExpense.accountId) {
+                    await tx.account.update({
+                        where: { id: oldExpense.accountId },
+                        data: { balance: { increment: oldExpense.amount } },
+                    });
+                }
+                if (oldExpense.linkedCardId) {
+                    await tx.creditCard.update({
+                        where: { id: oldExpense.linkedCardId },
+                        data: { balance: { decrement: oldExpense.amount } },
+                    });
+                }
 
-            if (newAccountId) {
-                await tx.account.update({
-                    where: { id: newAccountId },
-                    data: { balance: { decrement: newAmount } },
-                });
-            }
-            if (newCardId) {
-                await tx.creditCard.update({
-                    where: { id: newCardId },
-                    data: { balance: { increment: newAmount } },
-                });
+                if (newAccountId) {
+                    await tx.account.update({
+                        where: { id: newAccountId },
+                        data: { balance: { decrement: newAmount } },
+                    });
+                }
+                if (newCardId) {
+                    await tx.creditCard.update({
+                        where: { id: newCardId },
+                        data: { balance: { increment: newAmount } },
+                    });
+                }
             }
 
             await tx.expense.update({
@@ -187,17 +202,20 @@ export async function deleteExpense(id: number): Promise<void> {
             if (!expense) throw new Error('Gasto no encontrado');
             await requireOwnership(expense.profileId);
 
-            if (expense.accountId) {
-                await tx.account.update({
-                    where: { id: expense.accountId },
-                    data: { balance: { increment: expense.amount } },
-                });
-            }
-            if (expense.linkedCardId) {
-                await tx.creditCard.update({
-                    where: { id: expense.linkedCardId },
-                    data: { balance: { decrement: expense.amount } },
-                });
+            // Si nunca se confirmó, nunca movió dinero real: no hay nada que revertir.
+            if (!expense.isProjected) {
+                if (expense.accountId) {
+                    await tx.account.update({
+                        where: { id: expense.accountId },
+                        data: { balance: { increment: expense.amount } },
+                    });
+                }
+                if (expense.linkedCardId) {
+                    await tx.creditCard.update({
+                        where: { id: expense.linkedCardId },
+                        data: { balance: { decrement: expense.amount } },
+                    });
+                }
             }
 
             await tx.expense.delete({ where: { id } });
@@ -206,6 +224,56 @@ export async function deleteExpense(id: number): Promise<void> {
         revalidatePath('/budget');
     } catch (error) {
         logger.error(`Error deleting expense ${id}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Convierte un gasto proyectado (planeado a futuro, sin impacto real en el saldo)
+ * en un gasto real: valida fondos igual que createExpense y recién ahí descuenta
+ * la cuenta/tarjeta vinculada. Es el único camino para "materializar" una proyección.
+ */
+export async function confirmExpense(id: number) {
+    const expense = await prisma.expense.findUnique({ where: { id } });
+    if (!expense) throw new Error('Gasto no encontrado');
+    await requireOwnership(expense.profileId);
+    if (!expense.isProjected) throw new Error('Este gasto ya está confirmado');
+
+    if (expense.accountId) {
+        const account = await prisma.account.findUnique({ where: { id: expense.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.lockDate && new Date(account.lockDate) > new Date()) {
+            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+        }
+        if (Number(account.balance) < Number(expense.amount)) {
+            throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+        }
+    }
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            if (expense.linkedCardId) {
+                await tx.creditCard.update({
+                    where: { id: expense.linkedCardId },
+                    data: { balance: { increment: expense.amount } },
+                });
+            }
+            if (expense.accountId) {
+                await tx.account.update({
+                    where: { id: expense.accountId },
+                    data: { balance: { decrement: expense.amount } },
+                });
+            }
+
+            await tx.expense.update({
+                where: { id },
+                data: { isProjected: false, confirmedAt: new Date() },
+            });
+        });
+
+        revalidatePath('/budget');
+    } catch (error) {
+        logger.error(`Error confirming expense ${id}:`, error);
         throw error;
     }
 }
@@ -254,6 +322,7 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                 isRecurring: true,
                 isOneTime: false,
                 dueDate: { not: null },
+                isProjected: false,
             },
             include: {
                 account: true,

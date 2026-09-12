@@ -85,6 +85,8 @@ model Expense {
   accountId       Int?
   createdAt       DateTime  @default(now())
   lastPaidAt      DateTime?
+  isProjected     Boolean   @default(false)
+  confirmedAt     DateTime?
   account         Account?  @relation(fields: [accountId], references: [id])
   categoryRel     Category? @relation(fields: [categoryId], references: [id])
   profile         Profile   @relation(fields: [profileId], references: [id])
