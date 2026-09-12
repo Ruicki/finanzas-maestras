@@ -25,7 +25,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     if (income === 0) {
         return (
             <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm text-center">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm text-center">
                     <DollarSignIcon size={32} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200 mb-2">Sin ingresos registrados</h3>
                     <p className="text-sm text-zinc-400 max-w-md mx-auto">
@@ -34,7 +34,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 </div>
 
                 {/* Emergency Fund still shows */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
+                <div className="bg-surface dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
                             <ShieldCheckIcon size={18} className="text-emerald-500" />
@@ -108,7 +108,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
         <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
 
             {/* EXECUTIVE SUMMARY */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
+            <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                     <DollarSignIcon size={18} className="text-zinc-400" />
                     <h3 className="font-bold text-zinc-700 dark:text-zinc-200">Resumen Ejecutivo</h3>
@@ -140,7 +140,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* HEALTH SCORE */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col items-center justify-center text-center">
+                <div className="bg-surface dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col items-center justify-center text-center">
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Score Financiero</p>
                     <div className={`text-5xl font-black mb-1 ${score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
                         {score}
@@ -158,7 +158,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 </div>
 
                 {/* RULE 1: 50/30/20 — BIGGER CHART */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
                             <TrendingUpIcon size={18} className="text-blue-500" />
@@ -252,7 +252,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
                 </div>
 
                 {/* RULE 3: EMERGENCY FUND */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
+                <div className="bg-surface dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
                             <ShieldCheckIcon size={18} className="text-emerald-500" />

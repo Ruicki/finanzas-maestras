@@ -84,7 +84,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
     }
 
     return (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-surface dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between relative overflow-hidden">
             {/* Header */}
             <div>
                 <div className="flex justify-between items-start mb-6">
@@ -124,7 +124,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
                                         <SmartMoneyInput
                                             value={limitInput}
                                             onMoneyChange={setLimitInput}
-                                            className="w-full pl-5 pr-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            className="w-full pl-5 pr-2 py-1 bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
                                             autoFocus
                                             onKeyDown={(e) => e.key === 'Enter' && handleSaveLimit()}
                                         />

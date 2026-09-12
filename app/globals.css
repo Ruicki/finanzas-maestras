@@ -28,8 +28,10 @@
   --color-zinc-950: #0d0e1d;
 }
 
-/* El acento (indigo-*) se deriva de --t-accent (un solo valor por tema+modo)
-   con color-mix, en vez de fijar 11 tonos a mano por cada uno de los 5 temas. */
+/* El acento (indigo-*) se deriva de --t-accent (un solo valor EXACTO por
+   tema, el mismo en claro y oscuro — sin mezclarlo con otro color) con
+   color-mix únicamente para generar sus variantes claras/oscuras de hover y
+   focus, como haría cualquier escala de Tailwind a partir de un solo tono. */
 @theme inline {
   --color-indigo-50: color-mix(in srgb, var(--t-accent) 8%, white);
   --color-indigo-100: color-mix(in srgb, var(--t-accent) 16%, white);
@@ -41,59 +43,74 @@
   --color-indigo-700: color-mix(in srgb, var(--t-accent) 72%, black);
   --color-indigo-800: color-mix(in srgb, var(--t-accent) 56%, black);
   --color-indigo-900: color-mix(in srgb, var(--t-accent) 40%, black);
+
+  /* bg-surface: reemplaza el "bg-white" de las tarjetas en modo claro por el
+     tono de superficie exacto del tema; en modo oscuro se mantiene la base
+     fija (zinc-900) como ya se acordó. */
+  --color-surface: var(--surface);
 }
 
 /* --- 5 temas de color (Ajustes > Tema de color) --- */
-/* Cada uno define: acento en claro/oscuro, fondo+tinta de página en modo claro,
-   y su fuente de título asignada. El modo oscuro comparte una sola base (Añil
-   Cálido) y solo el acento cambia — así lo pidió el usuario. */
-:root,
+/* Los 4 tonos de cada tema son EXACTOS a los de la paleta del usuario, sin
+   mezclar ni inventar ninguno: acento (más oscuro/saturado) → secundario →
+   superficie de tarjetas → fondo de página (más claro). El acento es el
+   mismo valor en claro y oscuro; el modo oscuro solo cambia el acento, la
+   base (fondo/tarjetas) sigue siendo la fija (Añil Cálido). */
 [data-color-theme="marino"] {
-  --t-accent-light: #2f6699;
-  --t-accent-dark: #63a0b5;
-  --t-bg-light: #f1ece2;
-  --t-ink-light: #17324a;
+  --t-accent: #2f6699;
+  --t-secondary: #63a0b5;
+  --t-surface: #cfe3dd;
+  --t-bg: #f1ece2;
   --t-title-font: var(--font-switzer-family);
 }
 [data-color-theme="bosque"] {
-  --t-accent-light: #2a8562;
-  --t-accent-dark: #4fbe8a;
-  --t-bg-light: #f1f6f0;
-  --t-ink-light: #0d2b2e;
+  --t-accent: #0d2b2e;
+  --t-secondary: #155048;
+  --t-surface: #2a8562;
+  --t-bg: #8fbc98;
   --t-title-font: var(--font-boska-family);
 }
 [data-color-theme="cuarzo"] {
-  --t-accent-light: #8b6bae;
-  --t-accent-dark: #c4b0dc;
-  --t-bg-light: #faecec;
-  --t-ink-light: #3a2a42;
+  --t-accent: #c4b0dc;
+  --t-secondary: #f3c7c6;
+  --t-surface: #fcdedd;
+  --t-bg: #faecec;
   --t-title-font: var(--font-stardom-family);
 }
 [data-color-theme="ultravioleta"] {
-  --t-accent-light: #23897a;
-  --t-accent-dark: #6fe0ce;
-  --t-bg-light: #e8fbf5;
-  --t-ink-light: #241833;
+  --t-accent: #2e1f45;
+  --t-secondary: #3e5a76;
+  --t-surface: #6fe0ce;
+  --t-bg: #d8fbf0;
   --t-title-font: var(--font-satoshi-family);
 }
 [data-color-theme="burdeos"] {
-  --t-accent-light: #6b0e0e;
-  --t-accent-dark: #d9534f;
-  --t-bg-light: #f3ece7;
-  --t-ink-light: #2e0000;
+  --t-accent: #2e0000;
+  --t-secondary: #6b0e0e;
+  --t-surface: #767f6e;
+  --t-bg: #f1ece2;
   --t-title-font: var(--font-supreme-family);
 }
 
+/* Nota: sin bloque ":root" que repita --t-accent/--t-surface/--t-bg como
+   "fallback" — con la misma especificidad que [data-color-theme], ganaría
+   por ir después en el archivo y anularía los 5 temas de arriba. El script
+   inline en layout.tsx ya garantiza que data-color-theme esté seteado antes
+   del primer pintado, así que [data-color-theme="marino"] cubre ese caso. */
+
 :root {
-  --t-accent: var(--t-accent-light);
-  --background: var(--t-bg-light);
-  --foreground: var(--t-ink-light);
+  --background: var(--t-bg);
+  /* La tinta de texto se oscurece a partir del acento real del tema (no es un
+     color nuevo/ajeno): garantiza contraste legible incluso en temas pastel
+     como Cuarzo Rosa, donde el tono "más oscuro" de la paleta sigue siendo claro. */
+  --foreground: color-mix(in srgb, var(--t-accent) 70%, black);
+  --surface: var(--t-surface);
 }
 
 .dark {
-  --t-accent: var(--t-accent-dark);
   --background: #14152b;
   --foreground: #edebfa;
+  --surface: var(--color-zinc-900);
 }
 
 body {

@@ -54,7 +54,7 @@ function AccountMenu({
             </button>
 
             {open && (
-                <div className="absolute right-0 top-10 z-50 w-44 bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-10 z-50 w-44 bg-surface dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                     <button
                         onClick={() => { setOpen(false); onView(); }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
@@ -160,7 +160,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     ? 'bg-gradient-to-br from-[#ffe4f1] to-[#ffd6ea] dark:from-[#FF62BB] dark:to-[#FF97D0] text-[#d44d94] dark:text-white'
                     : ''}
                 ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
-                    ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
+                    ? 'bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
             `}
         >
             {/* Decoración de fondo */}
@@ -293,7 +293,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             {/* Estado vacío */}
             {accounts.length === 0 && !isCreating && (
                 <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
-                    <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <div className="w-20 h-20 bg-surface dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                         <Landmark className="w-10 h-10 text-zinc-300 lucide-animated" />
                     </div>
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>

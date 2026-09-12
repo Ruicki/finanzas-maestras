@@ -25,7 +25,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
     const progress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
 
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+        <div className="bg-surface dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
 
             {/* Top Decoration (Amber for Personal to distinguish from Indigo Bank) */}
             <div className="h-1.5 w-full bg-linear-to-r from-amber-400 via-orange-400 to-amber-400" />

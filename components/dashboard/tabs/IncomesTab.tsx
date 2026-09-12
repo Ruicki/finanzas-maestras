@@ -25,7 +25,7 @@ export default function IncomesTab({ incomes, salaries, accounts, profileId, onU
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-4 pt-6">
             <div className="space-y-8">
                 {/* Sección Hero / Acción */}
-                <div className="relative overflow-hidden bg-white dark:bg-zinc-900 text-black dark:text-white p-10 rounded-[2.5rem] shadow-xl text-center space-y-6 border border-zinc-200 dark:border-zinc-800">
+                <div className="relative overflow-hidden bg-surface dark:bg-zinc-900 text-black dark:text-white p-10 rounded-[2.5rem] shadow-xl text-center space-y-6 border border-zinc-200 dark:border-zinc-800">
                     <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-[#519A66]/10 dark:bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
                     <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-[#1591DC]/10 dark:bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -52,7 +52,7 @@ export default function IncomesTab({ incomes, salaries, accounts, profileId, onU
             </div>
 
             <div className="space-y-8">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[2.5rem] shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-[2.5rem] shadow-sm">
                     <div className="flex justify-between items-center mb-8 border-b border-zinc-100 dark:border-zinc-800 pb-6">
                         <div>
                             <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Historial</h3>

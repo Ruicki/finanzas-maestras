@@ -319,7 +319,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         </div>
 
                         {/* 2. Net Worth */}
-                        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-surface dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <TrendingUpIcon className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
                             </div>
@@ -360,7 +360,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                     </div>
 
                     {/* TABS NAVIGATION */}
-                    <div className="bg-white dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-xl relative md:sticky md:top-6 z-40 mb-8 md:mb-0 shadow-xl shadow-zinc-200/50 dark:shadow-none mx-auto max-w-5xl">
+                    <div className="bg-surface dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-xl relative md:sticky md:top-6 z-40 mb-8 md:mb-0 shadow-xl shadow-zinc-200/50 dark:shadow-none mx-auto max-w-5xl">
                         <div className="grid grid-cols-3 md:flex md:justify-between gap-1">
                             {/* Accounts */}
                             <button onClick={() => updateTab('accounts')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'accounts' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>

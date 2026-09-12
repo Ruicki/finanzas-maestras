@@ -36,7 +36,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
     const impact = calculatePayoffImpact(currentBalance, interestRate, monthlyPayment, 50);
 
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+        <div className="bg-surface dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
 
             {/* Top Decoration */}
             <div className="h-1.5 w-full bg-linear-to-r from-indigo-500 via-purple-500 to-indigo-500" />

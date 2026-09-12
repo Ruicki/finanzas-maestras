@@ -140,8 +140,8 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                                     className={`group flex flex-col items-center gap-1.5 rounded-xl p-1.5 border-2 transition-all ${colorTheme === theme.id ? 'border-indigo-500' : 'border-transparent hover:border-zinc-200 dark:hover:border-zinc-700'}`}
                                 >
                                     <div className="w-full h-10 rounded-lg overflow-hidden flex flex-col shadow-inner">
-                                        {theme.swatches.map((hex) => (
-                                            <div key={hex} className="flex-1" style={{ backgroundColor: hex }} />
+                                        {[theme.accent, theme.secondary, theme.surface, theme.background].map((hex, i) => (
+                                            <div key={i} className="flex-1" style={{ backgroundColor: hex }} />
                                         ))}
                                     </div>
                                     <span className="text-[10px] font-bold text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 truncate w-full text-center">

@@ -99,7 +99,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                         onClick={() => setSubTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center ${
                             subTab === tab.id
-                                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                                ? 'bg-surface dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
                                 : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                         }`}
                     >
@@ -187,12 +187,12 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
 
                             return (
                                 <>
-                                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Total Gastado</p>
                                         <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalSpent)}</p>
                                         <p className="text-[10px] text-zinc-400 mt-1">este mes</p>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Presupuesto</p>
                                         <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalAssigned)}</p>
                                         <p className="text-[10px] text-zinc-400 mt-1">
@@ -202,14 +202,14 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                             }
                                         </p>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Restante</p>
                                         <p className={`text-2xl font-black ${totalAssigned - totalSpent >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                                             {formatMoney(totalAssigned - totalSpent)}
                                         </p>
                                         <p className="text-[10px] text-zinc-400 mt-1">{totalAssigned > 0 ? `${((totalSpent / totalAssigned) * 100).toFixed(0)}% usado` : 'sin límite'}</p>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
                                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Alertas</p>
                                         <p className={`text-2xl font-black ${overBudget.length > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                                             {overBudget.length}
@@ -269,7 +269,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                     <p className="text-xs text-indigo-200 mt-1">{subscriptionPctOfIncome.toFixed(0)}% de tus ingresos</p>
                                 </div>
 
-                                <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
+                                <div className="relative overflow-hidden rounded-3xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
                                     <div className="flex items-center gap-3 mb-3">
                                         <TrendingDownIcon size={18} className="text-red-500" />
                                         <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Costo Anual</p>
@@ -279,7 +279,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                 </div>
 
                                 {nextDueDay && (
-                                    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
+                                    <div className="relative overflow-hidden rounded-3xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
                                         <div className="flex items-center gap-3 mb-3">
                                             <CalendarIcon size={18} className="text-purple-500" />
                                             <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Próximo Cobro</p>
@@ -301,7 +301,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                     const catColor = exp.categoryRel?.color || 'bg-zinc-400';
                                     const catIcon = exp.categoryRel?.icon || 'RefreshCw';
                                     return (
-                                        <div key={exp.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                                        <div key={exp.id} className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md transition-all relative overflow-hidden">
                                             <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-purple-500 to-indigo-500" />
 
                                             <div className="p-5">
@@ -423,7 +423,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             </div>
                         </>
                     ) : (
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
                             <CreditCardIcon size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
                             <p className="text-sm font-bold text-zinc-500 mb-1">No tienes suscripciones</p>
                             <p className="text-xs text-zinc-400">Registra tus gastos recurrentes para controlar tu &quot;costo de vida&quot; base.</p>

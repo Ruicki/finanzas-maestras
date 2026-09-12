@@ -102,7 +102,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <button
                         onClick={() => setShowCategoryManager(true)}
-                        className="h-12 px-6 rounded-2xl font-bold bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
+                        className="h-12 px-6 rounded-2xl font-bold bg-surface dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
                     >
                         Categorías
                     </button>
@@ -122,7 +122,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             {/* --- TARJETA DE RESUMEN --- */}
             {/* ... (Keep existing summary cards) ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="col-span-1 md:col-span-2 relative overflow-hidden rounded-4xl bg-white dark:bg-zinc-950 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 p-10 shadow-2xl group">
+                <div className="col-span-1 md:col-span-2 relative overflow-hidden rounded-4xl bg-surface dark:bg-zinc-950 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 p-10 shadow-2xl group">
                     <div className="absolute top-0 right-0 -mr-8 -mt-8 h-48 w-48 rounded-full bg-[#1591DC]/10 dark:bg-indigo-500/30 blur-3xl group-hover:bg-[#1591DC]/15 dark:group-hover:bg-indigo-500/40 transition-all duration-1000" />
                     <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-48 w-48 rounded-full bg-[#FF62BB]/10 dark:bg-pink-500/20 blur-3xl group-hover:bg-[#FF62BB]/15 dark:group-hover:bg-pink-500/30 transition-all duration-1000" />
 
@@ -141,7 +141,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     </div>
                 </div>
 
-                <div className="col-span-1 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden shadow-sm">
+                <div className="col-span-1 rounded-[2.5rem] bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden shadow-sm">
                     <div className="bg-zinc-100 dark:bg-zinc-800 rounded-full h-32 w-32 flex items-center justify-center mb-4">
                         <span className="text-4xl">📊</span>
                     </div>
@@ -265,7 +265,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                                 <div className="grid gap-3">
                                     {items.map((exp) => (
-                                        <div key={exp.id} className={`group relative bg-white dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
+                                        <div key={exp.id} className={`group relative bg-surface dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
 
                                             {/* Caja de Icono */}
                                             <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(exp.category)} ${getCategoryColor(exp.category).includes('text-') ? getCategoryColor(exp.category).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
