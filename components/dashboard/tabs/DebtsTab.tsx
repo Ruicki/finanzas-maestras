@@ -21,8 +21,20 @@ import PaymentModal from '@/components/shared/PaymentModal';
 import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import { formatMoney } from '@/lib/utils';
 import {
-    calculateLoanPayoffDate
+    calculateLoanPayoffDate,
+    calculateMinimumPayment
 } from '@/lib/financial-engine';
+
+// El campo `type` de Loan no se usa para nada más en la UI (histéricamente
+// siempre valía 'PERSONAL'), así que se reutiliza aquí como el discriminador
+// real BANK/FRIEND. Para préstamos creados antes de este cambio (type no es
+// ni 'BANK' ni 'FRIEND'), se cae de vuelta a la heurística anterior —
+// interestRate > 0 — para no reclasificar deuda ya existente.
+function isBankLoan(loan: { type: string; interestRate: number | null }): boolean {
+    if (loan.type === 'FRIEND') return false;
+    if (loan.type === 'BANK') return true;
+    return Number(loan.interestRate) > 0;
+}
 
 type DebtsTabProps = {
     creditCards: CreditCard[];
@@ -69,6 +81,15 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
         hasAnnualFee: false,
         annualFee: '',
         annualFeeMonth: '1',
+        // Campos que este formulario simplificado no expone en su UI, pero que
+        // hay que preservar al editar — si no, cada edición los pisaba con
+        // valores fijos (minPaymentPercentage 3.0, insuranceRate 0.0) sin
+        // importar los reales de la tarjeta.
+        bank: undefined as string | undefined,
+        insuranceRate: undefined as number | undefined,
+        itbmsRate: undefined as number | undefined,
+        minPaymentFloor: undefined as number | undefined,
+        minPaymentPercentage: undefined as number | undefined,
     });
 
     const [submitting, setSubmitting] = useState(false);
@@ -78,7 +99,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
         setEditingId(loan.id);
         // Misma regla que usa la lista para decidir BankLoanCard vs FriendLoanCard,
         // para que el editor abra en el modo que realmente corresponde a esta deuda.
-        const isBank = Number(loan.interestRate) > 0;
+        const isBank = isBankLoan(loan);
         setWizardType('LOAN');
         setLoanWizardMode(isBank ? 'BANK' : 'FRIEND');
         setFriendHasInterest(Number(loan.interestRate) > 0);
@@ -112,6 +133,11 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             hasAnnualFee: !!card.annualFee,
             annualFee: card.annualFee?.toString() || '',
             annualFeeMonth: card.annualFeeMonth?.toString() || '1',
+            bank: card.bank ?? undefined,
+            insuranceRate: card.insuranceRate != null ? Number(card.insuranceRate) : undefined,
+            itbmsRate: card.itbmsRate != null ? Number(card.itbmsRate) : undefined,
+            minPaymentFloor: card.minPaymentFloor != null ? Number(card.minPaymentFloor) : undefined,
+            minPaymentPercentage: card.minPaymentPercentage != null ? Number(card.minPaymentPercentage) : undefined,
         });
         setIsWizardOpen(true);
     }
@@ -125,6 +151,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
         setCardForm({
             name: '', limit: '', initialBalance: '', cutoffDay: '', paymentDay: '',
             interestRate: '', hasAnnualFee: false, annualFee: '', annualFeeMonth: '1',
+            bank: undefined, insuranceRate: undefined, itbmsRate: undefined,
+            minPaymentFloor: undefined, minPaymentPercentage: undefined,
         });
     }
 
@@ -134,12 +162,32 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     const totalLoanDebt = loans.reduce((acc, l) => acc + l.currentBalance, 0);
     const totalDebt = totalCardDebt + totalLoanDebt;
 
-    // Calcular Fecha de Libertad (Max Payoff Date)
+    // Calcular Fecha de Libertad (Max Payoff Date) — considera préstamos Y
+    // tarjetas de crédito. Antes solo miraba préstamos, así que alguien sin
+    // préstamos pero con deuda real en tarjetas veía "mes actual" como fecha
+    // de libertad aunque totalDebt (que sí suma tarjetas) mostrara isDebtFree=false.
     const getFreedomDate = () => {
         let maxDate = new Date();
 
         loans.forEach(loan => {
             const payoff = calculateLoanPayoffDate(Number(loan.currentBalance), Number(loan.interestRate) || 0, Number(loan.monthlyPayment) || 0);
+            if (payoff && payoff > maxDate) maxDate = payoff;
+        });
+
+        creditCards.forEach(card => {
+            const balance = Number(card.balance);
+            if (balance <= 0) return;
+            const monthlyRate = Number(card.interestRate) || 0;
+            const monthlyPayment = calculateMinimumPayment(
+                balance,
+                monthlyRate,
+                Number(card.insuranceRate) || 0,
+                Number(card.minPaymentPercentage) || 3.0,
+                Number(card.itbmsRate) || 0.07,
+                Number(card.minPaymentFloor) || 0,
+            );
+            // calculateLoanPayoffDate espera una tasa ANUAL; la de la tarjeta es mensual.
+            const payoff = calculateLoanPayoffDate(balance, monthlyRate * 12, monthlyPayment);
             if (payoff && payoff > maxDate) maxDate = payoff;
         });
 
@@ -165,11 +213,17 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     limit: parseFloat(cardForm.limit),
                     cutoffDay: parseInt(cardForm.cutoffDay || '1'),
                     paymentDay: parseInt(cardForm.paymentDay || '1'),
-                    interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : undefined,
-                    annualFee: cardForm.hasAnnualFee && cardForm.annualFee ? parseFloat(cardForm.annualFee) : undefined,
-                    annualFeeMonth: cardForm.hasAnnualFee ? parseInt(cardForm.annualFeeMonth) : undefined,
-                    minPaymentPercentage: 3.0,
-                    insuranceRate: 0.0,
+                    interestRate: cardForm.interestRate ? parseFloat(cardForm.interestRate) : null,
+                    annualFee: cardForm.hasAnnualFee && cardForm.annualFee ? parseFloat(cardForm.annualFee) : null,
+                    annualFeeMonth: cardForm.hasAnnualFee ? (parseInt(cardForm.annualFeeMonth) || null) : null,
+                    // Este formulario simplificado no expone estos campos en su UI —
+                    // se preservan los de la tarjeta si se está editando, y solo se
+                    // usa un default sensato al crear una tarjeta nueva.
+                    minPaymentPercentage: cardForm.minPaymentPercentage ?? 3.0,
+                    insuranceRate: cardForm.insuranceRate ?? 0.0,
+                    itbmsRate: cardForm.itbmsRate ?? 0.07,
+                    minPaymentFloor: cardForm.minPaymentFloor ?? 0,
+                    bank: cardForm.bank ?? null,
                     initialBalance: parseFloat(cardForm.initialBalance) || 0,
                     profileId
                 };
@@ -200,6 +254,10 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     totalAmount: parseFloat(loanForm.totalAmount.toString()),
                     interestRate: finalInterest,
                     termMonths: finalTerm,
+                    // Se persiste explícitamente BANK/FRIEND (antes `type` quedaba
+                    // fijo en 'PERSONAL' y la UI adivinaba con interestRate > 0,
+                    // lo cual clasificaba mal un préstamo de amigo CON interés).
+                    type: loanWizardMode,
                     startDate: new Date(),
                     profileId
                 };
@@ -219,8 +277,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             setIsWizardOpen(false);
             resetForms();
         } catch (error) {
-            toast.error("Error guardando registro");
-            console.error(error);
+            toast.error(error instanceof Error ? error.message : "Error guardando registro");
         } finally {
             setSubmitting(false);
         }
@@ -242,11 +299,26 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                 else await deleteLoan(id);
                 onUpdate();
                 toast.success("Eliminado correctamente");
-            } catch { toast.error("Error al eliminar"); }
+            } catch (error) { toast.error(error instanceof Error ? error.message : "Error al eliminar"); }
         });
     }
 
     // --- MANEJADORES: PAGAR ---
+    // Abre el modal de pago reseteando monto/cuenta — si no, al pagar el
+    // préstamo A, cancelar, y abrir el préstamo B, quedaba el monto y la
+    // cuenta que se habían tecleado para A.
+    function openPaymentModal(type: 'CARD' | 'LOAN', id: number, name: string, maxAmount: number) {
+        setPaymentAmount('');
+        setPaymentAccountId('');
+        setPaymentModal({ isOpen: true, type, id, name, maxAmount });
+    }
+
+    function closePaymentModal() {
+        setPaymentModal(null);
+        setPaymentAmount('');
+        setPaymentAccountId('');
+    }
+
     async function handlePay() {
         if (!paymentModal || !paymentAmount) {
             toast.warning("Ingresa un monto");
@@ -267,26 +339,29 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                 await payLoan(paymentModal.id, amount, paymentAccountId ? parseInt(paymentAccountId) : null);
             }
             onUpdate();
-            setPaymentModal(null);
-            setPaymentAmount('');
+            closePaymentModal();
             toast.success("Pago registrado");
-        } catch {
-            toast.error("Error en el pago");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error en el pago");
         } finally {
             setSubmitting(false);
         }
     }
 
     function quickPay(loan: Loan, amount: number) {
-        // Find main account (fallback)
-        if (accounts.length === 0) return toast.error("Necesitas una cuenta para pagar");
-        const defaultAcc = accounts[0].id;
+        // Preferir una cuenta de gasto normal, no bloqueada y no de ahorro —
+        // antes tomaba accounts[0] a ciegas, pudiendo drenar una cuenta de
+        // ahorro bloqueada solo por ser la primera de la lista.
+        const now = new Date();
+        const candidate = accounts.find(a =>
+            a.purpose !== 'SAVINGS' && (!a.lockDate || new Date(a.lockDate) <= now)
+        ) || accounts[0];
+        if (!candidate) return toast.error("Necesitas una cuenta para pagar");
 
-        // Auto-pay
-        toast.promise(payLoan(loan.id, amount, defaultAcc).then(() => onUpdate()), {
+        toast.promise(payLoan(loan.id, amount, candidate.id).then(() => onUpdate()), {
             loading: 'Procesando Abono Rápido...',
             success: `Abonados $${amount} a ${loan.name}`,
-            error: 'Error al abonar'
+            error: (error) => error instanceof Error ? error.message : 'Error al abonar',
         });
     }
 
@@ -350,13 +425,13 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         {loans.map(loan => {
-                            const isBank = Number(loan.interestRate) > 0;
+                            const isBank = isBankLoan(loan);
                             if (isBank) {
                                 return (
                                     <BankLoanCard
                                         key={loan.id}
                                         loan={loan}
-                                        onPay={() => setPaymentModal({ isOpen: true, type: 'LOAN', id: loan.id, name: loan.name, maxAmount: Number(loan.currentBalance) })}
+                                        onPay={() => openPaymentModal('LOAN', loan.id, loan.name, Number(loan.currentBalance))}
                                         onDelete={() => handleDelete(loan.id, 'LOAN')}
                                         onEdit={() => openEditLoan(loan)}
                                     />
@@ -366,7 +441,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                     <FriendLoanCard
                                         key={loan.id}
                                         loan={loan}
-                                        onPay={() => setPaymentModal({ isOpen: true, type: 'LOAN', id: loan.id, name: loan.name, maxAmount: Number(loan.currentBalance) })}
+                                        onPay={() => openPaymentModal('LOAN', loan.id, loan.name, Number(loan.currentBalance))}
                                         onDelete={() => handleDelete(loan.id, 'LOAN')}
                                         onQuickPay={(l, amount) => quickPay(l, amount)}
                                         onEdit={() => openEditLoan(loan)}
@@ -607,7 +682,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-black">Abonar a {paymentModal.name}</h3>
-                            <button onClick={() => setPaymentModal(null)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full"><XIcon size={20} /></button>
+                            <button onClick={closePaymentModal} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full"><XIcon size={20} /></button>
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -659,7 +734,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                         itbmsRate: Number(payingCard.itbmsRate) || 0.07,
                         minPaymentFloor: Number(payingCard.minPaymentFloor) || 0,
                     }}
-                    accounts={accounts.map(a => ({
+                    accounts={accounts.filter(a => a.purpose !== 'SAVINGS').map(a => ({
                         id: a.id,
                         name: a.name,
                         balance: Number(a.balance),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { calculateMinimumPayment } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
 import { XIcon, CreditCardIcon, CheckIcon } from '@animateicons/react/lucide';
@@ -64,7 +65,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
             await onConfirm(card.id, amount, selectedAccountId);
             onClose();
         } catch (error) {
-            console.error(error);
+            toast.error(error instanceof Error ? error.message : 'Error al procesar el pago');
         } finally {
             setLoading(false);
         }
