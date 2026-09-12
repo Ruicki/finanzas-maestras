@@ -9,13 +9,13 @@ type CreditCard = ProfileWithData['creditCards'][number];
 type Account = ProfileWithData['accounts'][number];
 type Category = ProfileWithData['categories'][number];
 
-import { deleteExpense } from '@/app/actions/budget';
+import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
-import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon } from '@animateicons/react/lucide';
+import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon, CheckIcon, ClockIcon } from '@animateicons/react/lucide';
 
 interface ExpensesTabProps {
     expenses: ExpenseWithCategory[];
@@ -44,7 +44,11 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
         return matchesSearch && matchesCategory;
     });
 
-    const totalExpenses = expensesList.reduce((sum, exp) => sum + exp.amount, 0);
+    // Los gastos proyectados aún no descontaron saldo real: no cuentan en el total gastado.
+    const confirmedExpenses = expensesList.filter(e => !e.isProjected);
+    const projectedExpenses = expensesList.filter(e => e.isProjected);
+    const totalExpenses = confirmedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalProjected = projectedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     async function handleDelete(id: number) {
         confirmDelete(async () => {
@@ -56,6 +60,16 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 toast.error("Error eliminando gasto");
             }
         });
+    }
+
+    async function handleConfirm(id: number) {
+        try {
+            await confirmExpense(id);
+            onUpdate();
+            toast.success("Gasto confirmado: se descontó de tu cuenta");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error al confirmar el gasto");
+        }
     }
 
     const getCategoryColor = (catName: string) => {
@@ -125,6 +139,21 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     <p className="text-sm font-bold text-zinc-400 uppercase">Movimientos</p>
                 </div>
             </div>
+
+            {projectedExpenses.length > 0 && (
+                <div className="flex items-center gap-4 rounded-3xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-6 py-4">
+                    <ClockIcon className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <div className="flex-1">
+                        <p className="font-bold text-sm text-amber-800 dark:text-amber-300">
+                            Tienes {projectedExpenses.length} gasto{projectedExpenses.length === 1 ? '' : 's'} proyectado{projectedExpenses.length === 1 ? '' : 's'} (aún no confirmado{projectedExpenses.length === 1 ? '' : 's'})
+                        </p>
+                        <p className="text-xs text-amber-600/80 dark:text-amber-400/70">No descuentan tu saldo hasta que los confirmes.</p>
+                    </div>
+                    <p className="font-black text-lg text-amber-700 dark:text-amber-400 shrink-0">
+                        ${totalProjected.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </div>
+            )}
 
 
             {/* --- CONTROLES: BÚSQUEDA, ORDENAMIENTO, FILTRO --- */}
@@ -226,7 +255,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                                 <div className="grid gap-3">
                                     {items.map((exp) => (
-                                        <div key={exp.id} className="group relative bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5">
+                                        <div key={exp.id} className={`group relative bg-white dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
 
                                             {/* Caja de Icono */}
                                             <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(exp.category)} ${getCategoryColor(exp.category).includes('text-') ? getCategoryColor(exp.category).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
@@ -240,10 +269,11 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                         <div className="flex flex-wrap items-center gap-2 mt-1">
                                                             <span className="text-[10px] md:text-xs font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate max-w-[100px]">{exp.category}</span>
                                                             {exp.isRecurring && <span className="text-[10px] font-black bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">Suscripción</span>}
+                                                            {exp.isProjected && <span className="flex items-center gap-1 text-[10px] font-black bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider"><ClockIcon size={10} /> Proyectado</span>}
                                                         </div>
                                                     </div>
                                                     <div className="text-right shrink-0">
-                                                        <p className="font-black text-zinc-900 dark:text-white">-${exp.amount.toFixed(2)}</p>
+                                                        <p className={`font-black ${exp.isProjected ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>-${exp.amount.toFixed(2)}</p>
                                                         <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs font-medium text-zinc-400 mt-1">
                                                             {exp.linkedCardId ? <CardIcon size={10} /> : <WalletIcon size={10} />}
                                                             <span className="truncate max-w-[80px]">
@@ -256,8 +286,17 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                 </div>
                                             </div>
 
-                                            {/* Acción: Botones (Edit/Delete) */}
+                                            {/* Acción: Botones (Confirmar/Edit/Delete) */}
                                             <div className="flex flex-col gap-1 md:flex-row md:items-center">
+                                                {exp.isProjected && (
+                                                    <button
+                                                        onClick={() => handleConfirm(exp.id)}
+                                                        className="shrink-0 p-2 md:p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                                        title="Confirmar como pagado"
+                                                    >
+                                                        <CheckIcon size={18} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => { setExpenseToEdit(exp); setShowWizard(true); }}
                                                     className="shrink-0 p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm"
