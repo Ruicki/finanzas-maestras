@@ -34,6 +34,8 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
     const [expenseToEdit, setExpenseToEdit] = useState<ExpenseWithCategory | null>(null);
     const [sortBy, setSortBy] = useState<'date' | 'amount' | 'name'>('date');
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
+    // Evita doble clic disparando dos veces confirmar/eliminar sobre el mismo gasto.
+    const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
     // Filtrar deudas, categoría y aplicar búsqueda
     const expensesList = expenses.filter(e => {
@@ -52,23 +54,31 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
     async function handleDelete(id: number) {
         confirmDelete(async () => {
+            if (processingIds.has(id)) return;
+            setProcessingIds(prev => new Set(prev).add(id));
             try {
                 await deleteExpense(id);
                 onUpdate();
                 toast.success("Gasto eliminado");
-            } catch {
-                toast.error("Error eliminando gasto");
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Error eliminando gasto");
+            } finally {
+                setProcessingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
             }
         });
     }
 
     async function handleConfirm(id: number) {
+        if (processingIds.has(id)) return;
+        setProcessingIds(prev => new Set(prev).add(id));
         try {
             await confirmExpense(id);
             onUpdate();
             toast.success("Gasto confirmado: se descontó de tu cuenta");
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Error al confirmar el gasto");
+        } finally {
+            setProcessingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
         }
     }
 
@@ -291,7 +301,8 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                 {exp.isProjected && (
                                                     <button
                                                         onClick={() => handleConfirm(exp.id)}
-                                                        className="shrink-0 p-2 md:p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                                        disabled={processingIds.has(exp.id)}
+                                                        className="shrink-0 p-2 md:p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                                                         title="Confirmar como pagado"
                                                     >
                                                         <CheckIcon size={18} />
@@ -299,14 +310,16 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                 )}
                                                 <button
                                                     onClick={() => { setExpenseToEdit(exp); setShowWizard(true); }}
-                                                    className="shrink-0 p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm"
+                                                    disabled={processingIds.has(exp.id)}
+                                                    className="shrink-0 p-2 md:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                                                     title="Editar"
                                                 >
                                                     <PencilIcon size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(exp.id)}
-                                                    className="shrink-0 p-2 md:p-3 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm"
+                                                    disabled={processingIds.has(exp.id)}
+                                                    className="shrink-0 p-2 md:p-3 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm disabled:opacity-50 disabled:pointer-events-none"
                                                     title="Eliminar"
                                                 >
                                                     <Trash2Icon size={18} />
