@@ -53,6 +53,18 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
     const [accountId, setAccountId] = useState<string>(
         goal.type === 'FIXED' && goal.sourceAccountId ? goal.sourceAccountId.toString() : ''
     );
+    const [submitting, setSubmitting] = useState(false);
+
+    // Si se colapsa el panel sin enviar (se abrió otra meta, o se cerró a mano),
+    // limpia el monto tecleado — si no, al reabrir esta misma tarjeta más tarde
+    // aparecía el monto de la vez anterior en vez de un campo en blanco.
+    useEffect(() => {
+        if (!isExpanded) {
+            setAmount('');
+            setAccountId(goal.type === 'FIXED' && goal.sourceAccountId ? goal.sourceAccountId.toString() : '');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isExpanded]);
 
     const percentage = goal.targetAmount > 0 ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) : 0;
     const catInfo = getCategoryInfo(goal.category);
@@ -70,12 +82,34 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
         setAccountId(goal.type === 'FIXED' && goal.sourceAccountId ? goal.sourceAccountId.toString() : '');
     }
 
+    async function handleQuota() {
+        if (submitting) return;
+        if (!goal.sourceAccountId) {
+            onToggleExpand(goal.id);
+            setAmount(Number(goal.contributionAmount || 0).toFixed(2));
+            return;
+        }
+        setSubmitting(true);
+        try {
+            await handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId);
+            toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`);
+            confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
+            onRefresh();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Error al pagar cuota');
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
     async function handleTransaction(type: 'DEPOSIT' | 'WITHDRAW') {
+        if (submitting) return;
         const parsed = parseFloat(amount);
         if (!parsed || parsed <= 0) { toast.error("Monto inválido"); return; }
         if (type === 'WITHDRAW' && parsed > goal.currentAmount) { toast.error("Fondos insuficientes"); return; }
         if (type === 'WITHDRAW' && !accountId) { toast.error("Selecciona cuenta destino"); return; }
 
+        setSubmitting(true);
         try {
             await handleGoalTransaction(goal.id, parsed, type, accountId ? parseInt(accountId) : undefined);
             toast.success(type === 'DEPOSIT' ? "¡Depósito registrado! 🚀" : "Retiro registrado 📉");
@@ -84,6 +118,8 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
             onRefresh();
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Error en transacción");
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -170,7 +206,6 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                     <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     {(() => {
                         const remaining = goal.targetAmount - goal.currentAmount;
-                        // eslint-disable-next-line react-hooks/purity -- solo afecta el texto mostrado, se recalcula en cada render sin causar efectos secundarios
                         const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                         if (daysLeft > 0 && remaining > 0) {
                             return <span className="text-zinc-500">${(remaining / daysLeft).toFixed(2)}/día</span>;
@@ -210,14 +245,14 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => handleTransaction('DEPOSIT')} className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all">Depositar</button>
-                            <button onClick={() => handleTransaction('WITHDRAW')} className="p-3 bg-white dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all">Retirar</button>
+                            <button disabled={submitting} onClick={() => handleTransaction('DEPOSIT')} className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none">Depositar</button>
+                            <button disabled={submitting} onClick={() => handleTransaction('WITHDRAW')} className="p-3 bg-white dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none">Retirar</button>
                         </div>
                     </div>
                 ) : (
                     goal.type === 'FIXED' && goal.contributionAmount ? (
                         <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => { if (goal.sourceAccountId) { handleGoalTransaction(goal.id, Number(goal.contributionAmount), 'DEPOSIT', goal.sourceAccountId).then(() => { toast.success(`Cuota de $${goal.contributionAmount} pagada 🚀`); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } }); onRefresh(); }).catch((err) => toast.error(err instanceof Error ? err.message : 'Error al pagar cuota')); } else { onToggleExpand(goal.id); setAmount(Number(goal.contributionAmount || 0).toFixed(2)); } }} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                            <button disabled={submitting} onClick={handleQuota} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none">
                                 <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
                                 <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
                             </button>
