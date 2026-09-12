@@ -45,13 +45,18 @@ export default function AccountHistoryModal({
     const [loadingHistory, setLoadingHistory] = useState(true);
 
     // ── Corrección de saldo ────────────────────────────────────────────────
+    // Estado propio (no compartido con "Saldo actual" de Configuración): si
+    // ambos paneles usaban el mismo state, cancelar una corrección a medio
+    // escribir y luego guardar en Configuración aplicaba ese saldo abandonado
+    // sin razón ni registro de auditoría.
     const [isAdjusting, setIsAdjusting] = useState(false);
-    const [newBalance, setNewBalance] = useState(account.balance.toString());
+    const [correctionBalance, setCorrectionBalance] = useState(account.balance.toString());
     const [adjustmentReason, setAdjustmentReason] = useState('');
     const [savingAdjust, setSavingAdjust] = useState(false);
 
     // ── Configuración ──────────────────────────────────────────────────────
     const [editName, setEditName] = useState(account.name);
+    const [newBalance, setNewBalance] = useState(account.balance.toString());
     const [editLockDate, setEditLockDate] = useState(
         account.lockDate ? new Date(account.lockDate).toISOString().split('T')[0] : ''
     );
@@ -64,8 +69,8 @@ export default function AccountHistoryModal({
         try {
             const data = await getAccountTransactions(account.id);
             setTransactions(data);
-        } catch {
-            toast.error('No se pudo cargar el historial');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo cargar el historial');
         } finally {
             setLoadingHistory(false);
         }
@@ -75,8 +80,14 @@ export default function AccountHistoryModal({
         loadHistory();
     }, [loadHistory]);
 
+    function cancelAdjust() {
+        setIsAdjusting(false);
+        setCorrectionBalance(account.balance.toString());
+        setAdjustmentReason('');
+    }
+
     async function handleAdjustBalance() {
-        const val = parseFloat(newBalance);
+        const val = parseFloat(correctionBalance);
         if (isNaN(val) || val < 0) { toast.error('Ingresa un monto válido'); return; }
         if (!adjustmentReason.trim()) { toast.error('Escribe una razón para el ajuste'); return; }
         setSavingAdjust(true);
@@ -86,8 +97,8 @@ export default function AccountHistoryModal({
             setIsAdjusting(false);
             onUpdate();
             onClose();
-        } catch {
-            toast.error('No se pudo corregir el saldo');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo corregir el saldo');
         } finally {
             setSavingAdjust(false);
         }
@@ -102,13 +113,13 @@ export default function AccountHistoryModal({
             await updateAccount(account.id, {
                 name: editName,
                 balance: val,
-                lockDate: editLockDate ? new Date(editLockDate) : undefined,
+                lockDate: editLockDate ? new Date(editLockDate) : null,
             });
             toast.success('Cuenta actualizada');
             onUpdate();
             onClose();
-        } catch {
-            toast.error('No se pudo actualizar la cuenta');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo actualizar la cuenta');
         } finally {
             setSavingEdit(false);
         }
@@ -217,7 +228,7 @@ export default function AccountHistoryModal({
                             <div className="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
                                 {!isAdjusting ? (
                                     <button
-                                        onClick={() => setIsAdjusting(true)}
+                                        onClick={() => { setCorrectionBalance(account.balance.toString()); setIsAdjusting(true); }}
                                         className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-amber-500 transition-colors"
                                     >
                                         <TriangleAlertIcon className="w-3.5 h-3.5" />
@@ -235,8 +246,8 @@ export default function AccountHistoryModal({
                                             <div className="relative flex-1">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">$</span>
                                                 <SmartMoneyInput
-                                                    value={newBalance}
-                                                    onMoneyChange={setNewBalance}
+                                                    value={correctionBalance}
+                                                    onMoneyChange={setCorrectionBalance}
                                                     className="w-full bg-white dark:bg-zinc-800 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2.5 pl-7 font-bold outline-none focus:ring-2 ring-amber-400"
                                                     placeholder="Saldo real"
                                                 />
@@ -251,7 +262,7 @@ export default function AccountHistoryModal({
                                         </div>
                                         <div className="flex justify-end gap-2">
                                             <button
-                                                onClick={() => setIsAdjusting(false)}
+                                                onClick={cancelAdjust}
                                                 className="text-xs font-bold text-zinc-500 hover:text-zinc-700 px-3 py-2"
                                             >
                                                 Cancelar
@@ -342,11 +353,11 @@ export default function AccountHistoryModal({
                                     type="text"
                                     value={editName}
                                     onChange={e => setEditName(e.target.value)}
-                                    disabled={account.name === 'Efectivo' && account.isDefault}
+                                    disabled={account.isDefault}
                                     className="w-full bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl p-4 text-lg font-bold outline-none focus:border-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                     placeholder="Ej: Banco General"
                                 />
-                                {account.name === 'Efectivo' && account.isDefault && (
+                                {account.isDefault && (
                                     <p className="text-xs text-amber-500">
                                         El nombre de la cuenta de efectivo no se puede cambiar.
                                     </p>

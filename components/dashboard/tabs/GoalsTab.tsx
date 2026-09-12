@@ -332,8 +332,9 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         try {
             const txs = await getGoalTransactions(goal.id);
             setTransactions(txs);
-        } catch {
+        } catch (error) {
             setTransactions([]);
+            toast.error(error instanceof Error ? error.message : 'No se pudo cargar el historial');
         }
         setLoadingHistory(false);
     }
@@ -349,11 +350,11 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             deadline: form.deadline ? new Date(form.deadline) : undefined,
             profileId,
             type: form.type,
-            frequency: form.type === 'FIXED' ? form.frequency : undefined,
-            contributionAmount: form.type === 'FIXED' && form.contributionAmount ? parseFloat(form.contributionAmount) : undefined,
+            frequency: form.type === 'FIXED' ? form.frequency : null,
+            contributionAmount: form.type === 'FIXED' && form.contributionAmount ? parseFloat(form.contributionAmount) : null,
             priority: form.priority,
             category: form.category,
-            notes: form.notes || undefined,
+            notes: form.notes || null,
             sourceAccountId: form.sourceAccountId ? parseInt(form.sourceAccountId) : undefined,
             destinationAccountId: form.destinationAccountId ? parseInt(form.destinationAccountId) : undefined,
         };

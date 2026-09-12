@@ -44,14 +44,22 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
     }, [isCrossCurrency]);
 
     const numAmount = parseFloat(amount) || 0;
-    const numRate = parseFloat(exchangeRate) || 1;
+    // Sin valor por defecto: si es cruce de divisa y no se escribió una tasa,
+    // numRate queda en 0 (inválido) en vez de asumir 1:1 silenciosamente.
+    const numRate = parseFloat(exchangeRate) || 0;
     const destAmount = isCrossCurrency && numRate > 0 ? numAmount * numRate : numAmount;
+    const missingRate = !!isCrossCurrency && numRate <= 0;
 
     const handleTransfer = async () => {
         if (!sourceId || !destinationId || !amount) return;
 
         if (isNaN(numAmount) || numAmount <= 0) {
             toast.warning("Monto inválido");
+            return;
+        }
+
+        if (missingRate) {
+            toast.warning("Ingresa el tipo de cambio");
             return;
         }
 
@@ -66,8 +74,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
             onSuccess();
             onClose();
         } catch (error) {
-            console.error(error);
-            toast.error("Error en la transferencia");
+            toast.error(error instanceof Error ? error.message : "Error en la transferencia");
         } finally {
             setLoading(false);
         }
@@ -193,7 +200,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                 <div className="p-6 pt-2">
                     <button
                         onClick={handleTransfer}
-                        disabled={loading || !sourceId || !destinationId || !amount || (sourceAccount ? numAmount > Number(sourceAccount.balance) : false)}
+                        disabled={loading || !sourceId || !destinationId || !amount || missingRate || (sourceAccount ? numAmount > Number(sourceAccount.balance) : false)}
                         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none active:scale-95"
                     >
                         {loading ? 'Procesando...' : 'Confirmar Transferencia'}
