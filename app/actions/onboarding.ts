@@ -8,6 +8,8 @@ import { revalidatePath } from 'next/cache';
 
 export async function ensureProfileIntegrity(profileId: number): Promise<void> {
     try {
+        await requireOwnership(profileId);
+
         const profile = await prisma.profile.findUnique({
             where: { id: profileId },
             include: { accounts: true, categories: true },

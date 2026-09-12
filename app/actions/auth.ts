@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { signSession, verifySession } from '@/lib/auth-utils';
+import { signSession, verifySession, requireAuth, requireOwnership } from '@/lib/auth-utils';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { validate, authSchema } from '@/lib/validators/schemas';
 import { z } from 'zod';
@@ -134,6 +134,8 @@ export async function updateProfile(profileId: number, formData: FormData) {
     const password = formData.get('password') as string;
 
     try {
+        await requireOwnership(profileId);
+
         const data: { name?: string; email?: string; password?: string } = {};
         if (name) data.name = name;
         if (email) {
@@ -160,6 +162,9 @@ export async function updateProfile(profileId: number, formData: FormData) {
 
 export async function generateAccessCode(profileId: number) {
     try {
+        const { role } = await requireAuth();
+        if (role !== 'ADMIN') return { error: 'Acceso denegado: solo administradores' };
+
         // 8 bytes (64 bits) para que el código no sea adivinable por fuerza bruta
         const bytes = crypto.randomBytes(8);
         const code = bytes.toString('base64url').toUpperCase();
@@ -247,6 +252,9 @@ export async function resetPassword(profileId: number, newPassword: string) {
     if (!pwdValidation.success) return { error: pwdValidation.error };
 
     try {
+        const { role } = await requireAuth();
+        if (role !== 'ADMIN') return { error: 'Acceso denegado: solo administradores' };
+
         const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
         await prisma.profile.update({
             where: { id: profileId },

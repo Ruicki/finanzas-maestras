@@ -4,11 +4,17 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
-import { requireAuth } from '@/lib/auth-utils';
+import { requireAuth, requireOwnership } from '@/lib/auth-utils';
 
 // ─── PROFILES ──────────────────────────────────────────────────────────────
 
+// Devuelve TODOS los perfiles con su información financiera completa —
+// solo para el panel de administración. Un usuario normal nunca debe poder
+// leer los datos de otro perfil.
 export async function getProfiles() {
+    const { role } = await requireAuth();
+    if (role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
+
     const profiles = await prisma.profile.findMany({
         include: {
             expenses: true,
@@ -62,6 +68,8 @@ export async function getProfiles() {
 }
 
 export async function getProfileById(id: number) {
+    await requireOwnership(id);
+
     const profile = await prisma.profile.findUnique({
         where: { id },
         include: {
@@ -80,7 +88,17 @@ export async function getProfileById(id: number) {
 
     return {
         ...profile,
-        expenses: profile.expenses.map((e) => ({ ...e, amount: toNum(e.amount) })),
+        expenses: profile.expenses.map((e) => ({
+            ...e,
+            amount: toNum(e.amount),
+            categoryRel: e.categoryRel
+                ? {
+                    ...e.categoryRel,
+                    monthlyLimit: toNumOrNull(e.categoryRel.monthlyLimit),
+                    rolloverBalance: toNum(e.categoryRel.rolloverBalance),
+                }
+                : null,
+        })),
         goals: profile.goals.map((g) => ({
             ...g,
             targetAmount: toNum(g.targetAmount),
@@ -138,12 +156,18 @@ export async function getGlobalStats() {
 }
 
 export async function createProfile(name: string) {
+    const { role } = await requireAuth();
+    if (role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
+
     const profile = await prisma.profile.create({ data: { name } });
     await logAction('CREATE_PROFILE', `Nombre: ${name}`, profile.id);
     revalidatePath('/budget');
 }
 
 export async function deleteProfile(id: number) {
+    const { role } = await requireAuth();
+    if (role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
+
     await prisma.$transaction(async (tx) => {
         // Nullificar FKs primero
         await tx.expense.updateMany({ where: { profileId: id }, data: { accountId: null, categoryId: null, linkedCardId: null } });
@@ -183,6 +207,8 @@ export async function deleteProfile(id: number) {
 }
 
 export async function resetProfileData(id: number) {
+    await requireOwnership(id);
+
     try {
         await prisma.$transaction(async (tx) => {
             // 1. Nullificar FKs antes de borrar

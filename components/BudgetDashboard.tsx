@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { getProfiles } from '@/app/actions/budget';
+import { getProfileById } from '@/app/actions/budget';
 import { logout, stopImpersonation } from '@/app/actions/auth';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
@@ -68,8 +68,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     const refreshData = async () => {
         try {
-            const profiles = await getProfiles();
-            const updated = profiles.find(p => p.id === activeProfile.id);
+            const updated = await getProfileById(activeProfile.id);
             if (updated) setActiveProfile(updated);
         } catch (error) {
             console.error("Error refreshing data:", error);

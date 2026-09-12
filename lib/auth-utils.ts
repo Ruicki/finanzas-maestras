@@ -44,7 +44,18 @@ export async function getSession(): Promise<number | null> {
 export async function getImpersonatedId(): Promise<number | null> {
     const cookieStore = await cookies();
     const val = cookieStore.get(IMPERSONATE_COOKIE)?.value;
-    return val ? parseInt(val) : null;
+    if (!val) return null;
+
+    // El cookie de impersonación no está firmado: httpOnly evita que JS lo lea,
+    // pero no evita que el propio usuario lo edite a mano (devtools). Por eso
+    // solo se honra si la sesión real y verificada (JWT) es de un ADMIN — así
+    // un usuario normal no puede forjar este valor para suplantar a otro perfil.
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    if (!token) return null;
+    const payload = await verifySession(token);
+    if (!payload || payload.role !== 'ADMIN') return null;
+
+    return parseInt(val);
 }
 
 export async function requireAuth(): Promise<{ userId: number; role?: string }> {

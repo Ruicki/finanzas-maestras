@@ -38,7 +38,25 @@ export async function createGoal(data: CreateGoalInput) {
     await requireOwnership(data.profileId);
     const initialAmount = data.currentAmount ?? 0;
 
+    if (data.sourceAccountId && data.destinationAccountId && data.sourceAccountId === data.destinationAccountId) {
+        throw new Error('La cuenta de origen y destino no pueden ser la misma');
+    }
+
     const goal = await prisma.$transaction(async (tx) => {
+        // Toda cuenta referenciada por la meta (origen o destino) debe pertenecer
+        // al mismo perfil: sin esto, un id de cuenta ajeno permitiria mover dinero
+        // real de otro usuario al confirmar/retirar/reclamar esta meta.
+        if (data.sourceAccountId) {
+            const sourceAccount = await tx.account.findUnique({ where: { id: data.sourceAccountId } });
+            if (!sourceAccount) throw new Error('Cuenta origen no encontrada');
+            if (sourceAccount.profileId !== data.profileId) throw new Error('La cuenta origen no pertenece a este perfil');
+        }
+        if (data.destinationAccountId) {
+            const destAccount = await tx.account.findUnique({ where: { id: data.destinationAccountId } });
+            if (!destAccount) throw new Error('Cuenta destino no encontrada');
+            if (destAccount.profileId !== data.profileId) throw new Error('La cuenta destino no pertenece a este perfil');
+        }
+
         // Toda meta debe estar respaldada por una cuenta real (para que el dinero
         // ahorrado se vea reflejado en Cuentas, no solo como un numero dentro de la
         // meta). Si no se eligio una cuenta existente, se crea una dedicada.
@@ -84,6 +102,22 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
     const existing = await prisma.goal.findUnique({ where: { id } });
     if (!existing) throw new Error('Meta no encontrada');
     await requireOwnership(existing.profileId);
+
+    const newSourceId = data.sourceAccountId !== undefined ? data.sourceAccountId : existing.sourceAccountId;
+    const newDestId = data.destinationAccountId !== undefined ? data.destinationAccountId : existing.destinationAccountId;
+    if (newSourceId && newDestId && newSourceId === newDestId) {
+        throw new Error('La cuenta de origen y destino no pueden ser la misma');
+    }
+    if (data.sourceAccountId !== undefined && data.sourceAccountId !== null) {
+        const sourceAccount = await prisma.account.findUnique({ where: { id: data.sourceAccountId } });
+        if (!sourceAccount) throw new Error('Cuenta origen no encontrada');
+        if (sourceAccount.profileId !== existing.profileId) throw new Error('La cuenta origen no pertenece a este perfil');
+    }
+    if (data.destinationAccountId !== undefined && data.destinationAccountId !== null) {
+        const destAccount = await prisma.account.findUnique({ where: { id: data.destinationAccountId } });
+        if (!destAccount) throw new Error('Cuenta destino no encontrada');
+        if (destAccount.profileId !== existing.profileId) throw new Error('La cuenta destino no pertenece a este perfil');
+    }
 
     const goal = await prisma.goal.update({
         where: { id },
@@ -143,6 +177,10 @@ export async function deleteGoalWithReclaim(
             if (targetAccount.profileId !== goal.profileId) throw new Error('La cuenta destino no pertenece a este perfil.');
 
             if (goal.destinationAccountId) {
+                const savingsAccount = await tx.account.findUnique({ where: { id: goal.destinationAccountId } });
+                if (!savingsAccount) throw new Error('Cuenta de ahorro no encontrada.');
+                if (savingsAccount.profileId !== goal.profileId) throw new Error('La cuenta de ahorro no pertenece a este perfil.');
+
                 await tx.account.update({
                     where: { id: goal.destinationAccountId },
                     data: { balance: { decrement: goal.currentAmount } },
@@ -192,6 +230,10 @@ export async function handleGoalTransaction(
 
             const destAccountId = goal.destinationAccountId;
             if (destAccountId) {
+                const destAccount = await tx.account.findUnique({ where: { id: destAccountId } });
+                if (!destAccount) throw new Error('Cuenta de ahorro no encontrada.');
+                if (destAccount.profileId !== goal.profileId) throw new Error('La cuenta de ahorro no pertenece a este perfil.');
+
                 await tx.account.update({
                     where: { id: destAccountId },
                     data: { balance: { increment: amount } },
@@ -259,6 +301,10 @@ export async function handleGoalTransaction(
 }
 
 export async function getGoalTransactions(goalId: number) {
+    const goal = await prisma.goal.findUnique({ where: { id: goalId } });
+    if (!goal) throw new Error('Meta no encontrada');
+    await requireOwnership(goal.profileId);
+
     const transactions = await prisma.goalTransaction.findMany({
         where: { goalId },
         orderBy: { createdAt: 'desc' },
