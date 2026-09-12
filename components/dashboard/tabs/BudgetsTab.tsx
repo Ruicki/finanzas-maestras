@@ -129,8 +129,13 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                 return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
                             };
 
-                            // Helper: calculate rollover from previous month
+                            // Helper: calculate rollover from previous month — solo si la
+                            // categoría tiene el toggle "isRollover" activado; antes se
+                            // sumaba el sobrante del mes anterior a TODAS las categorías
+                            // sin importar si el usuario lo había activado o no.
                             const getRollover = (cat: Category) => {
+                                if (!cat.isRollover) return 0;
+
                                 let prevMonth = currentMonth; // 0-indexed current
                                 let prevYear = currentYear;
                                 prevMonth -= 1;
@@ -142,7 +147,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
 
                                 const prevSpent = allExpenses
                                     .filter(e => {
-                                        if (e.categoryId !== cat.id) return false;
+                                        if (e.categoryId !== cat.id || e.isProjected) return false;
                                         const d = new Date(e.createdAt);
                                         return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
                                     })
@@ -163,6 +168,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             const catStats = categories.map(cat => {
                                 const spent = expenses
                                     .filter(e => {
+                                        if (e.isProjected) return false; // aún no descuenta saldo real
                                         const d = new Date(e.createdAt);
                                         return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
                                     })
@@ -216,7 +222,8 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                     {/* Category Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => {
-                            // Calculate rollover for this category
+                            // Calculate rollover for this category — solo si tiene el
+                            // toggle activado (misma regla que el resumen de arriba).
                             let prevM = currentMonth;
                             let prevY = currentYear;
                             prevM -= 1;
@@ -224,10 +231,10 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                             const prevMb = categoryObj.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
                             const prevLimit = prevMb ? Number(prevMb.limit) : (Number(categoryObj.monthlyLimit) || 0);
                             const prevSpent = allExpenses
-                                .filter(e => e.categoryId === categoryObj.id)
+                                .filter(e => e.categoryId === categoryObj.id && !e.isProjected)
                                 .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
                                 .reduce((sum, e) => sum + Number(e.amount), 0);
-                            const rollover = prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
+                            const rollover = categoryObj.isRollover && prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
 
                             return (
                                 <BudgetCard

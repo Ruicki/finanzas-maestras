@@ -142,7 +142,8 @@ export async function getGlobalStats() {
         prisma.profile.count(),
         prisma.account.aggregate({ _sum: { balance: true } }),
         prisma.loan.aggregate({ _sum: { currentBalance: true } }),
-        prisma.expense.aggregate({ _sum: { amount: true } }),
+        // Los gastos proyectados aún no son dinero real: no deben inflar esta métrica.
+        prisma.expense.aggregate({ _sum: { amount: true }, where: { isProjected: false } }),
     ]);
 
     const creditCardBalances = await prisma.creditCard.aggregate({ _sum: { balance: true } });

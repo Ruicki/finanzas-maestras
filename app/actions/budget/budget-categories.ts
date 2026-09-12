@@ -2,11 +2,16 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── BUDGET CATEGORIES ─────────────────────────────────────────────────────
 
 export async function updateCategoryLimit(categoryId: number, limit: number) {
     try {
+        const category = await prisma.category.findUnique({ where: { id: categoryId } });
+        if (!category) return { success: false, error: 'Categoría no encontrada' };
+        await requireOwnership(category.profileId);
+
         await prisma.category.update({
             where: { id: categoryId },
             data: { monthlyLimit: limit },
@@ -21,6 +26,10 @@ export async function updateCategoryLimit(categoryId: number, limit: number) {
 
 export async function toggleCategoryRollover(categoryId: number, isRollover: boolean) {
     try {
+        const category = await prisma.category.findUnique({ where: { id: categoryId } });
+        if (!category) return { success: false, error: 'Categoría no encontrada' };
+        await requireOwnership(category.profileId);
+
         await prisma.category.update({
             where: { id: categoryId },
             data: { isRollover },
@@ -35,6 +44,10 @@ export async function toggleCategoryRollover(categoryId: number, isRollover: boo
 
 export async function updateCategoryRolloverBalance(categoryId: number, balance: number) {
     try {
+        const category = await prisma.category.findUnique({ where: { id: categoryId } });
+        if (!category) return { success: false, error: 'Categoría no encontrada' };
+        await requireOwnership(category.profileId);
+
         await prisma.category.update({
             where: { id: categoryId },
             data: { rolloverBalance: balance },
