@@ -13,11 +13,18 @@ export const COLOR_THEMES = [
         fontLabel: 'Switzer',
     },
     {
+        // Acento pedido explícitamente por el usuario: el más oscuro (#0D2B2E)
+        // se leía casi negro, sin color propio — #2A8562 es el verde esmeralda
+        // que realmente identifica el tema. Con el acento fuera, los otros dos
+        // tonos que quedaban (#0D2B2E, #155048) son ambos oscuros — usarlos de
+        // fondo de tarjeta dejaría el texto fijo (oscuro) ilegible encima, así
+        // que las tarjetas comparten el mismo tono claro que el fondo de
+        // página (se distinguen por borde, no por relleno).
         id: 'bosque',
         label: 'Bosque',
-        accent: '#0D2B2E',
+        accent: '#2A8562',
         secondary: '#155048',
-        surface: '#2A8562',
+        surface: '#8FBC98',
         background: '#8FBC98',
         fontLabel: 'Boska',
     },
@@ -40,10 +47,13 @@ export const COLOR_THEMES = [
         fontLabel: 'Satoshi',
     },
     {
+        // Acento pedido explícitamente por el usuario: el más oscuro (#2E0000)
+        // se leía casi negro — #6B0E0E es el vino profundo que sí se reconoce
+        // como color propio del tema.
         id: 'burdeos',
         label: 'Burdeos',
-        accent: '#2E0000',
-        secondary: '#6B0E0E',
+        accent: '#6B0E0E',
+        secondary: '#2E0000',
         surface: '#767F6E',
         background: '#F1ECE2',
         fontLabel: 'Supreme',

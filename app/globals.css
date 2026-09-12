@@ -64,9 +64,12 @@
   --t-title-font: var(--font-switzer-family);
 }
 [data-color-theme="bosque"] {
-  --t-accent: #0d2b2e;
+  /* Con el acento en #2a8562, los dos tonos restantes (#0d2b2e, #155048) son
+     ambos oscuros — no sirven como fondo de tarjeta (texto oscuro ilegible
+     encima), así que la tarjeta comparte el tono claro con la página. */
+  --t-accent: #2a8562;
   --t-secondary: #155048;
-  --t-surface: #2a8562;
+  --t-surface: #8fbc98;
   --t-bg: #8fbc98;
   --t-title-font: var(--font-boska-family);
 }
@@ -85,8 +88,8 @@
   --t-title-font: var(--font-satoshi-family);
 }
 [data-color-theme="burdeos"] {
-  --t-accent: #2e0000;
-  --t-secondary: #6b0e0e;
+  --t-accent: #6b0e0e;
+  --t-secondary: #2e0000;
   --t-surface: #767f6e;
   --t-bg: #f1ece2;
   --t-title-font: var(--font-supreme-family);
