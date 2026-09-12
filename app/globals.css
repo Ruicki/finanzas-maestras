@@ -2,17 +2,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Utilidades de tipografía adicionales — títulos de componentes (Excon) y
-   acento editorial para cifras destacadas (Bevellier). Cuerpo de texto usa
-   el font-sans por defecto de Tailwind, servido por --font-sans-family. */
+/* Utilidades de tipografía adicionales — --font-title cambia según el tema de
+   color elegido (ver bloque de temas abajo); --font-accent (Bevellier) es fijo
+   en todos los temas, reservado para cifras destacadas (balance, KPIs). */
 @theme {
-  --font-title: var(--font-title-family), ui-sans-serif, sans-serif;
+  --font-title: var(--t-title-font), ui-sans-serif, sans-serif;
   --font-accent: var(--font-accent-family), ui-serif, serif;
 }
 
-/* Paleta "Menta Ejecutivo" (claro) / "Añil Cálido" (oscuro) — reemplaza la
-   escala neutra (zinc) y el acento (indigo) por defecto de Tailwind en toda
-   la app, sin tener que tocar cada className. emerald/red/amber quedan
+/* Escala neutra (zinc) compartida por los 5 temas de color — superficies y
+   bordes se mantienen consistentes; lo que cambia por tema es el acento y el
+   fondo de página (ver [data-color-theme] abajo). emerald/red/amber quedan
    intactos a propósito: son el código semántico ingreso/gasto/alerta. */
 @theme {
   --color-zinc-50: #f4f7f5;
@@ -26,25 +26,72 @@
   --color-zinc-800: #23264a;
   --color-zinc-900: #16182f;
   --color-zinc-950: #0d0e1d;
+}
 
-  --color-indigo-50: #eaf5f0;
-  --color-indigo-100: #d2ead9;
-  --color-indigo-200: #a8d6c3;
-  --color-indigo-300: #7bc0a6;
-  --color-indigo-400: #4fa688;
-  --color-indigo-500: #1f6f54;
-  --color-indigo-600: #175943;
-  --color-indigo-700: #114536;
-  --color-indigo-800: #0d3329;
-  --color-indigo-900: #08201a;
+/* El acento (indigo-*) se deriva de --t-accent (un solo valor por tema+modo)
+   con color-mix, en vez de fijar 11 tonos a mano por cada uno de los 5 temas. */
+@theme inline {
+  --color-indigo-50: color-mix(in srgb, var(--t-accent) 8%, white);
+  --color-indigo-100: color-mix(in srgb, var(--t-accent) 16%, white);
+  --color-indigo-200: color-mix(in srgb, var(--t-accent) 30%, white);
+  --color-indigo-300: color-mix(in srgb, var(--t-accent) 50%, white);
+  --color-indigo-400: color-mix(in srgb, var(--t-accent) 75%, white);
+  --color-indigo-500: var(--t-accent);
+  --color-indigo-600: color-mix(in srgb, var(--t-accent) 88%, black);
+  --color-indigo-700: color-mix(in srgb, var(--t-accent) 72%, black);
+  --color-indigo-800: color-mix(in srgb, var(--t-accent) 56%, black);
+  --color-indigo-900: color-mix(in srgb, var(--t-accent) 40%, black);
+}
+
+/* --- 5 temas de color (Ajustes > Tema de color) --- */
+/* Cada uno define: acento en claro/oscuro, fondo+tinta de página en modo claro,
+   y su fuente de título asignada. El modo oscuro comparte una sola base (Añil
+   Cálido) y solo el acento cambia — así lo pidió el usuario. */
+:root,
+[data-color-theme="marino"] {
+  --t-accent-light: #2f6699;
+  --t-accent-dark: #63a0b5;
+  --t-bg-light: #f1ece2;
+  --t-ink-light: #17324a;
+  --t-title-font: var(--font-switzer-family);
+}
+[data-color-theme="bosque"] {
+  --t-accent-light: #2a8562;
+  --t-accent-dark: #4fbe8a;
+  --t-bg-light: #f1f6f0;
+  --t-ink-light: #0d2b2e;
+  --t-title-font: var(--font-boska-family);
+}
+[data-color-theme="cuarzo"] {
+  --t-accent-light: #8b6bae;
+  --t-accent-dark: #c4b0dc;
+  --t-bg-light: #faecec;
+  --t-ink-light: #3a2a42;
+  --t-title-font: var(--font-stardom-family);
+}
+[data-color-theme="ultravioleta"] {
+  --t-accent-light: #23897a;
+  --t-accent-dark: #6fe0ce;
+  --t-bg-light: #e8fbf5;
+  --t-ink-light: #241833;
+  --t-title-font: var(--font-satoshi-family);
+}
+[data-color-theme="burdeos"] {
+  --t-accent-light: #6b0e0e;
+  --t-accent-dark: #d9534f;
+  --t-bg-light: #f3ece7;
+  --t-ink-light: #2e0000;
+  --t-title-font: var(--font-supreme-family);
 }
 
 :root {
-  --background: #f5f7f3;
-  --foreground: #16241e;
+  --t-accent: var(--t-accent-light);
+  --background: var(--t-bg-light);
+  --foreground: var(--t-ink-light);
 }
 
 .dark {
+  --t-accent: var(--t-accent-dark);
   --background: #14152b;
   --foreground: #edebfa;
 }
