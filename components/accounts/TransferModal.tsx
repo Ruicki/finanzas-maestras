@@ -27,8 +27,11 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
     const sourceAccount = accounts.find(a => a.id === sourceId);
     const destAccount = accounts.find(a => a.id === destinationId);
 
+    // Solo el símbolo/moneda determina si es "cruce de divisa" — el TIPO de cuenta
+    // (Banco/Efectivo/Billetera/Ahorro) no tiene nada que ver con la moneda, y
+    // comparalo aquí forzaba el panel de tipo de cambio en transferencias normales
+    // (ej. Banco -> Efectivo, ambas en USD sin símbolo).
     const isCrossCurrency = sourceAccount && destAccount && (
-        sourceAccount.type !== destAccount.type ||
         (sourceAccount.symbol && destAccount.symbol && sourceAccount.symbol !== destAccount.symbol) ||
         (sourceAccount.symbol && !destAccount.symbol) ||
         (!sourceAccount.symbol && destAccount.symbol)
