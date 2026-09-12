@@ -132,6 +132,7 @@ export async function updateProfile(profileId: number, formData: FormData) {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const currentPassword = formData.get('currentPassword') as string;
 
     try {
         await requireOwnership(profileId);
@@ -145,6 +146,15 @@ export async function updateProfile(profileId: number, formData: FormData) {
             data.email = email;
         }
         if (password) {
+            // Cambiar la contraseña exige confirmar la actual — sin esto, cualquiera
+            // con la sesión abierta (ej. un dispositivo compartido) podría tomar la
+            // cuenta con solo abrir Ajustes.
+            const profile = await prisma.profile.findUnique({ where: { id: profileId } });
+            if (!profile) return { error: 'Perfil no encontrado' };
+            if (profile.password) {
+                const isValid = currentPassword && await bcrypt.compare(currentPassword, profile.password);
+                if (!isValid) return { error: 'La contraseña actual no es correcta' };
+            }
             data.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
         }
 
