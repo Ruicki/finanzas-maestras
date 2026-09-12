@@ -86,7 +86,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">Tu Presupuesto</h2>
+                    <h2 className="font-title text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white tracking-tight">Tu Presupuesto</h2>
                     <p className="text-zinc-500">Reglas financieras, control de gastos y suscripciones.</p>
                 </div>
             </div>

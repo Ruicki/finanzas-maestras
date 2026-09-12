@@ -2,20 +2,57 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Utilidades de tipografía adicionales — títulos de componentes (Excon) y
+   acento editorial para cifras destacadas (Bevellier). Cuerpo de texto usa
+   el font-sans por defecto de Tailwind, servido por --font-sans-family. */
+@theme {
+  --font-title: var(--font-title-family), ui-sans-serif, sans-serif;
+  --font-accent: var(--font-accent-family), ui-serif, serif;
+}
+
+/* Paleta "Menta Ejecutivo" (claro) / "Añil Cálido" (oscuro) — reemplaza la
+   escala neutra (zinc) y el acento (indigo) por defecto de Tailwind en toda
+   la app, sin tener que tocar cada className. emerald/red/amber quedan
+   intactos a propósito: son el código semántico ingreso/gasto/alerta. */
+@theme {
+  --color-zinc-50: #f4f7f5;
+  --color-zinc-100: #e7eeea;
+  --color-zinc-200: #d3dfd8;
+  --color-zinc-300: #b3c4ba;
+  --color-zinc-400: #8aa097;
+  --color-zinc-500: #64786f;
+  --color-zinc-600: #4c5f63;
+  --color-zinc-700: #363b54;
+  --color-zinc-800: #23264a;
+  --color-zinc-900: #16182f;
+  --color-zinc-950: #0d0e1d;
+
+  --color-indigo-50: #eaf5f0;
+  --color-indigo-100: #d2ead9;
+  --color-indigo-200: #a8d6c3;
+  --color-indigo-300: #7bc0a6;
+  --color-indigo-400: #4fa688;
+  --color-indigo-500: #1f6f54;
+  --color-indigo-600: #175943;
+  --color-indigo-700: #114536;
+  --color-indigo-800: #0d3329;
+  --color-indigo-900: #08201a;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f7f3;
+  --foreground: #16241e;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #14152b;
+  --foreground: #edebfa;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans-family), ui-sans-serif, system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   width: 100%;
   font-feature-settings: "cv11", "ss01";

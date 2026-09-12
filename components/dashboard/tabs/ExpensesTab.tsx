@@ -93,7 +93,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             {/* --- ENCABEZADO Y ACCIONES --- */}
             <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-end">
                 <div>
-                    <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Mis Gastos</h2>
+                    <h2 className="font-title text-3xl md:text-4xl font-semibold text-zinc-900 dark:text-white tracking-tight mb-2">Mis Gastos</h2>
                     <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-md">
                         Controla cada centavo. Gestiona tus salidas, suscripciones y límites de presupuesto.
                     </p>
@@ -134,7 +134,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                             <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Total este mes</span>
                         </div>
                         <div>
-                            <h3 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900 dark:text-white drop-shadow-none dark:drop-shadow-lg dark:shadow-black">
+                            <h3 className="font-accent text-6xl md:text-8xl tracking-tight text-zinc-900 dark:text-white drop-shadow-none dark:drop-shadow-lg dark:shadow-black">
                                 ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h3>
                         </div>

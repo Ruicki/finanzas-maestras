@@ -93,7 +93,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
                             {category.name.charAt(0)}
                         </div>
                         <div>
-                            <h4 className="font-bold text-xl text-zinc-900 dark:text-white wrap-break-word leading-tight">{category.name}</h4>
+                            <h4 className="font-title font-semibold text-lg text-zinc-900 dark:text-white wrap-break-word leading-tight">{category.name}</h4>
                             <p className="text-xs font-bold text-zinc-400 uppercase tracking-wide">{catExpenses.length} gastos</p>
                         </div>
                     </div>
@@ -109,7 +109,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
                     )}
                 </div>
 
-                <p className="text-3xl font-black text-zinc-900 dark:text-white mb-4">{formatMoney(total)}</p>
+                <p className="font-accent text-4xl text-zinc-900 dark:text-white mb-4">{formatMoney(total)}</p>
 
                 {/* Barra de Presupuesto */}
                 <div className={`bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-3xl mb-4 transition-all ${isEditing ? 'ring-2 ring-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>

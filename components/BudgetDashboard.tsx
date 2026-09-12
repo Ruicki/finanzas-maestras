@@ -218,7 +218,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 border-b border-zinc-200 dark:border-zinc-800 pb-10">
                 <div className="text-center md:text-left">
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-linear-to-r from-zinc-900 via-zinc-700 to-zinc-900 dark:from-white dark:via-zinc-400 dark:to-zinc-600 mb-4">
+                    <h1 className="font-title text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-zinc-900 via-zinc-700 to-zinc-900 dark:from-white dark:via-zinc-400 dark:to-zinc-600 mb-4">
                         Finanzas Maestras
                     </h1>
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -308,7 +308,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <WalletIcon className="w-20 h-20 text-[#1591DC]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Dinero disponible</p>
-                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
+                            <p className={`font-accent text-4xl md:text-5xl relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
                                 ${balance.toFixed(2)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
@@ -324,7 +324,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <TrendingUpIcon className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Patrimonio Neto</p>
-                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-[#519A66] dark:text-[#6dc28a]' : 'text-red-500'}`}>
+                            <p className={`font-accent text-4xl md:text-5xl relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-[#519A66] dark:text-[#6dc28a]' : 'text-red-500'}`}>
                                 ${netWorth.toFixed(2)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
@@ -342,7 +342,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <DollarSignIcon className="w-20 h-20 text-[#519A66]" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Ingresos (Mes)</p>
-                            <p className="text-3xl md:text-4xl font-black text-[#519A66] dark:text-[#6dc28a] relative z-10 blur-sensitive">
+                            <p className="font-accent text-4xl md:text-5xl text-[#519A66] dark:text-[#6dc28a] relative z-10 blur-sensitive">
                                 +${totalMonthlyIncome.toFixed(2)}
                             </p>
                         </div>
@@ -353,7 +353,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <TrendingUpIcon className="w-20 h-20 text-red-500" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Deuda Total</p>
-                            <p className="text-3xl md:text-4xl font-black text-red-500 relative z-10 blur-sensitive">
+                            <p className="font-accent text-4xl md:text-5xl text-red-500 relative z-10 blur-sensitive">
                                 -${totalCreditDebt.toFixed(2)}
                             </p>
                         </div>
