@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
+import { decrementAccountBalance } from '@/lib/ledger';
 
 // ─── ACCOUNTS ──────────────────────────────────────────────────────────────
 
@@ -29,13 +30,16 @@ export async function createAccount(
 
 export async function updateAccount(
     id: number,
-    data: { name?: string; type?: string; balance?: number; lockDate?: Date; purpose?: string; symbol?: string },
+    data: { name?: string; type?: string; balance?: number; lockDate?: Date | null; purpose?: string; symbol?: string | null },
 ) {
     if (data.balance !== undefined && data.balance < 0)
         throw new Error('El saldo no puede ser negativo');
     const account = await prisma.account.findUnique({ where: { id } });
     if (!account) throw new Error('Cuenta no encontrada');
     await requireOwnership(account.profileId);
+    if (account.isDefault && data.name !== undefined && data.name !== account.name) {
+        throw new Error('El nombre de la cuenta principal de Efectivo no se puede cambiar.');
+    }
     await prisma.account.update({
         where: { id },
         data: {
@@ -55,6 +59,8 @@ export async function adjustAccountBalance(
     newBalance: number,
     reason: string,
 ) {
+    if (newBalance < 0) throw new Error('El saldo no puede ser negativo');
+
     await prisma.$transaction(async (tx) => {
         const account = await tx.account.findUnique({ where: { id: accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
@@ -86,7 +92,7 @@ export async function deleteAccount(id: number): Promise<void> {
     const account = await prisma.account.findUnique({ where: { id } });
     if (!account) throw new Error('Cuenta no encontrada');
     await requireOwnership(account.profileId);
-    if (account.name === 'Efectivo' && account.isDefault) {
+    if (account.isDefault) {
         throw new Error('No se puede eliminar la cuenta principal de Efectivo.');
     }
 
@@ -265,10 +271,10 @@ export async function createTransfer(
 
     try {
         await prisma.$transaction(async (tx) => {
-            const updatedSource = await tx.account.update({
-                where: { id: sourceAccountId },
-                data: { balance: { decrement: amount } },
-            });
+            // UPDATE condicionado: cierra la carrera de dos transferencias
+            // concurrentes desde la misma cuenta que sobregirarían el saldo.
+            await decrementAccountBalance(tx, sourceAccountId, amount, sourceAccount.name);
+            const updatedSource = await tx.account.findUniqueOrThrow({ where: { id: sourceAccountId } });
             await tx.account.update({
                 where: { id: destinationAccountId },
                 data: { balance: { increment: effectiveDestAmount } },

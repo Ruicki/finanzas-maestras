@@ -45,7 +45,10 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         const incomeTotal = incomes.reduce((acc, i) => acc + i.amount, 0);
         const totalIncome = salaryTotal + incomeTotal;
 
-        const totalExpense = expenses.reduce((acc, e) => acc + e.amount, 0);
+        // Los gastos proyectados aún no descuentan saldo real: no cuentan como
+        // "gastado" en ninguno de estos cálculos.
+        const realExpenses = expenses.filter(e => !e.isProjected);
+        const totalExpense = realExpenses.reduce((acc, e) => acc + e.amount, 0);
         const netSavings = totalIncome - totalExpense;
         const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
@@ -53,7 +56,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
         const chartData = Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1;
-            const dayExpenses = expenses
+            const dayExpenses = realExpenses
                 .filter(e => {
                     const d = new Date(e.createdAt || new Date());
                     return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -71,11 +74,12 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
 
         // C. Comparación de Presupuesto
         const budgetComparison = categories.map(cat => {
-            const catExpenses = expenses.filter(e => e.categoryId === cat.id).reduce((acc, e) => acc + e.amount, 0);
+            const catExpenses = realExpenses.filter(e => e.categoryId === cat.id).reduce((acc, e) => acc + e.amount, 0);
             const mb = cat.budgets?.find((b) => b.year === currentYear && b.month === currentMonth + 1);
             const limit = mb ? Number(mb.limit) : Number(cat.monthlyLimit || 0);
 
-            // Calculate rollover from previous month
+            // Calculate rollover from previous month — solo si la categoría tiene
+            // el toggle isRollover activado (misma regla que en Presupuesto).
             let prevM = currentMonth;
             let prevY = currentYear;
             prevM -= 1;
@@ -83,10 +87,10 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             const prevMb = cat.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
             const prevLimit = prevMb ? Number(prevMb.limit) : Number(cat.monthlyLimit || 0);
             const prevSpent = allExpenses
-                .filter(e => e.categoryId === cat.id)
+                .filter(e => e.categoryId === cat.id && !e.isProjected)
                 .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
                 .reduce((sum, e) => sum + Number(e.amount), 0);
-            const rollover = prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
+            const rollover = cat.isRollover && prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
 
             const effectiveLimit = limit + rollover;
             const diff = effectiveLimit - catExpenses;
@@ -95,14 +99,20 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             return {
                 ...cat,
                 spent: catExpenses,
+                effectiveLimit,
                 remaining: diff,
                 percent,
                 status: percent > 100 ? 'EXCEEDED' : percent > 85 ? 'WARNING' : 'GOOD'
             };
         }).sort((a, b) => b.percent - a.percent);
 
-        // D. Categorías Principales para "Insights Rápidos"
-        const topCategories = [...budgetComparison].sort((a, b) => b.spent - a.spent).slice(0, 3);
+        // D. Categorías Principales para "Insights Rápidos" — solo las que
+        // realmente tuvieron gasto este mes (si no, con &lt;3 categorías activas
+        // se mostraban tarjetas de categorías con $0 gastado).
+        const topCategories = [...budgetComparison]
+            .filter(c => c.spent > 0)
+            .sort((a, b) => b.spent - a.spent)
+            .slice(0, 3);
 
         return {
             totalIncome,
@@ -255,7 +265,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                     </td>
                                     <td className="p-6 text-right hidden md:table-cell">
                                         <p className="font-medium text-zinc-400 tabular-nums text-sm">
-                                            {cat.monthlyLimit ? `${currency}${cat.monthlyLimit.toLocaleString()}` : 'Sin Límite'}
+                                            {cat.effectiveLimit > 0 ? `${currency}${cat.effectiveLimit.toLocaleString()}` : 'Sin Límite'}
                                         </p>
                                     </td>
                                     <td className="p-6 text-right">

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { XIcon, PlusIcon, Trash2Icon, PencilIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { CategoryIcon, AVAILABLE_ICONS } from './CategoryIcon';
+import { confirmDelete } from './DeleteConfirmation';
 
 type Category = ProfileWithData['categories'][number];
 
@@ -67,17 +68,21 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
             }
             onUpdate();
             setView('list');
-        } catch {
-            toast.error("Error guardando categoría");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error guardando categoría");
         }
     }
 
     async function handleDelete(id: number) {
-        if (confirm('¿Seguro? Los gastos asociados perderán su categoría.')) {
-            await deleteCategory(id);
-            onUpdate();
-            toast.success("Categoría eliminada");
-        }
+        confirmDelete(async () => {
+            try {
+                await deleteCategory(id);
+                onUpdate();
+                toast.success("Categoría eliminada");
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Error eliminando categoría");
+            }
+        }, '¿Eliminar categoría?', 'Los gastos asociados perderán su categoría.');
     }
 
     return (

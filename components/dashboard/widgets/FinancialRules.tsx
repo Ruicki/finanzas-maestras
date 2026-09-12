@@ -21,7 +21,7 @@ interface FinancialRulesProps {
     totalCash: number;
 }
 
-export default function FinancialRules({ income, expenses, debtsPayment, totalCash }: FinancialRulesProps) {
+export default function FinancialRules({ income, expenses, debtsPayment, totalSavings, totalCash }: FinancialRulesProps) {
     if (income === 0) {
         return (
             <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
@@ -88,9 +88,13 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalCa
     const dtiBg = dtiStatus === 'healthy' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' : dtiStatus === 'warning' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20';
 
     // --- RULE 3: EMERGENCY FUND ---
+    // Cuenta el efectivo disponible MÁS el ahorro acumulado en metas sin cuenta
+    // dedicada (totalSavings) — antes este parámetro se recibía pero nunca se
+    // usaba, así que ese ahorro no contaba para nada en la cobertura del fondo.
     const monthlyFixedExpenses = expenses.filter(e => getType(e) === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
     const monthlyBurn = monthlyFixedExpenses > 0 ? monthlyFixedExpenses : (needs + wants);
-    const monthsCovered = monthlyBurn > 0 ? (totalCash / monthlyBurn) : 0;
+    const liquidFunds = totalCash + totalSavings;
+    const monthsCovered = monthlyBurn > 0 ? (liquidFunds / monthlyBurn) : 0;
     const monthsMissing = Math.max(0, 6 - monthsCovered);
     const monthlySavingsNeeded = monthsMissing > 0 && monthsCovered < 6 ? Math.ceil(monthlyBurn * monthsMissing / 6) : 0;
 

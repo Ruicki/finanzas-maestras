@@ -57,6 +57,8 @@ type SubTab = 'resumen' | 'categorias' | 'suscripciones';
 export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [showWizard, setShowWizard] = useState(false);
+    // Evita doble clic disparando dos veces marcar-pagado/cancelar sobre la misma suscripción.
+    const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
     const [editingSub, setEditingSub] = useState<Partial<Expense> | null>(null);
 
     // Subscriptions sorted by due date (each one individually)
@@ -352,7 +354,10 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                             {/* Action Buttons */}
                                             <div className="px-5 pb-4 flex items-center justify-between">
                                                     <button
+                                                        disabled={processingIds.has(exp.id)}
                                                         onClick={async () => {
+                                                            if (processingIds.has(exp.id)) return;
+                                                            setProcessingIds(prev => new Set(prev).add(exp.id));
                                                             try {
                                                                 if (isPaidThisMonth(exp)) {
                                                                     await markSubscriptionUnpaid(exp.id);
@@ -362,11 +367,13 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                                     toast.success("Marcado como pagado");
                                                                 }
                                                                 if (onUpdate) onUpdate();
-                                                            } catch {
-                                                                toast.error("Error al actualizar");
+                                                            } catch (error) {
+                                                                toast.error(error instanceof Error ? error.message : "Error al actualizar");
+                                                            } finally {
+                                                                setProcessingIds(prev => { const next = new Set(prev); next.delete(exp.id); return next; });
                                                             }
                                                         }}
-                                                        className={`py-2 px-4 rounded-xl text-[10px] font-bold transition-all ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
+                                                        className={`py-2 px-4 rounded-xl text-[10px] font-bold transition-all disabled:opacity-50 disabled:pointer-events-none ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
                                                     >
                                                         {isPaidThisMonth(exp) ? 'Pagado ✓' : 'Marcar pagado'}
                                                     </button>
@@ -379,14 +386,23 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                                             <PencilIcon size={12} />
                                                         </button>
                                                         <button
+                                                            disabled={processingIds.has(exp.id)}
                                                             onClick={() => {
                                                                 confirmDelete(async () => {
-                                                                    await deleteExpense(exp.id);
-                                                                    toast.success("Suscripción cancelada");
-                                                                    if (onUpdate) onUpdate();
+                                                                    if (processingIds.has(exp.id)) return;
+                                                                    setProcessingIds(prev => new Set(prev).add(exp.id));
+                                                                    try {
+                                                                        await deleteExpense(exp.id);
+                                                                        toast.success("Suscripción cancelada");
+                                                                        if (onUpdate) onUpdate();
+                                                                    } catch (error) {
+                                                                        toast.error(error instanceof Error ? error.message : "Error al cancelar la suscripción");
+                                                                    } finally {
+                                                                        setProcessingIds(prev => { const next = new Set(prev); next.delete(exp.id); return next; });
+                                                                    }
                                                                 });
                                                             }}
-                                                            className="px-3 py-1.5 text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-all"
+                                                            className="px-3 py-1.5 text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-all disabled:opacity-50 disabled:pointer-events-none"
                                                         >
                                                             Cancelar
                                                         </button>

@@ -27,8 +27,7 @@ export default function SystemPage() {
 
             toast.success("Backup generado y descargado correctamente");
         } catch (error) {
-            console.error(error);
-            toast.error("Error al generar backup");
+            toast.error(error instanceof Error ? error.message : "Error al generar backup");
         } finally {
             setExporting(false);
         }
@@ -40,10 +39,10 @@ export default function SystemPage() {
             await toggleMaintenanceMode(newState);
             setMaintenance(newState);
             toast.message(newState ? "Modo Mantenimiento ACTIVADO" : "Modo Mantenimiento DESACTIVADO", {
-                description: newState ? "Solo los administradores pueden acceder." : "El acceso es público nuevamente."
+                description: "Por ahora solo queda registrado en el log — todavía no bloquea el acceso real."
             });
-        } catch {
-            toast.error("Error al cambiar estado");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error al cambiar estado");
         }
     };
 
@@ -70,7 +69,7 @@ export default function SystemPage() {
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">Backup Completo (JSON)</h3>
                         <p className="text-zinc-500 text-sm mb-8 leading-relaxed">
-                            Genera un archivo JSON encriptado con toda la información de usuarios, transacciones, deudas y configuraciones. Útil para migraciones o seguridad.
+                            Genera un archivo JSON (sin encriptar) con toda la información de usuarios, transacciones, deudas y configuraciones. Contiene datos sensibles — guárdalo en un lugar seguro. No incluye contraseñas ni códigos de acceso.
                         </p>
                     </div>
 
@@ -104,7 +103,7 @@ export default function SystemPage() {
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">Modo Mantenimiento</h3>
                         <p className="text-zinc-500 text-sm mb-8 leading-relaxed">
-                            Cierra el acceso público a la aplicación. Solo los usuarios con rol <span className="text-indigo-400 font-mono text-xs bg-indigo-500/10 px-1 rounded">ADMIN</span> podrán iniciar sesión o realizar acciones.
+                            <span className="text-amber-400 font-bold">Aún no bloquea el acceso real.</span> Por ahora solo registra el cambio de estado en el log de auditoría — falta implementar la verificación en el resto de la app para que otros usuarios queden realmente bloqueados.
                         </p>
                     </div>
 

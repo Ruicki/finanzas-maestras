@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
 import { resetProfileData } from '@/app/actions/budget';
+import { updateProfile } from '@/app/actions/auth';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 
 interface UserSettingsModalProps {
     isOpen: boolean;
@@ -22,6 +24,7 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
     const [showPassword, setShowPassword] = useState(false);
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [strength, setStrength] = useState(0);
+    const [saving, setSaving] = useState(false);
 
     const checkStrength = (pass: string) => {
         let s = 0;
@@ -38,21 +41,43 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
         checkStrength(val);
     };
 
-    // Placeholder implementation
-    const handleSave = () => {
-        if (passwords.new) {
-            if (passwords.new !== passwords.confirm) {
-                toast.error("Las contraseñas no coinciden");
-                return;
-            }
-            if (strength < 2) {
-                toast.warning("La contraseña es muy débil");
-                return;
-            }
+    const handleSave = async () => {
+        if (!passwords.new) {
+            onClose();
+            return;
         }
 
-        toast.info("Ajustes guardados (Simulación)");
-        onClose();
+        if (passwords.new !== passwords.confirm) {
+            toast.error("Las contraseñas no coinciden");
+            return;
+        }
+        if (strength < 2) {
+            toast.warning("La contraseña es muy débil");
+            return;
+        }
+        if (!passwords.current) {
+            toast.error("Escribe tu contraseña actual para confirmar el cambio");
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const formData = new FormData();
+            formData.set('password', passwords.new);
+            formData.set('currentPassword', passwords.current);
+            const res = await updateProfile(profile.id, formData);
+            if (res?.error) {
+                toast.error(res.error);
+                return;
+            }
+            toast.success("Contraseña actualizada");
+            onUpdate();
+            onClose();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Error al guardar los ajustes");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleResetProfile = async () => {
@@ -62,8 +87,7 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
             onUpdate();
             onClose();
         } catch (error) {
-            toast.error("Error al resetear el perfil");
-            console.error(error);
+            toast.error(error instanceof Error ? error.message : "Error al resetear el perfil");
         }
     };
 
@@ -159,13 +183,11 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                             </p>
                             <Button
                                 className="w-full bg-red-500 hover:bg-red-600 text-white font-bold"
-                                onClick={() => {
-                                    if (confirm('¿ESTÁS ABSOLUTAMENTE SEGURO? Esta acción borrará TODOS tus datos financieros de este perfil (Cuentas, Gastos, Tarjetas, Metas). No hay vuelta atrás.')) {
-                                        if (confirm('¿De verdad? Última oportunidad para cancelar.')) {
-                                            handleResetProfile();
-                                        }
-                                    }
-                                }}
+                                onClick={() => confirmDelete(
+                                    handleResetProfile,
+                                    '¿Borrar todos tus datos?',
+                                    'Esta acción borrará TODOS tus datos financieros de este perfil (Cuentas, Gastos, Tarjetas, Metas) y no se puede deshacer.',
+                                )}
                             >
                                 Borrar Todos mis Datos
                             </Button>
@@ -173,8 +195,8 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleSave}>Guardar Cambios</Button>
+                    <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+                    <Button onClick={handleSave} disabled={saving}>{saving ? 'Guardando...' : 'Guardar Cambios'}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

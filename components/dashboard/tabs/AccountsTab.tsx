@@ -69,7 +69,7 @@ function AccountMenu({
                         <PencilIcon className="w-4 h-4 text-amber-500" />
                         Editar cuenta
                     </button>
-                    {!(account.name === 'Efectivo' && account.isDefault) && (
+                    {!account.isDefault && (
                         <>
                             <div className="h-px bg-zinc-100 dark:bg-zinc-700 mx-3" />
                             <button
@@ -102,9 +102,13 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
 
     const handleDelete = async (id: number) => {
         confirmDelete(async () => {
-            await deleteAccount(id);
-            toast.success('Cuenta eliminada');
-            onUpdate();
+            try {
+                await deleteAccount(id);
+                toast.success('Cuenta eliminada');
+                onUpdate();
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : 'Error eliminando la cuenta');
+            }
         }, 'Eliminar cuenta', '¿Seguro que deseas eliminar esta cuenta?');
     };
 

@@ -15,14 +15,14 @@ export interface CreateGoalInput {
     deadline?: Date;
     profileId: number;
     type: string;
-    frequency?: string;
-    contributionAmount?: number;
+    frequency?: string | null;
+    contributionAmount?: number | null;
     priority?: string;
     category?: string;
-    notes?: string;
+    notes?: string | null;
     isPaused?: boolean;
-    sourceAccountId?: number;
-    destinationAccountId?: number;
+    sourceAccountId?: number | null;
+    destinationAccountId?: number | null;
 }
 
 function serializeGoal<T extends Goal>(goal: T) {
