@@ -15,7 +15,8 @@ export class SalaryRepository {
                 company: data.company || "Sin Empresa",
                 absentDays: data.absentDays,
                 profileId: data.profileId,
-                accountId: data.accountId
+                accountId: data.accountId,
+                isManualCalculation: data.isManualCalculation ?? false,
             },
         });
     }
@@ -42,7 +43,8 @@ export class SalaryRepository {
                 company: data.company || "Sin Empresa",
                 absentDays: data.absentDays,
                 profileId: data.profileId,
-                accountId: data.accountId
+                accountId: data.accountId,
+                isManualCalculation: data.isManualCalculation ?? false,
             }
         });
     }

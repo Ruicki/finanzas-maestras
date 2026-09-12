@@ -59,8 +59,13 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
             setSelectedIcon(initialData.icon || 'Wallet');
             setDate(initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
 
-            // Detectar tipo basado en los datos
-            if (initialData.type === 'SALARY' || initialData.name?.toLowerCase().includes('salario')) {
+            // Detectar tipo: SalaryHistory (el único origen real de ediciones)
+            // ya etiqueta cada item con type: 'SALARY' | 'INCOME' explícitamente
+            // al armar la lista combinada — no hace falta (ni es seguro)
+            // adivinar por el nombre, porque un Ingreso normal llamado ej. "Bono
+            // de salario" terminaba llamando a updateSalary() con el id de un
+            // AdditionalIncome, corrompiendo un registro de Salary no relacionado.
+            if (initialData.type === 'SALARY') {
                 setType('SALARY');
                 setSalaryMode('MANUAL');
             } else if (initialData.accountId) {
@@ -114,7 +119,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
 
         try {
             if (isEditing && initialData?.id) {
-                if (initialData.type === 'SALARY' || type === 'SALARY') {
+                if (type === 'SALARY') {
                     await updateSalary(initialData.id, {
                         grossVal: val,
                         bonus: initialData.bonus ?? 0,
@@ -169,8 +174,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
 
             onSuccess();
         } catch (error) {
-            console.error(error);
-            toast.error("Error al guardar");
+            toast.error(error instanceof Error ? error.message : "Error al guardar");
         }
     };
 
