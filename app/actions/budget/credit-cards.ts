@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum, serializeCreditCard } from './serializers';
 import { logger } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
+import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
 
 // ─── CREDIT CARDS ──────────────────────────────────────────────────────────
 
@@ -14,14 +15,14 @@ export interface CreateCreditCardInput {
     cutoffDay: number;
     paymentDay: number;
     profileId: number;
-    interestRate?: number;
-    insuranceRate?: number;
-    minPaymentPercentage?: number;
-    itbmsRate?: number;
-    minPaymentFloor?: number;
-    annualFee?: number;
-    annualFeeMonth?: number;
-    bank?: string;
+    interestRate?: number | null;
+    insuranceRate?: number | null;
+    minPaymentPercentage?: number | null;
+    itbmsRate?: number | null;
+    minPaymentFloor?: number | null;
+    annualFee?: number | null;
+    annualFeeMonth?: number | null;
+    bank?: string | null;
     initialBalance?: number;
 }
 
@@ -36,6 +37,7 @@ export async function createCreditCard(data: CreateCreditCardInput) {
             profileId: data.profileId,
             interestRate: data.interestRate,
             insuranceRate: data.insuranceRate,
+            minPaymentPercentage: data.minPaymentPercentage,
             itbmsRate: data.itbmsRate,
             minPaymentFloor: data.minPaymentFloor,
             annualFee: data.annualFee,
@@ -78,6 +80,8 @@ export async function updateCreditCardDetails(
 }
 
 export async function updateCreditCardBalance(id: number, balance: number) {
+    if (balance < 0) throw new Error('El saldo no puede ser negativo');
+
     const existing = await prisma.creditCard.findUnique({ where: { id } });
     if (!existing) throw new Error('Tarjeta no encontrada');
     await requireOwnership(existing.profileId);
@@ -101,6 +105,7 @@ export async function deleteCreditCard(id: number) {
 export async function recalculateCardBalance(cardId: number) {
     const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
     if (!card) throw new Error('Tarjeta no encontrada');
+    await requireOwnership(card.profileId);
 
     // Sum of all expenses linked to this card (purchases + charges)
     const linkedExpenses = await prisma.expense.aggregate({
@@ -160,15 +165,10 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
 
     try {
         await prisma.$transaction(async (tx) => {
-            await tx.account.update({
-                where: { id: accountId },
-                data: { balance: { decrement: amount } },
-            });
-
-            await tx.creditCard.update({
-                where: { id: cardId },
-                data: { balance: { decrement: amount } },
-            });
+            // UPDATE condicionado (no leer-luego-escribir): cierra la carrera de dos
+            // pagos concurrentes que leen el mismo saldo antes de que ninguno confirme.
+            await decrementAccountBalance(tx, accountId, amount, account.name);
+            await decrementCreditCardBalance(tx, cardId, amount);
 
             const card = await tx.creditCard.findUnique({ where: { id: cardId } });
 

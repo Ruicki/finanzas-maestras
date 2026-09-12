@@ -41,6 +41,7 @@ model Salary {
   company    String?
   profileId  Int?
   accountId  Int?
+  isManualCalculation Boolean @default(false)
   account    Account? @relation(fields: [accountId], references: [id])
   profile    Profile? @relation(fields: [profileId], references: [id])
 

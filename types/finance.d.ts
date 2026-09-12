@@ -10,6 +10,7 @@ export interface SalaryData {
   absentDays: number;
   profileId?: number;
   accountId?: number;
+  isManualCalculation?: boolean;
 }
 
 export interface TaxBreakdown {

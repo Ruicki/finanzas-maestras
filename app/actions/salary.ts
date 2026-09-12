@@ -59,6 +59,16 @@ function calculateISR(monthlyGross: number) {
 export async function createSalary(data: ProcessSalaryRequest) {
     logger.info("Processing salary on the server...");
 
+    if (!data.dryRun) {
+        if (data.profileId === undefined) throw new Error('profileId es requerido');
+        await requireOwnership(data.profileId);
+        if (data.accountId) {
+            const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+            if (!account) throw new Error('Cuenta no encontrada');
+            if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
+        }
+    }
+
     try {
         let finalNetVal = 0;
         let finalTaxes = 0;
@@ -103,11 +113,15 @@ export async function createSalary(data: ProcessSalaryRequest) {
                 isrRateUsed = isr.annualIncome > ISR_BRACKET_2_LIMIT ? ISR_RATE_25 : ISR_RATE_15;
             }
 
-            // Décimo: automatic in months 4 (Apr), 8 (Aug), 12 (Dec)
-            // Only on the FIRST biweekly payment (day <= 15)
+            // Décimo: automatic in months 4 (Apr), 8 (Aug), 12 (Dec).
+            // En quincenal, solo en el PRIMER pago del mes (día <= 15), para no
+            // contarlo dos veces en el segundo pago del mismo mes. En mensual
+            // (un solo pago al mes) siempre debe incluirse ese mes, sin importar
+            // el día — antes se exigía día <= 15 incluso en mensual, así que un
+            // sueldo mensual pagado a fin de mes (ej. día 30) perdía el décimo.
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
             const selectedDay = parseInt(data.paymentDate.split('-')[2]);
-            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && selectedDay <= 15;
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && (data.frequency !== 'biweekly' || selectedDay <= 15);
 
             if (isDecimoIncluded) {
                 // Décimo = 1/3 of monthly gross (before absences for calculation)
@@ -139,6 +153,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
             absentDays: data.absentDays,
             profileId: data.profileId,
             accountId: data.accountId,
+            isManualCalculation: data.isManualCalculation ?? false,
         };
 
         if (data.dryRun) {
@@ -240,6 +255,12 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
     if (!oldSalary) throw new Error("Salario no encontrado");
     if (oldSalary.profileId) await requireOwnership(oldSalary.profileId);
 
+    if (data.accountId) {
+        const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.profileId !== oldSalary.profileId) throw new Error('La cuenta no pertenece a este perfil');
+    }
+
     try {
         let finalNetVal = 0;
         let finalTaxes = 0;
@@ -272,7 +293,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
 
             const selectedMonth = parseInt(data.paymentDate.split('-')[1]);
             const selectedDay = parseInt(data.paymentDate.split('-')[2]);
-            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && selectedDay <= 15;
+            isDecimoIncluded = [4, 8, 12].includes(selectedMonth) && (data.frequency !== 'biweekly' || selectedDay <= 15);
 
             if (isDecimoIncluded) {
                 const grossMonthlyForDecimo = data.frequency === 'biweekly'
@@ -298,6 +319,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             eduIns: finalEduIns,
             incomeTax: finalIncomeTax,
             company: data.company,
+            isManualCalculation: data.isManualCalculation ?? false,
             absentDays: data.absentDays,
             profileId: data.profileId,
             accountId: data.accountId,

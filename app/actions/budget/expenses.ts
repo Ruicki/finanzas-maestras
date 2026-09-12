@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
+import { decrementAccountBalance } from '@/lib/ledger';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
@@ -13,8 +14,8 @@ export interface CreateExpenseInput {
     amount: number;
     category: string;
     profileId: number;
-    dueDate?: number;
-    graceDays?: number;
+    dueDate?: number | null;
+    graceDays?: number | null;
     isRecurring?: boolean;
     isOneTime?: boolean;
     recurrenceType?: string;
@@ -82,10 +83,7 @@ export async function createExpense(data: CreateExpenseInput) {
                 }
 
                 if (data.accountId) {
-                    await tx.account.update({
-                        where: { id: data.accountId },
-                        data: { balance: { decrement: data.amount } },
-                    });
+                    await decrementAccountBalance(tx, data.accountId, data.amount);
                 }
             }
 
@@ -109,6 +107,9 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
         const account = await prisma.account.findUnique({ where: { id: data.accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
         if (account.profileId !== oldExpense.profileId) throw new Error('La cuenta no pertenece a este perfil');
+        if (!oldExpense.isProjected && account.lockDate && new Date(account.lockDate) > new Date()) {
+            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+        }
     }
     if (data.linkedCardId !== undefined && data.linkedCardId !== null) {
         const card = await prisma.creditCard.findUnique({ where: { id: data.linkedCardId } });
@@ -155,10 +156,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                 }
 
                 if (newAccountId) {
-                    await tx.account.update({
-                        where: { id: newAccountId },
-                        data: { balance: { decrement: newAmount } },
-                    });
+                    await decrementAccountBalance(tx, newAccountId, newAmount);
                 }
                 if (newCardId) {
                     await tx.creditCard.update({
@@ -245,13 +243,19 @@ export async function confirmExpense(id: number) {
         if (account.lockDate && new Date(account.lockDate) > new Date()) {
             throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
         }
-        if (Number(account.balance) < Number(expense.amount)) {
-            throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
-        }
     }
 
     try {
         await prisma.$transaction(async (tx) => {
+            // Guardia atómica: si dos confirmaciones del mismo gasto llegan casi
+            // simultáneas (doble clic), solo una logra pasar isProjected de true a
+            // false — la otra ve count=0 y se detiene antes de mover dinero dos veces.
+            const { count } = await tx.expense.updateMany({
+                where: { id, isProjected: true },
+                data: { isProjected: false, confirmedAt: new Date() },
+            });
+            if (count === 0) throw new Error('Este gasto ya fue confirmado');
+
             if (expense.linkedCardId) {
                 await tx.creditCard.update({
                     where: { id: expense.linkedCardId },
@@ -259,16 +263,8 @@ export async function confirmExpense(id: number) {
                 });
             }
             if (expense.accountId) {
-                await tx.account.update({
-                    where: { id: expense.accountId },
-                    data: { balance: { decrement: expense.amount } },
-                });
+                await decrementAccountBalance(tx, expense.accountId, Number(expense.amount));
             }
-
-            await tx.expense.update({
-                where: { id },
-                data: { isProjected: false, confirmedAt: new Date() },
-            });
         });
 
         revalidatePath('/budget');

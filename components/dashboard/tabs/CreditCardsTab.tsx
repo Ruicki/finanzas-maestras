@@ -54,13 +54,15 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                 await deleteCreditCard(id);
                 onUpdate();
                 toast.success("Tarjeta eliminada");
-            } catch {
-                toast.error("Error eliminando tarjeta");
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Error eliminando tarjeta");
             }
         });
     }
 
     async function handlePayment(cardId: number, amount: number, accountId: number) {
+        // No atrapar el error aquí: PaymentModal (quien llama a esta función) necesita
+        // que se propague para NO cerrarse como si el pago hubiera funcionado.
         await payCreditCard(cardId, amount, accountId);
         onUpdate();
         toast.success("Pago realizado con éxito");
@@ -195,6 +197,11 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         interestRate: Number(editingCard.interestRate),
                         annualFee: editingCard.annualFee ? Number(editingCard.annualFee) : undefined,
                         annualFeeMonth: editingCard.annualFeeMonth,
+                        bank: editingCard.bank,
+                        insuranceRate: editingCard.insuranceRate != null ? Number(editingCard.insuranceRate) : undefined,
+                        itbmsRate: editingCard.itbmsRate != null ? Number(editingCard.itbmsRate) : undefined,
+                        minPaymentFloor: editingCard.minPaymentFloor != null ? Number(editingCard.minPaymentFloor) : undefined,
+                        minPaymentPercentage: editingCard.minPaymentPercentage != null ? Number(editingCard.minPaymentPercentage) : undefined,
                     } : undefined}
                 />
             )}

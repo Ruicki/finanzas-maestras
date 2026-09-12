@@ -21,6 +21,14 @@ export interface CreateIncomeInput {
 
 export async function createIncome(data: CreateIncomeInput) {
     await requireOwnership(data.profileId);
+    if (data.amount <= 0) throw new Error('El monto debe ser mayor a cero');
+
+    if (data.accountId) {
+        const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
+    }
+
     return await prisma.$transaction(async (tx) => {
         const income = await tx.additionalIncome.create({
             data: {
@@ -51,6 +59,13 @@ export async function updateIncome(id: number, data: Partial<CreateIncomeInput>)
     const oldIncome = await prisma.additionalIncome.findUnique({ where: { id } });
     if (!oldIncome) throw new Error('Ingreso no encontrado');
     await requireOwnership(oldIncome.profileId);
+    if (data.amount !== undefined && data.amount <= 0) throw new Error('El monto debe ser mayor a cero');
+
+    if (data.accountId !== undefined && data.accountId !== null) {
+        const account = await prisma.account.findUnique({ where: { id: data.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.profileId !== oldIncome.profileId) throw new Error('La cuenta no pertenece a este perfil');
+    }
 
     await prisma.$transaction(async (tx) => {
         // Revertir impacto anterior
@@ -79,6 +94,7 @@ export async function updateIncome(id: number, data: Partial<CreateIncomeInput>)
                 amount: newAmount,
                 type: data.type,
                 frequency: data.frequency,
+                durationMonths: data.durationMonths,
                 accountId: newAccountId,
                 icon: data.icon,
                 date: data.date,

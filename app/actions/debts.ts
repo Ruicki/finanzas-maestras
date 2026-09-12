@@ -1,9 +1,11 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { Account } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { toNum, toNumOrNull } from './budget/serializers';
 import { requireOwnership } from '@/lib/auth-utils';
+import { decrementAccountBalance, decrementLoanBalance } from '@/lib/ledger';
 
 export type CreateLoanInput = {
     name: string;
@@ -91,28 +93,27 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
         throw new Error(`El pago excede la deuda actual ($${Number(loan.currentBalance).toFixed(2)})`);
     }
 
-    let account;
+    let account: Account | null = null;
     if (sourceAccountId) {
         account = await prisma.account.findUnique({ where: { id: sourceAccountId } });
         if (!account) throw new Error("Cuenta no encontrada");
         if (account.profileId !== loan.profileId) throw new Error("La cuenta no pertenece a este perfil");
+        if (account.lockDate && new Date(account.lockDate) > new Date()) {
+            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+        }
         if (Number(account.balance) < amount) throw new Error("Fondos insuficientes en la cuenta de origen");
     }
 
     await prisma.$transaction(async (tx) => {
-        // 1. Deducir de la cuenta de origen (SI EXISTE)
-        if (sourceAccountId) {
-            await tx.account.update({
-                where: { id: sourceAccountId },
-                data: { balance: { decrement: amount } }
-            });
+        // 1. Deducir de la cuenta de origen (SI EXISTE) — UPDATE condicionado para
+        // cerrar la carrera de dos pagos concurrentes sobre el mismo saldo.
+        if (sourceAccountId && account) {
+            await decrementAccountBalance(tx, sourceAccountId, amount, account.name);
         }
 
-        // 2. Reducir el saldo del préstamo
-        const updatedLoan = await tx.loan.update({
-            where: { id: loanId },
-            data: { currentBalance: { decrement: amount } }
-        });
+        // 2. Reducir el saldo del préstamo, igual de condicionado
+        await decrementLoanBalance(tx, loanId, amount);
+        const updatedLoan = await tx.loan.findUniqueOrThrow({ where: { id: loanId } });
 
         // 3. Registrar Gasto (SOLO SI HAY CUENTA, ya que Expense requiere accountId usualmente o queremos trazarlo)
         // Para simplificar, si no hay cuenta, NO creamos gasto (es un pago externo/ajuste)

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { BANK_PRESETS, BANK_OPTIONS } from '@/lib/credit-card-presets';
 import { XIcon, ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@animateicons/react/lucide';
 import { useScrollLock } from '@/hooks/useScrollLock';
@@ -24,15 +25,20 @@ interface CreditCardWizardProps {
         insuranceRate?: number;
         annualFee?: number;
         annualFeeMonth?: number | null;
+        bank?: string | null;
+        itbmsRate?: number;
+        minPaymentFloor?: number;
+        minPaymentPercentage?: number;
     };
 }
 
 export default function CreditCardWizard({ profileId, onClose, onSuccess, onCreate, onUpdate, editingCard }: CreditCardWizardProps) {
-    const [step, setStep] = useState(1);
+    // Al editar ya se conoce el banco/nombre: se salta directo al detalle.
+    const [step, setStep] = useState(editingCard ? 2 : 1);
     const [loading, setLoading] = useState(false);
 
     // Step 1
-    const [bank, setBank] = useState('');
+    const [bank, setBank] = useState(editingCard?.bank || '');
     const [name, setName] = useState(editingCard?.name || '');
 
     // Step 2
@@ -44,20 +50,29 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     const [hasAnnualFee, setHasAnnualFee] = useState(!!editingCard?.annualFee);
     const [annualFee, setAnnualFee] = useState(editingCard?.annualFee?.toString() || '');
     const [annualFeeMonth, setAnnualFeeMonth] = useState(editingCard?.annualFeeMonth?.toString() || '');
-    const [insuranceRate, setInsuranceRate] = useState(editingCard?.insuranceRate?.toString() || '0.25');
+    const [insuranceRate, setInsuranceRate] = useState(editingCard?.insuranceRate?.toString() ?? '0.25');
+    const [itbmsRate, setItbmsRate] = useState(editingCard?.itbmsRate?.toString() ?? '0.07');
+    const [minPaymentFloor, setMinPaymentFloor] = useState(editingCard?.minPaymentFloor?.toString() ?? '0');
+    const [minPaymentPercentage, setMinPaymentPercentage] = useState(editingCard?.minPaymentPercentage?.toString() ?? '3.0');
 
     useScrollLock(true);
 
-    // Auto-fill when bank is selected
-    useEffect(() => {
-        if (bank && BANK_PRESETS[bank]) {
-            const preset = BANK_PRESETS[bank];
+    // Autocompletar SOLO cuando el usuario elige un banco a mano — nunca al
+    // montar el componente, para no pisar los valores reales de una tarjeta
+    // que ya se está editando con los del preset del banco.
+    const handleBankChange = (newBank: string) => {
+        setBank(newBank);
+        const preset = newBank ? BANK_PRESETS[newBank] : null;
+        if (preset) {
             setInterestRate(preset.interestRate.toString());
             setAnnualFee(preset.annualFee.toString());
             setHasAnnualFee(preset.annualFee > 0);
             setInsuranceRate(preset.insuranceRate.toString());
+            setItbmsRate(preset.itbmsRate.toString());
+            setMinPaymentFloor(preset.minPaymentFloor.toString());
+            setMinPaymentPercentage(preset.minPaymentPercentage.toString());
         }
-    }, [bank]);
+    };
 
     const getPreset = () => bank ? BANK_PRESETS[bank] : null;
 
@@ -75,14 +90,15 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 limit: parseFloat(limit) || 0,
                 initialBalance: parseFloat(balance) || 0,
                 interestRate: parseFloat(interestRate) || 0,
-                insuranceRate: getPreset()?.insuranceRate || parseFloat(insuranceRate) || 0.25,
-                itbmsRate: getPreset()?.itbmsRate ?? 0.07,
-                minPaymentFloor: getPreset()?.minPaymentFloor ?? 0,
+                insuranceRate: parseFloat(insuranceRate) || 0.25,
+                itbmsRate: parseFloat(itbmsRate) || 0.07,
+                minPaymentFloor: parseFloat(minPaymentFloor) || 0,
+                minPaymentPercentage: parseFloat(minPaymentPercentage) || 3.0,
                 cutoffDay: parseInt(cutoffDay) || 1,
                 paymentDay: parseInt(paymentDay) || 1,
-                annualFee: hasAnnualFee ? (parseFloat(annualFee) || 0) : 0,
-                annualFeeMonth: hasAnnualFee ? (parseInt(annualFeeMonth) || undefined) : undefined,
-                bank: bank || undefined,
+                annualFee: hasAnnualFee ? (parseFloat(annualFee) || 0) : null,
+                annualFeeMonth: hasAnnualFee ? (parseInt(annualFeeMonth) || null) : null,
+                bank: bank || null,
                 profileId,
             };
             
@@ -94,7 +110,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
             onSuccess();
             onClose();
         } catch (error) {
-            console.error(error);
+            toast.error(error instanceof Error ? error.message : 'Error al guardar la tarjeta');
         } finally {
             setLoading(false);
         }
@@ -107,7 +123,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
                     {/* Header */}
                     <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                        <h2 className="font-bold text-lg text-zinc-900 dark:text-white">Nueva Tarjeta de Crédito</h2>
+                        <h2 className="font-bold text-lg text-zinc-900 dark:text-white">{editingCard ? 'Editar Tarjeta de Crédito' : 'Nueva Tarjeta de Crédito'}</h2>
                         <button onClick={onClose} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
                             <XIcon className="w-5 h-5 text-zinc-400" />
                         </button>
@@ -119,7 +135,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Banco emisor</label>
                             <select
                                 value={bank}
-                                onChange={(e) => setBank(e.target.value)}
+                                onChange={(e) => handleBankChange(e.target.value)}
                                 className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                             >
                                 <option value="">Seleccionar banco...</option>
@@ -338,7 +354,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         ) : (
                             <>
                                 <CheckIcon className="w-4 h-4" />
-                                Crear Tarjeta
+                                {editingCard ? 'Guardar Cambios' : 'Crear Tarjeta'}
                             </>
                         )}
                     </button>

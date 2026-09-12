@@ -20,6 +20,7 @@ interface BudgetExpense {
     categoryId?: number | null;
     category: string;
     amount: number;
+    isProjected?: boolean;
 }
 
 interface BudgetCardProps {
@@ -36,7 +37,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
     const [isEditing, setIsEditing] = useState(false);
 
     // Calculate stats
-    const catExpenses = expenses.filter(e => e.categoryId === category.id || e.category === category.name);
+    const catExpenses = expenses.filter(e => !e.isProjected && (e.categoryId === category.id || e.category === category.name));
     const total = catExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
     // Límite del mes seleccionado: presupuesto específico del mes, o fallback al límite global

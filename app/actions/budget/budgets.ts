@@ -59,6 +59,10 @@ export async function setCategoryBudget(data: CategoryBudgetInput) {
 }
 
 export async function getCategoryBudget(categoryId: number, year: number, month: number) {
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) throw new Error('Categoría no encontrada');
+    await requireOwnership(category.profileId);
+
     const b = await prisma.categoryBudget.findUnique({
         where: {
             categoryId_year_month: { categoryId, year, month },
