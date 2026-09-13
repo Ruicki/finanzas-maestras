@@ -26,7 +26,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-zinc-50 dark:bg-black font-sans">
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 font-sans">
             <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-500">
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center text-3xl font-black mx-auto mb-4 shadow-lg rotate-3 hover:rotate-6 transition-transform">
