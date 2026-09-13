@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
-import { decrementAccountBalance } from '@/lib/ledger';
+import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ export async function createExpense(data: CreateExpenseInput) {
             return created;
         });
 
-        revalidatePath('/budget');
+        revalidatePath('/');
         return { ...expense, amount: toNum(expense.amount) };
     } catch (error) {
         logger.error('Error creating expense:', error);
@@ -149,10 +149,14 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     });
                 }
                 if (oldExpense.linkedCardId) {
-                    await tx.creditCard.update({
-                        where: { id: oldExpense.linkedCardId },
-                        data: { balance: { decrement: oldExpense.amount } },
-                    });
+                    // Mismo motivo que en deleteExpense: revertir el cargo viejo
+                    // no puede dejar la tarjeta en negativo.
+                    await decrementCreditCardBalance(
+                        tx,
+                        oldExpense.linkedCardId,
+                        Number(oldExpense.amount),
+                        `No se puede editar "${oldExpense.name}": el cargo de $${Number(oldExpense.amount).toFixed(2)} a la tarjeta ya fue pagado, asi que no queda saldo que revertir.`,
+                    );
                 }
 
                 if (newAccountId) {
@@ -186,7 +190,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
             });
         });
 
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         logger.error(`Error updating expense ${id}:`, error);
         throw error;
@@ -209,17 +213,23 @@ export async function deleteExpense(id: number): Promise<void> {
                     });
                 }
                 if (expense.linkedCardId) {
-                    await tx.creditCard.update({
-                        where: { id: expense.linkedCardId },
-                        data: { balance: { decrement: expense.amount } },
-                    });
+                    // Con guard, no con un decrement crudo: si el cargo ya se
+                    // pago, el saldo de la tarjeta no alcanza para revertirlo y
+                    // un decrement lo dejaria en negativo — deuda fantasma que
+                    // el patrimonio neto resta y dinero que se pierde sin aviso.
+                    await decrementCreditCardBalance(
+                        tx,
+                        expense.linkedCardId,
+                        Number(expense.amount),
+                        `No se puede borrar "${expense.name}": el cargo de $${Number(expense.amount).toFixed(2)} a la tarjeta ya fue pagado, asi que no queda saldo que revertir. Si el pago fue un error, corrigelo desde la tarjeta y vuelve a intentarlo.`,
+                    );
                 }
             }
 
             await tx.expense.delete({ where: { id } });
         });
 
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         logger.error(`Error deleting expense ${id}:`, error);
         throw error;
@@ -267,7 +277,7 @@ export async function confirmExpense(id: number) {
             }
         });
 
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         logger.error(`Error confirming expense ${id}:`, error);
         throw error;
@@ -431,7 +441,7 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
             }
         }
 
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         result.errors.push(`Error general: ${error}`);
     }
@@ -452,7 +462,7 @@ export async function markSubscriptionPaid(expenseId: number): Promise<void> {
         data: { lastPaidAt: new Date() },
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function markSubscriptionUnpaid(expenseId: number): Promise<void> {
@@ -466,5 +476,5 @@ export async function markSubscriptionUnpaid(expenseId: number): Promise<void> {
         data: { lastPaidAt: null },
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }

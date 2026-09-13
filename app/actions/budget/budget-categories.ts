@@ -16,7 +16,7 @@ export async function updateCategoryLimit(categoryId: number, limit: number) {
             where: { id: categoryId },
             data: { monthlyLimit: limit },
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error('Error updating limit:', error);
@@ -34,7 +34,7 @@ export async function toggleCategoryRollover(categoryId: number, isRollover: boo
             where: { id: categoryId },
             data: { isRollover },
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error('Error toggling rollover:', error);
@@ -52,7 +52,7 @@ export async function updateCategoryRolloverBalance(categoryId: number, balance:
             where: { id: categoryId },
             data: { rolloverBalance: balance },
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error('Error updating rollover balance:', error);

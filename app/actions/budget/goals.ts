@@ -94,7 +94,7 @@ export async function createGoal(data: CreateGoalInput) {
         });
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeGoal(goal);
 }
 
@@ -136,7 +136,7 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
             destinationAccountId: data.destinationAccountId,
         },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeGoal(goal);
 }
 
@@ -148,7 +148,7 @@ export async function toggleGoalPaused(id: number): Promise<void> {
         where: { id },
         data: { isPaused: !goal.isPaused },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteGoal(id: number): Promise<void> {
@@ -159,7 +159,7 @@ export async function deleteGoal(id: number): Promise<void> {
         throw new Error('No se puede eliminar una meta con dinero. Usa deleteGoalWithReclaim para reclamar los fondos primero.');
     }
     await prisma.goal.delete({ where: { id } });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteGoalWithReclaim(
@@ -195,7 +195,7 @@ export async function deleteGoalWithReclaim(
 
         await tx.goal.delete({ where: { id } });
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function handleGoalTransaction(
@@ -296,7 +296,7 @@ export async function handleGoalTransaction(
         });
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeGoal(updatedGoal);
 }
 

@@ -41,7 +41,7 @@ export async function createLoan(data: CreateLoanInput) {
         }
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
     return {
         ...loan,
         totalAmount: toNum(loan.totalAmount),
@@ -71,7 +71,7 @@ export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {
             isAutomatic: data.isAutomatic,
         }
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteLoan(id: number) {
@@ -79,7 +79,7 @@ export async function deleteLoan(id: number) {
     if (!loan) throw new Error('Préstamo no encontrado');
     await requireOwnership(loan.profileId);
     await prisma.loan.delete({ where: { id } });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function payLoan(loanId: number, amount: number, sourceAccountId?: number | null) {
@@ -156,7 +156,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
         }
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 // ─── INTERÉS AUTOMÁTICO ─────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ export async function processLoanInterest(): Promise<ProcessLoanInterestResult> 
             }
         }
 
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         result.errors.push(`Error general: ${error}`);
     }

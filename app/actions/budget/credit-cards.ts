@@ -46,7 +46,7 @@ export async function createCreditCard(data: CreateCreditCardInput) {
             balance: data.initialBalance ?? 0,
         },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeCreditCard(card);
 }
 
@@ -75,7 +75,7 @@ export async function updateCreditCardDetails(
             bank: data.bank,
         },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeCreditCard(card);
 }
 
@@ -90,7 +90,7 @@ export async function updateCreditCardBalance(id: number, balance: number) {
         where: { id },
         data: { balance },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeCreditCard(card);
 }
 
@@ -99,7 +99,7 @@ export async function deleteCreditCard(id: number) {
     if (!card) throw new Error('Tarjeta no encontrada');
     await requireOwnership(card.profileId);
     await prisma.creditCard.delete({ where: { id } });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function recalculateCardBalance(cardId: number) {
@@ -136,7 +136,7 @@ export async function recalculateCardBalance(cardId: number) {
     });
 
     logger.info(`Recalculated card ${cardId}: ${oldBalance} → ${roundedBalance} (linked: ${totalLinked}, payments: ${totalPayments})`);
-    revalidatePath('/budget');
+    revalidatePath('/');
 
     return {
         oldBalance,
@@ -203,7 +203,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
         });
 
         logger.info(`Credit card payment: $${amount} to card ${cardId} from account ${accountId}`);
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         logger.error('Error paying credit card:', error);
         throw error;

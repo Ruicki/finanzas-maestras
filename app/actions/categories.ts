@@ -36,7 +36,7 @@ export async function initializeDefaultCategories(profileId: number) {
         )
     );
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 // Helper para serializar categorías
@@ -75,7 +75,7 @@ export async function createCategory(profileId: number, name: string, icon: stri
             profileId
         }
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeCategory(category);
 }
 
@@ -93,7 +93,7 @@ export async function updateCategory(id: number, name: string, icon: string, col
             type
         }
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return serializeCategory(category);
 }
 
@@ -108,7 +108,7 @@ export async function deleteCategory(id: number) {
     });
 
     await prisma.category.delete({ where: { id } });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function updateCategoryLimit(id: number, limit: number | null) {
@@ -120,5 +120,5 @@ export async function updateCategoryLimit(id: number, limit: number | null) {
         where: { id },
         data: { monthlyLimit: limit }
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
