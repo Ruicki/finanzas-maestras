@@ -57,6 +57,18 @@ export const COLOR_THEMES = [
         background: '#F1ECE2',
         fontLabel: 'Supreme',
     },
+    {
+        // Pedido con los tonos claros dominando el fondo y los recuadros en
+        // verde, al revés que el resto: la superficie no es el tono más claro
+        // de la paleta sino el oliva aclarado con su propio gris.
+        id: 'salvia',
+        label: 'Salvia',
+        accent: '#8C9B6E',
+        secondary: '#EBE3D7',
+        surface: 'color-mix(in srgb, #8C9B6E 30%, #EEEFEF)',
+        background: '#F7F2EC',
+        fontLabel: 'Excon',
+    },
 ] as const;
 
 export type ColorThemeId = typeof COLOR_THEMES[number]['id'];

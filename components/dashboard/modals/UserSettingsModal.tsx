@@ -130,7 +130,7 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
 
                     <div className="space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-4">
                         <label className="text-sm font-bold">Tema de color</label>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             {COLOR_THEMES.map((theme) => (
                                 <button
                                     key={theme.id}
