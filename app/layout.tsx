@@ -8,6 +8,7 @@ import {
   Bodoni_Moda,
   Outfit,
   Figtree,
+  Familjen_Grotesk,
 } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -46,6 +47,7 @@ const boskaFont = Petrona({ variable: "--font-boska-family", weight: ["500", "60
 const stardomFont = Bodoni_Moda({ variable: "--font-stardom-family", weight: ["500", "600"], subsets: ["latin"] });
 const satoshiFont = Outfit({ variable: "--font-satoshi-family", weight: ["500", "600"], subsets: ["latin"] });
 const supremeFont = Figtree({ variable: "--font-supreme-family", weight: ["500", "600"], subsets: ["latin"] });
+const exconFont = Familjen_Grotesk({ variable: "--font-excon-family", weight: ["500", "600"], subsets: ["latin"] });
 
 const themeInitScript = `(function(){try{var k=${JSON.stringify(COLOR_THEME_STORAGE_KEY)};var ids=${JSON.stringify(COLOR_THEME_IDS)};var v=localStorage.getItem(k);document.documentElement.setAttribute('data-color-theme', v && ids.indexOf(v)>-1 ? v : ${JSON.stringify(DEFAULT_COLOR_THEME)});}catch(e){}})();`;
 
@@ -62,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${bodyFont.variable} ${monoFont.variable} ${accentFont.variable} ${switzerFont.variable} ${boskaFont.variable} ${stardomFont.variable} ${satoshiFont.variable} ${supremeFont.variable} antialiased`}
+        className={`${bodyFont.variable} ${monoFont.variable} ${accentFont.variable} ${switzerFont.variable} ${boskaFont.variable} ${stardomFont.variable} ${satoshiFont.variable} ${supremeFont.variable} ${exconFont.variable} antialiased`}
       >
         {/* Fija data-color-theme antes del primer pintado para evitar flash del tema por defecto */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
