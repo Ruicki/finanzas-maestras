@@ -99,7 +99,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     </button>
                     <button
                         onClick={() => onPay(loan)}
-                        className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
+                        className="flex-1 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
                     >
                         Pagar
                     </button>

@@ -225,7 +225,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </button>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all"
+                        className="flex items-center gap-2 bg-indigo-600 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all"
                     >
                         <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva Cuenta</span>
@@ -302,7 +302,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </p>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+                        className="px-8 py-3 bg-indigo-600 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
                     >
                         Crear Cuenta
                     </button>

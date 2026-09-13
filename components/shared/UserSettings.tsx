@@ -119,7 +119,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black dark:bg-white text-white dark:text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
+                        className="w-full bg-indigo-600 dark:bg-white text-white dark:text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
                     >
                         {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <><SaveIcon size={18} /> Guardar Cambios</>}
                     </button>

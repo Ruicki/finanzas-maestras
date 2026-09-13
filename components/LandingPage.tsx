@@ -9,7 +9,7 @@ export default function LandingPage() {
             <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-black font-black text-xl rotate-3">
+                        <div className="w-10 h-10 bg-indigo-600 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-black font-black text-xl rotate-3">
                             $
                         </div>
                         <span className="font-black text-xl tracking-tight hidden sm:block">Finanzas Maestras</span>
@@ -20,7 +20,7 @@ export default function LandingPage() {
                         </Link>
                         <Link
                             href="/register"
-                            className="bg-black dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-transform"
+                            className="bg-indigo-600 dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-transform"
                         >
                             Comenzar Gratis
                         </Link>
@@ -161,7 +161,7 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
 function StepCard({ number, title, desc }: { number: string, title: string, desc: string }) {
     return (
         <div className="bg-surface p-6 rounded-2xl md:bg-transparent">
-            <div className="w-24 h-24 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-3xl flex items-center justify-center text-3xl font-black mb-6 mx-auto shadow-xl rotate-3">
+            <div className="w-24 h-24 bg-indigo-600 dark:bg-white text-white dark:text-black rounded-3xl flex items-center justify-center text-3xl font-black mb-6 mx-auto shadow-xl rotate-3">
                 {number}
             </div>
             <h3 className="text-2xl font-black mb-3 text-center">{title}</h3>

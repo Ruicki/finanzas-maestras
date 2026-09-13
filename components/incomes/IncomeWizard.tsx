@@ -378,7 +378,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                                             key={icon}
                                             onClick={() => setSelectedIcon(icon)}
                                             className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-all ${selectedIcon === icon
-                                                ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-110'
+                                                ? 'bg-indigo-600 dark:bg-white text-white dark:text-black shadow-lg scale-110'
                                                 : 'bg-white dark:bg-zinc-800 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                                 }`}
                                         >

@@ -129,7 +129,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                     {/* Add button */}
                     <button
                         onClick={() => setShowWizard(true)}
-                        className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="flex items-center gap-2 bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva</span>
@@ -171,7 +171,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         <p className="text-sm mt-2 text-zinc-500">Agrega tus tarjetas para visualizar deudas y fechas de corte.</p>
                         <button
                             onClick={() => setShowWizard(true)}
-                            className="mt-6 px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:scale-105 transition-transform"
+                            className="mt-6 px-6 py-3 bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:scale-105 transition-transform"
                         >
                             Crear Primera Tarjeta
                         </button>

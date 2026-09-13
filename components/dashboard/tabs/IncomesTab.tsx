@@ -88,7 +88,7 @@ export default function IncomesTab({ incomes, salaries, accounts, profileId, onU
                             </p>
                             <button
                                 onClick={() => { setIncomeToEdit(null); setShowIncomeWizard(true); }}
-                                className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm"
+                                className="px-6 py-3 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm"
                             >
                                 Añadir Ingreso
                             </button>

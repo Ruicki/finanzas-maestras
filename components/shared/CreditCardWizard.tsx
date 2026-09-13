@@ -164,7 +164,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         <button
                             onClick={() => setStep(2)}
                             disabled={!bank}
-                            className="w-full py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                         >
                             Siguiente
                             <ChevronRightIcon className="w-4 h-4" />
@@ -347,7 +347,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                     <button
                         onClick={handleCreate}
                         disabled={!limit || loading}
-                        className="w-full py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />

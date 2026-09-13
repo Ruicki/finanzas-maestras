@@ -200,7 +200,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                                 <button
                                                     key={icon}
                                                     onClick={() => setNewIcon(icon)}
-                                                    className={`aspect-square rounded-2xl flex items-center justify-center transition-all ${newIcon === icon ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-zinc-800 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}
+                                                    className={`aspect-square rounded-2xl flex items-center justify-center transition-all ${newIcon === icon ? 'bg-indigo-600 dark:bg-white text-white dark:text-black shadow-lg scale-105' : 'bg-white dark:bg-zinc-800 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'}`}
                                                 >
                                                     <CategoryIcon iconName={icon} size={24} />
                                                 </button>
@@ -219,7 +219,7 @@ export default function CategoryManager({ categories, profileId, onClose, onUpda
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="flex-1 py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all shadow-lg"
+                                    className="flex-1 py-4 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all shadow-lg"
                                 >
                                     {editId ? 'Actualizar' : 'Guardar Categoría'}
                                 </button>
