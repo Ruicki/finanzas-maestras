@@ -192,7 +192,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                 <div className="flex gap-2 mt-auto">
                     <button
                         onClick={() => onPay(card)}
-                        className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+                        className="flex-1 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
                     >
                         Pagar
                     </button>

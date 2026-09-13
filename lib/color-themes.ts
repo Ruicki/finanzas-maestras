@@ -65,7 +65,7 @@ export const COLOR_THEMES = [
         label: 'Salvia',
         accent: '#8C9B6E',
         secondary: '#EBE3D7',
-        surface: 'color-mix(in srgb, #8C9B6E 30%, #EEEFEF)',
+        surface: 'color-mix(in srgb, #8C9B6E 45%, #EEEFEF)',
         background: '#F7F2EC',
         fontLabel: 'Excon',
     },

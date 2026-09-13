@@ -428,7 +428,7 @@ export default function ExpenseWizard({
             <div className="pt-2 flex justify-end">
                 <button
                     onClick={handleSave}
-                    className="w-full md:w-auto md:max-w-[240px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
+                    className="w-full md:w-auto md:max-w-[240px] bg-indigo-600 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                     <SaveIcon className="w-5 h-5" />
                     {!isEditing && isProjected ? 'Guardar Proyección' : 'Guardar'}

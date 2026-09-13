@@ -103,7 +103,7 @@ export default function LoginPage() {
                         */}
                     </div>
 
-                    <p className="text-center text-xs text-zinc-400 mt-6">
+                    <p className="text-center text-xs text-zinc-500 mt-6">
                         Si olvidaste tu contraseña, contacta al administrador.
                     </p>
                 </form>

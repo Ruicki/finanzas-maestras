@@ -252,7 +252,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                 ) : (
                     goal.type === 'FIXED' && goal.contributionAmount ? (
                         <div className="grid grid-cols-2 gap-2">
-                            <button disabled={submitting} onClick={handleQuota} className="py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none">
+                            <button disabled={submitting} onClick={handleQuota} className="py-4 rounded-2xl bg-indigo-600 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none">
                                 <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
                                 <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
                             </button>
@@ -568,7 +568,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <button onClick={() => setReclaimModal({ isOpen: false, goal: null })} className="p-4 rounded-xl font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">Cancelar</button>
-                            <button onClick={executeReclaim} disabled={!reclaimAccountId || isReclaiming} className="p-4 rounded-xl bg-black dark:bg-white text-white dark:text-black font-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <button onClick={executeReclaim} disabled={!reclaimAccountId || isReclaiming} className="p-4 rounded-xl bg-indigo-600 dark:bg-white text-white dark:text-black font-black hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                                 {isReclaiming ? <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /><span>Procesando...</span></> : <span>Reclamar</span>}
                             </button>
                         </div>
@@ -696,7 +696,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                 <input type="date" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} className="w-full bg-zinc-50 dark:bg-zinc-900 border-transparent rounded-2xl px-5 py-3 font-bold text-lg outline-none mt-1" />
                             </div>
 
-                            <button onClick={handleSave} className="w-full py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">
+                            <button onClick={handleSave} className="w-full py-4 rounded-2xl bg-indigo-600 dark:bg-white text-white dark:text-black font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">
                                 {editingGoalId ? 'Guardar Cambios' : 'Crear Meta'}
                             </button>
                         </div>

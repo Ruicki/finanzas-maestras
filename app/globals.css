@@ -290,7 +290,7 @@
      verdes de forma inequívoca contra la crema del fondo, pero lo bastante
      claras para que encima se sigan leyendo la tinta y el verde/rojo de
      ingreso y gasto. */
-  --t-surface: color-mix(in srgb, #8c9b6e 30%, #eeefef);
+  --t-surface: color-mix(in srgb, #8c9b6e 45%, #eeefef);
   --t-bg: #f7f2ec;
   --t-hue-spread: 0.35;
   --t-title-font: var(--font-excon-family);

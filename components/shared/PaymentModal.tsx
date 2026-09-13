@@ -184,7 +184,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                     <button
                         onClick={handleConfirm}
                         disabled={!isValid || loading}
-                        className="flex-1 py-3 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                        className="flex-1 py-3 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />

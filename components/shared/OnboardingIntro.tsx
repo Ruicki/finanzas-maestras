@@ -71,7 +71,7 @@ export default function OnboardingIntro({ profileId, onClose, onNavigate }: Onbo
                         <button
                             onClick={() => goTo('accounts')}
                             disabled={dismissing}
-                            className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-3.5 rounded-2xl font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 py-3.5 rounded-2xl font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             Agregar cuenta bancaria <ArrowRight size={16} />
                         </button>

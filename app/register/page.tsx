@@ -29,7 +29,7 @@ export default function RegisterPage() {
         <div className="min-h-screen flex flex-col items-center justify-center p-4 font-sans">
             <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-500">
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center text-3xl font-black mx-auto mb-4 shadow-lg rotate-3 hover:rotate-6 transition-transform">
+                    <div className="w-16 h-16 bg-indigo-600 dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center text-3xl font-black mx-auto mb-4 shadow-lg rotate-3 hover:rotate-6 transition-transform">
                         $
                     </div>
                     <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">Crear Cuenta</h1>
@@ -82,7 +82,7 @@ export default function RegisterPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-zinc-900 dark:bg-white text-white dark:text-black font-black py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100 mt-4"
+                        className="w-full bg-indigo-600 dark:bg-white text-white dark:text-black font-black py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100 mt-4"
                     >
                         {loading ? 'Creando cuenta...' : 'Registrarse'}
                     </button>
