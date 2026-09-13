@@ -4,7 +4,7 @@ import { BarChart3 } from 'lucide-react';
 
 export default function LandingPage() {
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+        <div className="min-h-screen text-zinc-900 dark:text-white selection:bg-indigo-500 selection:text-white overflow-x-hidden">
             {/* Navbar */}
             <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -84,7 +84,7 @@ export default function LandingPage() {
             </section>
 
             {/* Features Grid */}
-            <section className="py-32 px-6 bg-zinc-50 dark:bg-zinc-950/50">
+            <section className="py-32 px-6 bg-surface">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <FeatureCard
@@ -107,7 +107,7 @@ export default function LandingPage() {
             </section>
 
             {/* Steps Section */}
-            <section className="py-32 px-6 bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-900">
+            <section className="py-32 px-6 border-t border-zinc-100 dark:border-zinc-900">
                 <div className="max-w-7xl mx-auto text-center mb-20">
                     <h2 className="text-4xl md:text-5xl font-black mb-6">Empezar es ridículamente fácil</h2>
                 </div>
@@ -131,7 +131,7 @@ export default function LandingPage() {
                     </h2>
                     <Link
                         href="/register"
-                        className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-10 py-5 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl relative z-10"
+                        className="inline-flex items-center gap-2 bg-surface text-zinc-900 dark:text-white px-10 py-5 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl relative z-10"
                     >
                         Únete Ahora
                         <ArrowRightIcon />
@@ -160,7 +160,7 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
 
 function StepCard({ number, title, desc }: { number: string, title: string, desc: string }) {
     return (
-        <div className="bg-white dark:bg-black p-6 rounded-2xl md:bg-transparent">
+        <div className="bg-surface p-6 rounded-2xl md:bg-transparent">
             <div className="w-24 h-24 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-3xl flex items-center justify-center text-3xl font-black mb-6 mx-auto shadow-xl rotate-3">
                 {number}
             </div>
