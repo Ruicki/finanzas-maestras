@@ -47,12 +47,14 @@ export const COLOR_THEMES = [
         fontLabel: 'Satoshi',
     },
     {
+        // Invertido respecto al resto: la crema es la página y el olivo el
+        // relleno de las tarjetas, aclarado para no comerse el contraste.
         id: 'burdeos',
         label: 'Burdeos',
         accent: '#6B0E0E',
         secondary: '#2E0000',
-        surface: '#F1ECE2',
-        background: '#767F6E',
+        surface: 'color-mix(in srgb, #767F6E 32%, white)',
+        background: '#F1ECE2',
         fontLabel: 'Supreme',
     },
 ] as const;

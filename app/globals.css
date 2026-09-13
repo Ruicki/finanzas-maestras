@@ -15,14 +15,10 @@
    fondo de página (ver [data-color-theme] abajo). emerald/red/amber quedan
    intactos a propósito: son el código semántico ingreso/gasto/alerta. */
 @theme {
-  --color-zinc-50: #f4f7f5;
-  --color-zinc-100: #e7eeea;
-  --color-zinc-200: #d3dfd8;
-  --color-zinc-300: #b3c4ba;
-  --color-zinc-700: #363b54;
-  --color-zinc-800: #23264a;
-  --color-zinc-900: #16182f;
-  --color-zinc-950: #0d0e1d;
+  --color-zinc-50: #f6f7f6;
+  --color-zinc-100: #eceeed;
+  --color-zinc-200: #dcdfdd;
+  --color-zinc-300: #bcc2bf;
 }
 
 /* El acento (indigo-*) sale de --t-accent (tono exacto de la paleta, resuelto
@@ -55,6 +51,16 @@
   --color-zinc-400: color-mix(in srgb, var(--foreground) 45%, transparent);
   --color-zinc-500: color-mix(in srgb, var(--foreground) 64%, transparent);
   --color-zinc-600: color-mix(in srgb, var(--foreground) 80%, transparent);
+
+  /* Superficies oscuras: se derivan de --t-dark (el tono más oscuro de la
+     paleta del tema), bajándole la luminosidad pero conservando su matiz. Así
+     las tarjetas del modo oscuro pertenecen al tema en vez de ser un azul
+     marino común, y en modo claro los botones oscuros y la tinta también
+     llevan el matiz del tema. */
+  --color-zinc-700: oklch(from var(--t-dark) 0.35 0.045 h);
+  --color-zinc-800: oklch(from var(--t-dark) 0.27 0.042 h);
+  --color-zinc-900: oklch(from var(--t-dark) 0.21 0.038 h);
+  --color-zinc-950: oklch(from var(--t-dark) 0.13 0.03 h);
 
   /* Gama decorativa armonizada: los azules, morados, rosas, naranjas y
      amarillos que la app usa para categorías, gráficos y etiquetas ya no son
@@ -193,10 +199,14 @@
      · página    = el segundo más claro
      · acento    = el tono dominante (el que eligió el usuario)
      · secundario= el restante, para bordes y detalles
-   En modo oscuro la base es fija y solo cambia el acento (--t-accent-d), que
-   usa otro tono real de la misma paleta cuando el dominante es demasiado
-   oscuro para verse sobre fondo oscuro. */
+   En modo oscuro cada tema tiene su propia base, construida a partir de
+   --t-dark (el tono MÁS OSCURO de su paleta): se le baja la luminosidad
+   conservando su matiz, así el fondo oscuro de cada tema es reconocible
+   (azul noche, bosque profundo, ciruela, berenjena, vino) en vez de un
+   gris común. --t-accent-d es el acento en oscuro, que usa otro tono real
+   de la paleta cuando el dominante es demasiado oscuro para destacar. */
 [data-color-theme="marino"] {
+  --t-dark: #2f6699;
   --t-accent-l: #2f6699;
   --t-accent-d: #63a0b5;
   --t-btn: #2f6699;
@@ -209,6 +219,7 @@
   /* Única paleta sin un segundo tono claro: para que la tarjeta se separe del
      fondo, su superficie es el MISMO verde salvia aclarado — no se introduce
      ningún color ajeno a la paleta. */
+  --t-dark: #0d2b2e;
   --t-accent-l: #2a8562;
   --t-accent-d: #2a8562;
   --t-btn: #2a8562;
@@ -220,6 +231,7 @@
 [data-color-theme="cuarzo"] {
   /* Paleta 100% pastel: no tiene ningún tono oscuro, así que el relleno de
      botón se oscurece desde su propio lavanda para que el texto se lea. */
+  --t-dark: #c4b0dc;
   --t-accent-l: #c4b0dc;
   --t-accent-d: #c4b0dc;
   --t-btn: color-mix(in srgb, #c4b0dc 50%, black);
@@ -229,6 +241,7 @@
   --t-title-font: var(--font-stardom-family);
 }
 [data-color-theme="ultravioleta"] {
+  --t-dark: #2e1f45;
   --t-accent-l: #2e1f45;
   --t-accent-d: #6fe0ce;
   --t-btn: #2e1f45;
@@ -238,12 +251,16 @@
   --t-title-font: var(--font-satoshi-family);
 }
 [data-color-theme="burdeos"] {
+  --t-dark: #2e0000;
   --t-accent-l: #6b0e0e;
   --t-accent-d: color-mix(in srgb, #6b0e0e 55%, white);
   --t-btn: #6b0e0e;
   --t-secondary: #2e0000;
-  --t-surface: #f1ece2;
-  --t-bg: #767f6e;
+  /* Invertido a petición del usuario: la crema pasa a ser la página y el
+     olivo el relleno de las tarjetas — aclarado, porque a su tono original
+     (medio) los importes y enlaces encima perdían contraste. */
+  --t-surface: color-mix(in srgb, #767f6e 32%, white);
+  --t-bg: #f1ece2;
   --t-title-font: var(--font-supreme-family);
 }
 
@@ -264,9 +281,12 @@
 
 .dark {
   --t-accent: var(--t-accent-d);
-  --background: #14152b;
-  --foreground: #edebfa;
-  --surface: var(--color-zinc-900);
+  --background: oklch(from var(--t-dark) 0.17 0.035 h);
+  --foreground: oklch(from var(--t-dark) 0.95 0.018 h);
+  /* Definido directamente y no como var(--color-zinc-900): los valores de
+     @theme inline se incrustan en las utilidades, no se publican como
+     variables CSS, así que referenciarlos aquí quedaría indefinido. */
+  --surface: oklch(from var(--t-dark) 0.21 0.038 h);
 }
 
 body {

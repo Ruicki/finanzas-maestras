@@ -135,10 +135,12 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                 {/* A. Gráfico de Flujo (Grande) */}
                 <div className="lg:col-span-2 relative h-80 w-full bg-linear-to-b from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-[2.5rem] overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 group">
                     <div className="absolute top-6 left-8 z-10">
-                        <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
+                        {/* div y no p: los iconos de @animateicons envuelven el svg en un
+                            div, y un div dentro de un p es HTML inválido — rompía la hidratación. */}
+                        <div className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
                             <TrendingUpIcon size={14} className="text-zinc-400 dark:text-zinc-600" />
                             Evolución de Gasto Mensual
-                        </p>
+                        </div>
                         <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                             {currency}{totalExpense.toLocaleString()}
                             <span className="text-sm font-medium text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded-lg">Acumulado</span>
