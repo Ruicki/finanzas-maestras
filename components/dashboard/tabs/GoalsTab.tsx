@@ -463,12 +463,12 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-6">
-            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-[#FF62BB] to-[#FF97D0] dark:from-[#3a1528] dark:to-[#2a1020] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-pink-200 dark:border-pink-900/40">
+            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-indigo-600 to-indigo-500 dark:from-indigo-800 dark:to-indigo-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-indigo-200 dark:border-indigo-900/40">
                 <div className="relative z-10 text-center md:text-left">
-                    <h2 className="text-3xl font-black mb-2">Tus Metas</h2>
-                    <p className="text-pink-100 dark:text-pink-300/60 font-medium">Visualiza, planea y alcanza tus sueños.</p>
+                    <h2 className="font-title text-2xl md:text-3xl font-semibold mb-2">Tus Metas</h2>
+                    <p className="text-white/75 font-medium">Visualiza, planea y alcanza tus sueños.</p>
                 </div>
-                <button onClick={openNewGoalModal} className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-[#FF62BB] text-[#FF62BB] dark:text-white px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                <button onClick={openNewGoalModal} className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95">
                     <PlusIcon size={24} /> Nueva Meta
                 </button>
                 <PiggyBankIcon className="absolute -bottom-6 -right-6 w-48 h-48 text-white opacity-10 rotate-12" />

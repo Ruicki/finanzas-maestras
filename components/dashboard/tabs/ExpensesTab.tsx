@@ -123,13 +123,13 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             {/* ... (Keep existing summary cards) ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="col-span-1 md:col-span-2 relative overflow-hidden rounded-4xl bg-surface dark:bg-zinc-950 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 p-10 shadow-2xl group">
-                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-48 w-48 rounded-full bg-[#1591DC]/10 dark:bg-indigo-500/30 blur-3xl group-hover:bg-[#1591DC]/15 dark:group-hover:bg-indigo-500/40 transition-all duration-1000" />
-                    <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-48 w-48 rounded-full bg-[#FF62BB]/10 dark:bg-pink-500/20 blur-3xl group-hover:bg-[#FF62BB]/15 dark:group-hover:bg-pink-500/30 transition-all duration-1000" />
+                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-48 w-48 rounded-full bg-blue-500/10 dark:bg-indigo-500/30 blur-3xl group-hover:bg-blue-500/15 dark:group-hover:bg-indigo-500/40 transition-all duration-1000" />
+                    <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-48 w-48 rounded-full bg-pink-500/10 dark:bg-pink-500/20 blur-3xl group-hover:bg-pink-500/15 dark:group-hover:bg-pink-500/30 transition-all duration-1000" />
 
                     <div className="relative z-10 flex flex-col justify-between h-full gap-6">
                         <div className="flex items-center gap-3">
                             <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/10 backdrop-blur-md border border-zinc-200 dark:border-white/10">
-                                <DollarSignIcon className="w-6 h-6 text-[#1591DC] dark:text-white" />
+                                <DollarSignIcon className="w-6 h-6 text-blue-500 dark:text-white" />
                             </div>
                             <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Total este mes</span>
                         </div>

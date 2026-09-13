@@ -81,10 +81,10 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                 </div>
                 <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <CreditCardIcon size={14} className="text-[#1591DC]" />
+                        <CreditCardIcon size={14} className="text-blue-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Disponible</span>
                     </div>
-                    <p className="text-xl font-black text-[#1591DC]">${totalAvailable.toFixed(2)}</p>
+                    <p className="text-xl font-black text-blue-500">${totalAvailable.toFixed(2)}</p>
                 </div>
                 <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">

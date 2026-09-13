@@ -148,16 +148,16 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                 relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg
                 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1
                 ${acc.type === 'BANK'
-                    ? 'bg-gradient-to-br from-[#d1ecf1] to-[#a8d4ec] dark:from-[#1591DC] dark:to-[#2C5EAD] text-[#2C5EAD] dark:text-white'
+                    ? 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-600 dark:to-blue-800 text-blue-800 dark:text-white'
                     : ''}
                 ${acc.type === 'CASH'
-                    ? 'bg-gradient-to-br from-[#d4edda] to-[#b0d9ba] dark:from-[#519A66] dark:to-[#237227] text-[#237227] dark:text-white'
+                    ? 'bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-600 dark:to-teal-800 text-teal-800 dark:text-white'
                     : ''}
                 ${acc.type === 'WALLET'
-                    ? 'bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8] dark:from-[#0B0909] dark:to-[#1a1a1a] text-[#0B0909] dark:text-[#FFBF00]'
+                    ? 'bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-600 dark:to-pink-800 text-pink-800 dark:text-white'
                     : ''}
                 ${acc.type === 'SAVINGS'
-                    ? 'bg-gradient-to-br from-[#ffe4f1] to-[#ffd6ea] dark:from-[#FF62BB] dark:to-[#FF97D0] text-[#d44d94] dark:text-white'
+                    ? 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-600 dark:to-purple-800 text-purple-800 dark:text-white'
                     : ''}
                 ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
                     ? 'bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
@@ -207,7 +207,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             {/* ── Encabezado ── */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold dark:text-white">Cuentas y Efectivo</h2>
+                    <h2 className="font-title text-2xl font-semibold dark:text-white">Cuentas y Efectivo</h2>
                     <p className="text-zinc-500 dark:text-zinc-400">
                         Total disponible:
                         <span className="ml-2 font-bold text-emerald-600 dark:text-emerald-400 text-xl">

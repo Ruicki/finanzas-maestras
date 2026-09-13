@@ -55,6 +55,135 @@
   --color-zinc-400: color-mix(in srgb, var(--foreground) 45%, transparent);
   --color-zinc-500: color-mix(in srgb, var(--foreground) 64%, transparent);
   --color-zinc-600: color-mix(in srgb, var(--foreground) 80%, transparent);
+
+  /* Gama decorativa armonizada: los azules, morados, rosas, naranjas y
+     amarillos que la app usa para categorías, gráficos y etiquetas ya no son
+     colores sueltos de Tailwind — se derivan del TONO del acento del tema con
+     un desfase fijo por familia, así siguen distinguiéndose entre sí pero
+     pertenecen todos a la misma armonía. La luminosidad y el croma se fijan
+     por peldaño, de modo que el resultado es consistente aunque el acento del
+     tema sea muy oscuro (Ultravioleta) o muy pastel (Cuarzo Rosa).
+     emerald/red/amber quedan fuera a propósito: son ingreso, gasto y alerta. */
+  --color-blue-50: oklch(from var(--t-accent) 0.965 0.02 h);
+  --color-blue-100: oklch(from var(--t-accent) 0.93 0.045 h);
+  --color-blue-200: oklch(from var(--t-accent) 0.87 0.075 h);
+  --color-blue-300: oklch(from var(--t-accent) 0.79 0.105 h);
+  --color-blue-400: oklch(from var(--t-accent) 0.7 0.13 h);
+  --color-blue-500: oklch(from var(--t-accent) 0.615 0.145 h);
+  --color-blue-600: oklch(from var(--t-accent) 0.53 0.145 h);
+  --color-blue-700: oklch(from var(--t-accent) 0.45 0.125 h);
+  --color-blue-800: oklch(from var(--t-accent) 0.375 0.1 h);
+  --color-blue-900: oklch(from var(--t-accent) 0.3 0.075 h);
+  --color-sky-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 12));
+  --color-sky-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 12));
+  --color-sky-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 12));
+  --color-sky-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 12));
+  --color-sky-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 12));
+  --color-sky-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 12));
+  --color-sky-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 12));
+  --color-sky-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 12));
+  --color-sky-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 12));
+  --color-sky-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 12));
+  --color-cyan-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 22));
+  --color-cyan-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 22));
+  --color-cyan-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 22));
+  --color-cyan-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 22));
+  --color-cyan-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 22));
+  --color-cyan-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 22));
+  --color-cyan-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 22));
+  --color-cyan-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 22));
+  --color-cyan-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 22));
+  --color-cyan-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 22));
+  --color-teal-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 32));
+  --color-teal-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 32));
+  --color-teal-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 32));
+  --color-teal-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 32));
+  --color-teal-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 32));
+  --color-teal-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 32));
+  --color-teal-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 32));
+  --color-teal-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 32));
+  --color-teal-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 32));
+  --color-teal-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 32));
+  --color-purple-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 42));
+  --color-purple-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 42));
+  --color-purple-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 42));
+  --color-purple-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 42));
+  --color-purple-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 42));
+  --color-purple-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 42));
+  --color-purple-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 42));
+  --color-purple-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 42));
+  --color-purple-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 42));
+  --color-purple-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 42));
+  --color-violet-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 48));
+  --color-violet-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 48));
+  --color-violet-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 48));
+  --color-violet-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 48));
+  --color-violet-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 48));
+  --color-violet-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 48));
+  --color-violet-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 48));
+  --color-violet-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 48));
+  --color-violet-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 48));
+  --color-violet-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 48));
+  --color-fuchsia-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 54));
+  --color-fuchsia-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 54));
+  --color-fuchsia-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 54));
+  --color-fuchsia-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 54));
+  --color-fuchsia-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 54));
+  --color-fuchsia-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 54));
+  --color-fuchsia-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 54));
+  --color-fuchsia-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 54));
+  --color-fuchsia-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 54));
+  --color-fuchsia-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 54));
+  --color-pink-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 60));
+  --color-pink-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 60));
+  --color-pink-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 60));
+  --color-pink-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 60));
+  --color-pink-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 60));
+  --color-pink-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 60));
+  --color-pink-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 60));
+  --color-pink-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 60));
+  --color-pink-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 60));
+  --color-pink-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 60));
+  --color-rose-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 60));
+  --color-rose-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 60));
+  --color-rose-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 60));
+  --color-rose-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 60));
+  --color-rose-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 60));
+  --color-rose-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 60));
+  --color-rose-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 60));
+  --color-rose-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 60));
+  --color-rose-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 60));
+  --color-rose-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 60));
+  --color-orange-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 30));
+  --color-orange-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 30));
+  --color-orange-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 30));
+  --color-orange-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 30));
+  --color-orange-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 30));
+  --color-orange-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 30));
+  --color-orange-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 30));
+  --color-orange-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 30));
+  --color-orange-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 30));
+  --color-orange-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 30));
+  --color-yellow-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 45));
+  --color-yellow-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 45));
+  --color-yellow-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 45));
+  --color-yellow-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 45));
+  --color-yellow-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 45));
+  --color-yellow-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 45));
+  --color-yellow-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 45));
+  --color-yellow-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 45));
+  --color-yellow-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 45));
+  --color-yellow-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 45));
+  --color-lime-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 45));
+  --color-lime-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 45));
+  --color-lime-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 45));
+  --color-lime-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 45));
+  --color-lime-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 45));
+  --color-lime-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 45));
+  --color-lime-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 45));
+  --color-lime-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 45));
+  --color-lime-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 45));
+  --color-lime-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 45));
 }
 
 /* --- 5 temas de color (Ajustes > Tema de color) --- */
