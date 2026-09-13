@@ -57,10 +57,10 @@
      las tarjetas del modo oscuro pertenecen al tema en vez de ser un azul
      marino común, y en modo claro los botones oscuros y la tinta también
      llevan el matiz del tema. */
-  --color-zinc-700: oklch(from var(--t-dark) 0.35 0.045 h);
-  --color-zinc-800: oklch(from var(--t-dark) 0.27 0.042 h);
-  --color-zinc-900: oklch(from var(--t-dark) 0.21 0.038 h);
-  --color-zinc-950: oklch(from var(--t-dark) 0.13 0.03 h);
+  --color-zinc-700: oklch(from var(--t-dark) 0.35 0.100 h);
+  --color-zinc-800: oklch(from var(--t-dark) 0.27 0.095 h);
+  --color-zinc-900: oklch(from var(--t-dark) 0.21 0.085 h);
+  --color-zinc-950: oklch(from var(--t-dark) 0.13 0.070 h);
 
   /* Gama decorativa armonizada: los azules, morados, rosas, naranjas y
      amarillos que la app usa para categorías, gráficos y etiquetas ya no son
@@ -281,12 +281,12 @@
 
 .dark {
   --t-accent: var(--t-accent-d);
-  --background: oklch(from var(--t-dark) 0.17 0.035 h);
-  --foreground: oklch(from var(--t-dark) 0.95 0.018 h);
+  --background: oklch(from var(--t-dark) 0.17 0.075 h);
+  --foreground: oklch(from var(--t-dark) 0.95 0.035 h);
   /* Definido directamente y no como var(--color-zinc-900): los valores de
      @theme inline se incrustan en las utilidades, no se publican como
      variables CSS, así que referenciarlos aquí quedaría indefinido. */
-  --surface: oklch(from var(--t-dark) 0.21 0.038 h);
+  --surface: oklch(from var(--t-dark) 0.21 0.085 h);
 }
 
 body {
