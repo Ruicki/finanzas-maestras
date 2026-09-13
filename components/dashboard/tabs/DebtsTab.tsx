@@ -370,19 +370,19 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {/* HERITAGE & FREEDOM HEADER */}
             <div className="flex flex-col xl:flex-row gap-6">
                 {/* GLOBAL FREEDOM WIDGET */}
-                <div className="flex-1 bg-white dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#519A66]/10 dark:bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-[#519A66]/15 dark:group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
+                <div className="flex-1 bg-surface dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 dark:bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/15 dark:group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
 
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">Tu Libertad Financiera</h3>
-                                <h2 className="text-4xl font-black text-zinc-900 dark:text-transparent dark:bg-clip-text dark:bg-linear-to-r dark:from-white dark:to-zinc-400">
+                                <h2 className="font-title text-3xl font-semibold text-zinc-900 dark:text-transparent dark:bg-clip-text dark:bg-linear-to-r dark:from-white dark:to-zinc-400">
                                     {isDebtFree ? "¡Eres Libre!" : (isNaN(freedomDate.getTime()) ? "Calculando..." : freedomDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }))}
                                 </h2>
                             </div>
                             <div className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl">
-                                <FlagIcon className={isDebtFree ? "text-[#519A66] dark:text-emerald-400" : "text-purple-500 dark:text-purple-400"} />
+                                <FlagIcon className={isDebtFree ? "text-emerald-500 dark:text-emerald-400" : "text-purple-500 dark:text-purple-400"} />
                             </div>
                         </div>
 
@@ -405,11 +405,11 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
 
                 {/* ACTION BUTTONS */}
                 <div className="flex flex-col justify-center gap-4">
-                    <button onClick={() => { resetForms(); setShowCardWizard(true); }} className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
+                    <button onClick={() => { resetForms(); setShowCardWizard(true); }} className="flex items-center gap-3 px-8 py-4 bg-surface dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
                         <div className="p-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500 rounded-full"><PlusIcon size={20} /></div>
                         Nueva Tarjeta
                     </button>
-                    <button onClick={() => startCreate('LOAN')} className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
+                    <button onClick={() => startCreate('LOAN')} className="flex items-center gap-3 px-8 py-4 bg-surface dark:bg-zinc-800 text-black dark:text-white rounded-4xl font-black hover:scale-105 transition-transform shadow-xl">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 rounded-full"><PlusIcon size={20} /></div>
                         Nuevo Préstamo
                     </button>
@@ -478,7 +478,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {/* --- WIZARD UNIFICADO --- */}
             {isWizardOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto">
                         <button onClick={() => setIsWizardOpen(false)} className="absolute top-6 right-6 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200"><XIcon size={20} /></button>
 
                         <h3 className="text-2xl font-black mb-1">
@@ -679,7 +679,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {/* --- MODAL DE PAGO (Reutilizado) --- */}
             {paymentModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-black">Abonar a {paymentModal.name}</h3>
                             <button onClick={closePaymentModal} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full"><XIcon size={20} /></button>

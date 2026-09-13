@@ -34,7 +34,7 @@ export default function MonthSelector({ currentDate, onMonthChange }: MonthSelec
     };
 
     return (
-        <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm">
+        <div className="flex items-center gap-2 bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm">
             <button
                 onClick={handlePrevMonth}
                 className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-500 transition-colors"

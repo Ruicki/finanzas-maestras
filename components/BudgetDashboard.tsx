@@ -218,7 +218,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 border-b border-zinc-200 dark:border-zinc-800 pb-10">
                 <div className="text-center md:text-left">
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-linear-to-r from-zinc-900 via-zinc-700 to-zinc-900 dark:from-white dark:via-zinc-400 dark:to-zinc-600 mb-4">
+                    <h1 className="font-title text-3xl md:text-4xl font-bold tracking-tight text-zinc-900 dark:text-white mb-4">
                         Finanzas Maestras
                     </h1>
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -303,32 +303,32 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                     {/* KPI CARDS */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* 1. Cash Available */}
-                        <div className="bg-white dark:bg-[#0d1b2a] border border-zinc-200 dark:border-[#1591DC]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <WalletIcon className="w-20 h-20 text-[#1591DC]" />
+                                <WalletIcon className="w-20 h-20 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Dinero disponible</p>
-                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${balance >= 0 ? 'text-[#1591DC] dark:text-[#5ba8e0]' : 'text-red-500'}`}>
+                            <p className={`font-accent text-3xl md:text-4xl tabular-nums relative z-10 blur-sensitive ${balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-500'}`}>
                                 ${balance.toFixed(2)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
-                                {bankBalance > 0 && <span className="text-[#1591DC]">Banco ${bankBalance.toFixed(0)}</span>}
-                                {cashBalance > 0 && <span className="text-[#519A66]">Efectivo ${cashBalance.toFixed(0)}</span>}
+                                {bankBalance > 0 && <span className="text-indigo-600 dark:text-indigo-400">Banco ${bankBalance.toFixed(0)}</span>}
+                                {cashBalance > 0 && <span className="text-emerald-600 dark:text-emerald-400">Efectivo ${cashBalance.toFixed(0)}</span>}
                                 {walletBalance > 0 && <span className="text-zinc-600 dark:text-zinc-400">Billetera ${walletBalance.toFixed(0)}</span>}
                             </div>
                         </div>
 
                         {/* 2. Net Worth */}
-                        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-surface dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <TrendingUpIcon className={`w-20 h-20 ${netWorth >= 0 ? 'text-[#519A66]' : 'text-red-500'}`} />
+                                <TrendingUpIcon className={`w-20 h-20 ${netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`} />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Patrimonio Neto</p>
-                            <p className={`text-3xl md:text-4xl font-black relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-[#519A66] dark:text-[#6dc28a]' : 'text-red-500'}`}>
+                            <p className={`font-accent text-3xl md:text-4xl tabular-nums relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
                                 ${netWorth.toFixed(2)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
-                                <span className="text-[#519A66]">Ingresos ${totalMonthlyIncome.toFixed(0)}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400">Ingresos ${totalMonthlyIncome.toFixed(0)}</span>
                                 <span className="text-zinc-300 dark:text-zinc-600">vs</span>
                                 <span className="text-red-400">Gastos ${totalExpenses.toFixed(0)}</span>
                                 <span className="text-zinc-300 dark:text-zinc-600">vs</span>
@@ -337,30 +337,30 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         </div>
 
                         {/* 3. Monthly Income (Filtered) */}
-                        <div className="bg-white dark:bg-[#0f2318] border border-zinc-200 dark:border-[#519A66]/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <DollarSignIcon className="w-20 h-20 text-[#519A66]" />
+                                <DollarSignIcon className="w-20 h-20 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Ingresos (Mes)</p>
-                            <p className="text-3xl md:text-4xl font-black text-[#519A66] dark:text-[#6dc28a] relative z-10 blur-sensitive">
+                            <p className="font-accent text-3xl md:text-4xl tabular-nums text-emerald-600 dark:text-emerald-400 relative z-10 blur-sensitive">
                                 +${totalMonthlyIncome.toFixed(2)}
                             </p>
                         </div>
 
                         {/* 4. Total Debt */}
-                        <div className="bg-white dark:bg-[#2a0f14] border border-zinc-200 dark:border-red-500/30 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-4xl shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <TrendingUpIcon className="w-20 h-20 text-red-500" />
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Deuda Total</p>
-                            <p className="text-3xl md:text-4xl font-black text-red-500 relative z-10 blur-sensitive">
+                            <p className="font-accent text-3xl md:text-4xl tabular-nums text-red-500 relative z-10 blur-sensitive">
                                 -${totalCreditDebt.toFixed(2)}
                             </p>
                         </div>
                     </div>
 
                     {/* TABS NAVIGATION */}
-                    <div className="bg-white dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-xl relative md:sticky md:top-6 z-40 mb-8 md:mb-0 shadow-xl shadow-zinc-200/50 dark:shadow-none mx-auto max-w-5xl">
+                    <div className="bg-surface dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-xl relative md:sticky md:top-6 z-40 mb-8 md:mb-0 shadow-xl shadow-zinc-200/50 dark:shadow-none mx-auto max-w-5xl">
                         <div className="grid grid-cols-3 md:flex md:justify-between gap-1">
                             {/* Accounts */}
                             <button onClick={() => updateTab('accounts')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'accounts' ? 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>

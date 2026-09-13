@@ -2,20 +2,297 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Utilidades de tipografía adicionales — --font-title cambia según el tema de
+   color elegido (ver bloque de temas abajo); --font-accent (Bevellier) es fijo
+   en todos los temas, reservado para cifras destacadas (balance, KPIs). */
+@theme {
+  --font-title: var(--t-title-font), ui-sans-serif, sans-serif;
+  --font-accent: var(--font-accent-family), ui-serif, serif;
+}
+
+/* Escala neutra (zinc) compartida por los 5 temas de color — superficies y
+   bordes se mantienen consistentes; lo que cambia por tema es el acento y el
+   fondo de página (ver [data-color-theme] abajo). emerald/red/amber quedan
+   intactos a propósito: son el código semántico ingreso/gasto/alerta. */
+@theme {
+  --color-zinc-50: #f6f7f6;
+  --color-zinc-100: #eceeed;
+  --color-zinc-200: #dcdfdd;
+  --color-zinc-300: #bcc2bf;
+}
+
+/* El acento (indigo-*) sale de --t-accent (tono exacto de la paleta, resuelto
+   según el modo claro/oscuro). color-mix solo genera sus variantes de hover y
+   focus a partir de ese mismo tono — nunca mezcla dos colores del tema. Los
+   rellenos sólidos de botón usan --t-btn, que siempre es lo bastante oscuro
+   para que el texto blanco encima se lea. */
+@theme inline {
+  --color-indigo-50: color-mix(in srgb, var(--t-accent) 8%, white);
+  --color-indigo-100: color-mix(in srgb, var(--t-accent) 16%, white);
+  --color-indigo-200: color-mix(in srgb, var(--t-accent) 30%, white);
+  --color-indigo-300: color-mix(in srgb, var(--t-accent) 50%, white);
+  --color-indigo-400: color-mix(in srgb, var(--t-accent) 75%, white);
+  --color-indigo-500: var(--t-accent);
+  --color-indigo-600: var(--t-btn);
+  --color-indigo-700: color-mix(in srgb, var(--t-btn) 80%, black);
+  --color-indigo-800: color-mix(in srgb, var(--t-btn) 62%, black);
+  --color-indigo-900: color-mix(in srgb, var(--t-btn) 45%, black);
+
+  /* bg-surface: reemplaza el "bg-white" de las tarjetas en modo claro por el
+     tono de superficie exacto del tema; en modo oscuro se mantiene la base
+     fija (zinc-900) como ya se acordó. */
+  --color-surface: var(--surface);
+
+  /* Grises de texto secundario (535 usos de text-zinc-400/500/600 en la app):
+     se derivan de la tinta del tema con transparencia en vez de ser un gris
+     fijo. Así siguen legibles sobre cualquier fondo del tema — un gris fijo
+     desaparecía sobre los fondos de tono medio (olivo de Burdeos, turquesa de
+     Ultravioleta, salvia de Bosque) y sobre el fondo oscuro. */
+  --color-zinc-400: color-mix(in srgb, var(--foreground) 45%, transparent);
+  --color-zinc-500: color-mix(in srgb, var(--foreground) 64%, transparent);
+  --color-zinc-600: color-mix(in srgb, var(--foreground) 80%, transparent);
+
+  /* Superficies oscuras: se derivan de --t-dark (el tono más oscuro de la
+     paleta del tema), bajándole la luminosidad pero conservando su matiz. Así
+     las tarjetas del modo oscuro pertenecen al tema en vez de ser un azul
+     marino común, y en modo claro los botones oscuros y la tinta también
+     llevan el matiz del tema. */
+  --color-zinc-700: oklch(from var(--t-dark) 0.35 0.045 h);
+  --color-zinc-800: oklch(from var(--t-dark) 0.27 0.042 h);
+  --color-zinc-900: oklch(from var(--t-dark) 0.21 0.038 h);
+  --color-zinc-950: oklch(from var(--t-dark) 0.13 0.03 h);
+
+  /* Gama decorativa armonizada: los azules, morados, rosas, naranjas y
+     amarillos que la app usa para categorías, gráficos y etiquetas ya no son
+     colores sueltos de Tailwind — se derivan del TONO del acento del tema con
+     un desfase fijo por familia, así siguen distinguiéndose entre sí pero
+     pertenecen todos a la misma armonía. La luminosidad y el croma se fijan
+     por peldaño, de modo que el resultado es consistente aunque el acento del
+     tema sea muy oscuro (Ultravioleta) o muy pastel (Cuarzo Rosa).
+     emerald/red/amber quedan fuera a propósito: son ingreso, gasto y alerta. */
+  --color-blue-50: oklch(from var(--t-accent) 0.965 0.02 h);
+  --color-blue-100: oklch(from var(--t-accent) 0.93 0.045 h);
+  --color-blue-200: oklch(from var(--t-accent) 0.87 0.075 h);
+  --color-blue-300: oklch(from var(--t-accent) 0.79 0.105 h);
+  --color-blue-400: oklch(from var(--t-accent) 0.7 0.13 h);
+  --color-blue-500: oklch(from var(--t-accent) 0.615 0.145 h);
+  --color-blue-600: oklch(from var(--t-accent) 0.53 0.145 h);
+  --color-blue-700: oklch(from var(--t-accent) 0.45 0.125 h);
+  --color-blue-800: oklch(from var(--t-accent) 0.375 0.1 h);
+  --color-blue-900: oklch(from var(--t-accent) 0.3 0.075 h);
+  --color-sky-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 12));
+  --color-sky-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 12));
+  --color-sky-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 12));
+  --color-sky-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 12));
+  --color-sky-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 12));
+  --color-sky-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 12));
+  --color-sky-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 12));
+  --color-sky-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 12));
+  --color-sky-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 12));
+  --color-sky-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 12));
+  --color-cyan-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 22));
+  --color-cyan-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 22));
+  --color-cyan-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 22));
+  --color-cyan-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 22));
+  --color-cyan-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 22));
+  --color-cyan-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 22));
+  --color-cyan-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 22));
+  --color-cyan-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 22));
+  --color-cyan-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 22));
+  --color-cyan-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 22));
+  --color-teal-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 32));
+  --color-teal-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 32));
+  --color-teal-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 32));
+  --color-teal-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 32));
+  --color-teal-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 32));
+  --color-teal-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 32));
+  --color-teal-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 32));
+  --color-teal-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 32));
+  --color-teal-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 32));
+  --color-teal-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 32));
+  --color-purple-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 42));
+  --color-purple-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 42));
+  --color-purple-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 42));
+  --color-purple-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 42));
+  --color-purple-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 42));
+  --color-purple-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 42));
+  --color-purple-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 42));
+  --color-purple-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 42));
+  --color-purple-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 42));
+  --color-purple-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 42));
+  --color-violet-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 48));
+  --color-violet-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 48));
+  --color-violet-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 48));
+  --color-violet-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 48));
+  --color-violet-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 48));
+  --color-violet-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 48));
+  --color-violet-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 48));
+  --color-violet-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 48));
+  --color-violet-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 48));
+  --color-violet-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 48));
+  --color-fuchsia-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 54));
+  --color-fuchsia-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 54));
+  --color-fuchsia-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 54));
+  --color-fuchsia-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 54));
+  --color-fuchsia-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 54));
+  --color-fuchsia-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 54));
+  --color-fuchsia-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 54));
+  --color-fuchsia-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 54));
+  --color-fuchsia-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 54));
+  --color-fuchsia-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 54));
+  --color-pink-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 60));
+  --color-pink-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 60));
+  --color-pink-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 60));
+  --color-pink-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 60));
+  --color-pink-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 60));
+  --color-pink-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 60));
+  --color-pink-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 60));
+  --color-pink-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 60));
+  --color-pink-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 60));
+  --color-pink-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 60));
+  --color-rose-50: oklch(from var(--t-accent) 0.965 0.02 calc(h + 60));
+  --color-rose-100: oklch(from var(--t-accent) 0.93 0.045 calc(h + 60));
+  --color-rose-200: oklch(from var(--t-accent) 0.87 0.075 calc(h + 60));
+  --color-rose-300: oklch(from var(--t-accent) 0.79 0.105 calc(h + 60));
+  --color-rose-400: oklch(from var(--t-accent) 0.7 0.13 calc(h + 60));
+  --color-rose-500: oklch(from var(--t-accent) 0.615 0.145 calc(h + 60));
+  --color-rose-600: oklch(from var(--t-accent) 0.53 0.145 calc(h + 60));
+  --color-rose-700: oklch(from var(--t-accent) 0.45 0.125 calc(h + 60));
+  --color-rose-800: oklch(from var(--t-accent) 0.375 0.1 calc(h + 60));
+  --color-rose-900: oklch(from var(--t-accent) 0.3 0.075 calc(h + 60));
+  --color-orange-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 30));
+  --color-orange-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 30));
+  --color-orange-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 30));
+  --color-orange-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 30));
+  --color-orange-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 30));
+  --color-orange-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 30));
+  --color-orange-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 30));
+  --color-orange-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 30));
+  --color-orange-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 30));
+  --color-orange-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 30));
+  --color-yellow-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 45));
+  --color-yellow-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 45));
+  --color-yellow-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 45));
+  --color-yellow-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 45));
+  --color-yellow-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 45));
+  --color-yellow-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 45));
+  --color-yellow-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 45));
+  --color-yellow-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 45));
+  --color-yellow-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 45));
+  --color-yellow-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 45));
+  --color-lime-50: oklch(from var(--t-accent) 0.965 0.02 calc(h - 45));
+  --color-lime-100: oklch(from var(--t-accent) 0.93 0.045 calc(h - 45));
+  --color-lime-200: oklch(from var(--t-accent) 0.87 0.075 calc(h - 45));
+  --color-lime-300: oklch(from var(--t-accent) 0.79 0.105 calc(h - 45));
+  --color-lime-400: oklch(from var(--t-accent) 0.7 0.13 calc(h - 45));
+  --color-lime-500: oklch(from var(--t-accent) 0.615 0.145 calc(h - 45));
+  --color-lime-600: oklch(from var(--t-accent) 0.53 0.145 calc(h - 45));
+  --color-lime-700: oklch(from var(--t-accent) 0.45 0.125 calc(h - 45));
+  --color-lime-800: oklch(from var(--t-accent) 0.375 0.1 calc(h - 45));
+  --color-lime-900: oklch(from var(--t-accent) 0.3 0.075 calc(h - 45));
+}
+
+/* --- 5 temas de color (Ajustes > Tema de color) --- */
+/* Los 4 tonos de cada tema son EXACTOS a los de la paleta del usuario. Reparto
+   de roles pensado para que el texto siempre se lea:
+     · tarjetas  = el tono MÁS CLARO de la paleta
+     · página    = el segundo más claro
+     · acento    = el tono dominante (el que eligió el usuario)
+     · secundario= el restante, para bordes y detalles
+   En modo oscuro cada tema tiene su propia base, construida a partir de
+   --t-dark (el tono MÁS OSCURO de su paleta): se le baja la luminosidad
+   conservando su matiz, así el fondo oscuro de cada tema es reconocible
+   (azul noche, bosque profundo, ciruela, berenjena, vino) en vez de un
+   gris común. --t-accent-d es el acento en oscuro, que usa otro tono real
+   de la paleta cuando el dominante es demasiado oscuro para destacar. */
+[data-color-theme="marino"] {
+  --t-dark: #2f6699;
+  --t-accent-l: #2f6699;
+  --t-accent-d: #63a0b5;
+  --t-btn: #2f6699;
+  --t-secondary: #63a0b5;
+  --t-surface: #f1ece2;
+  --t-bg: #cfe3dd;
+  --t-title-font: var(--font-switzer-family);
+}
+[data-color-theme="bosque"] {
+  /* Única paleta sin un segundo tono claro: para que la tarjeta se separe del
+     fondo, su superficie es el MISMO verde salvia aclarado — no se introduce
+     ningún color ajeno a la paleta. */
+  --t-dark: #0d2b2e;
+  --t-accent-l: #2a8562;
+  --t-accent-d: #2a8562;
+  --t-btn: #2a8562;
+  --t-secondary: #155048;
+  --t-surface: color-mix(in srgb, #8fbc98 40%, white);
+  --t-bg: #8fbc98;
+  --t-title-font: var(--font-boska-family);
+}
+[data-color-theme="cuarzo"] {
+  /* Paleta 100% pastel: no tiene ningún tono oscuro, así que el relleno de
+     botón se oscurece desde su propio lavanda para que el texto se lea. */
+  --t-dark: #c4b0dc;
+  --t-accent-l: #c4b0dc;
+  --t-accent-d: #c4b0dc;
+  --t-btn: color-mix(in srgb, #c4b0dc 50%, black);
+  --t-secondary: #f3c7c6;
+  --t-surface: #faecec;
+  --t-bg: #fcdedd;
+  --t-title-font: var(--font-stardom-family);
+}
+[data-color-theme="ultravioleta"] {
+  --t-dark: #2e1f45;
+  --t-accent-l: #2e1f45;
+  --t-accent-d: #6fe0ce;
+  --t-btn: #2e1f45;
+  --t-secondary: #3e5a76;
+  --t-surface: #d8fbf0;
+  --t-bg: #6fe0ce;
+  --t-title-font: var(--font-satoshi-family);
+}
+[data-color-theme="burdeos"] {
+  --t-dark: #2e0000;
+  --t-accent-l: #6b0e0e;
+  --t-accent-d: color-mix(in srgb, #6b0e0e 55%, white);
+  --t-btn: #6b0e0e;
+  --t-secondary: #2e0000;
+  /* Invertido a petición del usuario: la crema pasa a ser la página y el
+     olivo el relleno de las tarjetas — aclarado, porque a su tono original
+     (medio) los importes y enlaces encima perdían contraste. */
+  --t-surface: color-mix(in srgb, #767f6e 32%, white);
+  --t-bg: #f1ece2;
+  --t-title-font: var(--font-supreme-family);
+}
+
+/* Nota: ningún bloque ":root" vuelve a declarar --t-accent-l/--t-surface/--t-bg
+   como "fallback" — con la misma especificidad que [data-color-theme] ganaría
+   por ir después en el archivo y anularía los 5 temas. El script inline de
+   layout.tsx fija data-color-theme antes del primer pintado. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --t-accent: var(--t-accent-l);
+  --background: var(--t-bg);
+  /* La tinta de texto se oscurece a partir del acento real del tema (no es un
+     color ajeno): garantiza contraste legible incluso en temas pastel como
+     Cuarzo Rosa, donde el tono "más oscuro" de la paleta sigue siendo claro. */
+  --foreground: color-mix(in srgb, var(--t-accent-l) 70%, black);
+  --surface: var(--t-surface);
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --t-accent: var(--t-accent-d);
+  --background: oklch(from var(--t-dark) 0.17 0.035 h);
+  --foreground: oklch(from var(--t-dark) 0.95 0.018 h);
+  /* Definido directamente y no como var(--color-zinc-900): los valores de
+     @theme inline se incrustan en las utilidades, no se publican como
+     variables CSS, así que referenciarlos aquí quedaría indefinido. */
+  --surface: oklch(from var(--t-dark) 0.21 0.038 h);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans-family), ui-sans-serif, system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   width: 100%;
   font-feature-settings: "cv11", "ss01";

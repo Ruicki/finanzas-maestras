@@ -13,6 +13,9 @@ export default async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
     const isAuthPage = path === '/login' || path === '/register' || path === '/claim';
     const isHomePage = path === '/';
+    // Vista previa de los temas de color: solo datos ficticios, sin acceso a la
+    // base de datos ni a ningún dato del perfil, así que no requiere sesión.
+    const isThemePreview = path === '/preview-temas';
     const isPublicAsset = path.startsWith('/_next') ||
         path.startsWith('/api') ||
         path.includes('.');
@@ -30,7 +33,7 @@ export default async function middleware(request: NextRequest) {
 
     const isValidSession = payload !== null;
 
-    if (!isValidSession && !isAuthPage && !isHomePage && !isPublicAsset) {
+    if (!isValidSession && !isAuthPage && !isHomePage && !isPublicAsset && !isThemePreview) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 

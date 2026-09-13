@@ -88,7 +88,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
     };
 
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group h-full">
+        <div className="bg-surface dark:bg-zinc-900 rounded-3xl p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group h-full">
 
             {/* 1. VISUAL CARD (Top) */}
             <div className="relative w-full aspect-[1.586/1] shrink-0 rounded-[1.3rem] overflow-hidden bg-zinc-950 text-white shadow-lg flex flex-col justify-between p-6 m-1">
@@ -199,7 +199,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     {onEdit && (
                         <button
                             onClick={() => onEdit(card)}
-                            className="px-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
+                            className="px-4 bg-surface dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
                             <PencilIcon size={20} />
@@ -207,7 +207,7 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     )}
                     <button
                         onClick={() => onDelete(card.id)}
-                        className="px-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
+                        className="px-4 bg-surface dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
                         <MessageCircleMoreIcon size={20} />
                     </button>

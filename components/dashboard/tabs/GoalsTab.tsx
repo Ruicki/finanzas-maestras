@@ -124,7 +124,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
     }
 
     return (
-        <div className={`bg-white dark:bg-zinc-900/50 border ${goal.isPaused ? 'border-zinc-300 dark:border-zinc-700 opacity-70' : percentage >= 100 ? 'border-emerald-500/50 shadow-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[2.5rem] relative overflow-hidden group shadow-sm hover:shadow-md transition-all`}>
+        <div className={`bg-surface dark:bg-zinc-900/50 border ${goal.isPaused ? 'border-zinc-300 dark:border-zinc-700 opacity-70' : percentage >= 100 ? 'border-emerald-500/50 shadow-emerald-500/10' : 'border-zinc-200 dark:border-zinc-800'} p-6 rounded-[2.5rem] relative overflow-hidden group shadow-sm hover:shadow-md transition-all`}>
             {goal.isPaused && (
                 <div className="absolute top-4 right-4 z-10">
                     <span className="text-[10px] font-black bg-zinc-200 dark:bg-zinc-700 text-zinc-500 px-2 py-1 rounded-full uppercase">Pausada</span>
@@ -229,7 +229,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                             <button onClick={() => { onToggleExpand(null); resetForm(); }} className="p-1 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:text-zinc-800"><XIcon size={14} /></button>
                         </div>
                         <div className="mb-3">
-                            <SmartMoneyInput value={amount} onMoneyChange={setAmount} className="w-full bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700 font-bold text-lg outline-none" placeholder="0.00" />
+                            <SmartMoneyInput value={amount} onMoneyChange={setAmount} className="w-full bg-surface dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-700 font-bold text-lg outline-none" placeholder="0.00" />
                         </div>
                         <div className="mb-3">
                             {goal.type === 'FIXED' && goal.sourceAccountId ? (
@@ -238,7 +238,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                                     <span className="text-[10px] bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-500">Vinculada</span>
                                 </div>
                             ) : (
-                                <select value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
+                                <select value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full p-3 rounded-xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm font-bold outline-none">
                                     <option value="">Cuenta...</option>
                                     {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                 </select>
@@ -246,7 +246,7 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             <button disabled={submitting} onClick={() => handleTransaction('DEPOSIT')} className="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none">Depositar</button>
-                            <button disabled={submitting} onClick={() => handleTransaction('WITHDRAW')} className="p-3 bg-white dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none">Retirar</button>
+                            <button disabled={submitting} onClick={() => handleTransaction('WITHDRAW')} className="p-3 bg-surface dark:bg-zinc-800 hover:bg-red-50 text-red-500 border border-red-200 dark:border-red-900/30 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:pointer-events-none">Retirar</button>
                         </div>
                     </div>
                 ) : (
@@ -463,12 +463,12 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-6">
-            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-[#FF62BB] to-[#FF97D0] dark:from-[#3a1528] dark:to-[#2a1020] p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-pink-200 dark:border-pink-900/40">
+            <div className="flex flex-col md:flex-row justify-between items-center bg-linear-to-br from-indigo-600 to-indigo-500 dark:from-indigo-800 dark:to-indigo-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden border border-indigo-200 dark:border-indigo-900/40">
                 <div className="relative z-10 text-center md:text-left">
-                    <h2 className="text-3xl font-black mb-2">Tus Metas</h2>
-                    <p className="text-pink-100 dark:text-pink-300/60 font-medium">Visualiza, planea y alcanza tus sueños.</p>
+                    <h2 className="font-title text-2xl md:text-3xl font-semibold mb-2">Tus Metas</h2>
+                    <p className="text-white/75 font-medium">Visualiza, planea y alcanza tus sueños.</p>
                 </div>
-                <button onClick={openNewGoalModal} className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-[#FF62BB] text-[#FF62BB] dark:text-white px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                <button onClick={openNewGoalModal} className="relative z-10 mt-6 md:mt-0 bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95">
                     <PlusIcon size={24} /> Nueva Meta
                 </button>
                 <PiggyBankIcon className="absolute -bottom-6 -right-6 w-48 h-48 text-white opacity-10 rotate-12" />
@@ -501,7 +501,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* HISTORY MODAL */}
             {historyModal.isOpen && historyModal.goal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
                             <div>
                                 <h3 className="text-lg font-black text-zinc-900 dark:text-white">Historial</h3>
@@ -549,7 +549,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* RECLAIM MODAL */}
             {reclaimModal.isOpen && reclaimModal.goal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl text-center animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl text-center animate-in zoom-in-95 duration-200">
                         <div className="mb-6 flex justify-center">
                             <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-full animate-bounce"><PiggyBankIcon size={48} /></div>
                         </div>
@@ -579,7 +579,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* FORM MODAL */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">{editingGoalId ? 'Editar Meta' : 'Nueva Meta'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200 transition-colors"><XIcon size={20} /></button>
@@ -644,9 +644,9 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         <span className="font-bold text-xs">Calculadora</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2 text-center">
-                                        <div className="bg-white dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Mensual</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.monthly.toFixed(2)}</p></div>
-                                        <div className="bg-white dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Quincenal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.biweekly.toFixed(2)}</p></div>
-                                        <div className="bg-white dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Semanal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.weekly.toFixed(2)}</p></div>
+                                        <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Mensual</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.monthly.toFixed(2)}</p></div>
+                                        <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Quincenal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.biweekly.toFixed(2)}</p></div>
+                                        <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Semanal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recommended.weekly.toFixed(2)}</p></div>
                                     </div>
                                 </div>
                             )}
@@ -657,7 +657,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-xs font-bold text-zinc-500 ml-2">Frecuencia</label>
-                                            <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
+                                            <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })} className="w-full mt-1 bg-surface dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                                 <option value="WEEKLY">Semanal</option>
                                                 <option value="BIWEEKLY">Quincenal</option>
                                                 <option value="MONTHLY">Mensual</option>
@@ -665,19 +665,19 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-zinc-500 ml-2">Cuota ($)</label>
-                                            <SmartMoneyInput selectOnFocus={false} value={form.contributionAmount} onMoneyChange={(val) => setForm({ ...form, contributionAmount: val })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none" placeholder="100" />
+                                            <SmartMoneyInput selectOnFocus={false} value={form.contributionAmount} onMoneyChange={(val) => setForm({ ...form, contributionAmount: val })} className="w-full mt-1 bg-surface dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none" placeholder="100" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Origen</label>
-                                        <select value={form.sourceAccountId} onChange={e => setForm({ ...form, sourceAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
+                                        <select value={form.sourceAccountId} onChange={e => setForm({ ...form, sourceAccountId: e.target.value })} className="w-full mt-1 bg-surface dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Seleccionar...</option>
                                             {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 ml-2">Cuenta Ahorro Destino</label>
-                                        <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-1 bg-white dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
+                                        <select value={form.destinationAccountId} onChange={e => setForm({ ...form, destinationAccountId: e.target.value })} className="w-full mt-1 bg-surface dark:bg-zinc-900 border-none rounded-xl p-2 font-bold text-sm outline-none">
                                             <option value="">Crear cuenta de ahorro automáticamente</option>
                                             {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.symbol || '$'}{acc.balance})</option>)}
                                         </select>
