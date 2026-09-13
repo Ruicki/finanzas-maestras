@@ -1,40 +1,40 @@
-// Los 4 tonos de cada tema son EXACTOS a los que definió el usuario — no se
-// mezclan ni derivan colores nuevos. Ordenados de más oscuro/saturado a más
-// claro: acento (botones, foco) → secundario (detalles, badges) → superficie
-// (fondo de tarjetas, modo claro) → fondo de página (modo claro).
+// Los 4 tonos de cada tema son EXACTOS a los que definió el usuario. El reparto
+// de roles está pensado para que el texto siempre se lea encima:
+//   · surface    = el tono MÁS CLARO de la paleta (fondo de tarjetas)
+//   · background = el segundo más claro (fondo de página)
+//   · accent     = el tono dominante (botones, barras, foco)
+//   · secondary  = el restante (bordes y detalles)
 export const COLOR_THEMES = [
     {
         id: 'marino',
         label: 'Marino',
         accent: '#2F6699',
         secondary: '#63A0B5',
-        surface: '#CFE3DD',
-        background: '#F1ECE2',
+        surface: '#F1ECE2',
+        background: '#CFE3DD',
         fontLabel: 'Switzer',
     },
     {
-        // Acento pedido explícitamente por el usuario: el más oscuro (#0D2B2E)
-        // se leía casi negro, sin color propio — #2A8562 es el verde esmeralda
-        // que realmente identifica el tema. Con el acento fuera, los otros dos
-        // tonos que quedaban (#0D2B2E, #155048) son ambos oscuros — usarlos de
-        // fondo de tarjeta dejaría el texto fijo (oscuro) ilegible encima, así
-        // que las tarjetas comparten el mismo tono claro que el fondo de
-        // página (se distinguen por borde, no por relleno).
+        // Única paleta sin un segundo tono claro: la superficie de las tarjetas
+        // es su mismo verde salvia aclarado, para que se separen del fondo.
         id: 'bosque',
         label: 'Bosque',
         accent: '#2A8562',
         secondary: '#155048',
-        surface: '#8FBC98',
+        surface: 'color-mix(in srgb, #8FBC98 40%, white)',
         background: '#8FBC98',
         fontLabel: 'Boska',
     },
     {
+        // Paleta 100% pastel: el relleno de los botones se oscurece desde su
+        // propio lavanda, porque no hay ningún tono oscuro en la paleta y el
+        // texto blanco encima del lavanda original era ilegible.
         id: 'cuarzo',
         label: 'Cuarzo Rosa',
         accent: '#C4B0DC',
         secondary: '#F3C7C6',
-        surface: '#FCDEDD',
-        background: '#FAECEC',
+        surface: '#FAECEC',
+        background: '#FCDEDD',
         fontLabel: 'Stardom',
     },
     {
@@ -42,20 +42,17 @@ export const COLOR_THEMES = [
         label: 'Ultravioleta',
         accent: '#2E1F45',
         secondary: '#3E5A76',
-        surface: '#6FE0CE',
-        background: '#D8FBF0',
+        surface: '#D8FBF0',
+        background: '#6FE0CE',
         fontLabel: 'Satoshi',
     },
     {
-        // Acento pedido explícitamente por el usuario: el más oscuro (#2E0000)
-        // se leía casi negro — #6B0E0E es el vino profundo que sí se reconoce
-        // como color propio del tema.
         id: 'burdeos',
         label: 'Burdeos',
         accent: '#6B0E0E',
         secondary: '#2E0000',
-        surface: '#767F6E',
-        background: '#F1ECE2',
+        surface: '#F1ECE2',
+        background: '#767F6E',
         fontLabel: 'Supreme',
     },
 ] as const;
