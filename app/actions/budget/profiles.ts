@@ -162,7 +162,7 @@ export async function createProfile(name: string) {
 
     const profile = await prisma.profile.create({ data: { name } });
     await logAction('CREATE_PROFILE', `Nombre: ${name}`, profile.id);
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteProfile(id: number) {
@@ -204,7 +204,7 @@ export async function deleteProfile(id: number) {
         await tx.profile.delete({ where: { id } });
     });
     await logAction('DELETE_PROFILE', `Perfil ID: ${id} eliminado`, id);
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function resetProfileData(id: number) {
@@ -235,7 +235,7 @@ export async function resetProfileData(id: number) {
             await tx.account.deleteMany({ where: { profileId: id } });
             await tx.category.deleteMany({ where: { profileId: id } });
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         console.error('Error resetting profile data:', error);
         throw new Error('Error al resetear los datos del perfil');

@@ -197,7 +197,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
 
         logger.info(`Salary created successfully: ID ${newSalary.id}`);
 
-        revalidatePath('/budget');
+        revalidatePath('/');
         return {
             ...newSalary,
             grossVal: Number(newSalary.grossVal),
@@ -242,7 +242,7 @@ export async function deleteSalaryById(id: number): Promise<void> {
                 await SalaryRepository.delete(tx, id);
             }
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (err) {
         logger.error(`Error deleting salary ${id}`, err);
         throw err;
@@ -347,7 +347,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             // 3. Update Record
             await SalaryRepository.update(tx, id, salaryData);
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (err) {
         logger.error(`Error updating salary ${id}`, err);
         throw err;

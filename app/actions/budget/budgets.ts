@@ -54,7 +54,7 @@ export async function setCategoryBudget(data: CategoryBudgetInput) {
         });
     }
 
-    revalidatePath('/budget');
+    revalidatePath('/');
     return { success: true };
 }
 

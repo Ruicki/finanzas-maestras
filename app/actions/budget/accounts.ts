@@ -24,7 +24,7 @@ export async function createAccount(
     const account = await prisma.account.create({
         data: { name, type, balance, profileId, lockDate, purpose, symbol: symbol || null, isDefault },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
     return { ...account, balance: toNum(account.balance) };
 }
 
@@ -51,7 +51,7 @@ export async function updateAccount(
             symbol: data.symbol,
         },
     });
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function adjustAccountBalance(
@@ -85,7 +85,7 @@ export async function adjustAccountBalance(
         });
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteAccount(id: number): Promise<void> {
@@ -109,7 +109,25 @@ export async function deleteAccount(id: number): Promise<void> {
         );
     }
 
+    // Los gastos ya confirmados de esta cuenta SI movieron dinero. Si se les
+    // pone accountId en null, deleteExpense deja de tener cuenta a la que
+    // devolver el monto y borrarlos mas tarde pierde ese dinero en silencio.
+    // Se bloquea igual que con las metas: que el usuario los reasigne primero.
+    const paidExpenses = await prisma.expense.findMany({
+        where: { accountId: id, isProjected: false },
+        select: { name: true },
+        take: 6,
+    });
+    if (paidExpenses.length > 0) {
+        const nombres = paidExpenses.slice(0, 5).map((e) => e.name).join(', ');
+        const resto = paidExpenses.length > 5 ? ' y otros' : '';
+        throw new Error(
+            `No se puede eliminar esta cuenta: tiene gastos ya pagados (${nombres}${resto}). Reasignalos a otra cuenta o borralos primero, para no perder el registro de ese dinero.`,
+        );
+    }
+
     await prisma.$transaction(async (tx) => {
+        // Solo quedan gastos proyectados, que nunca movieron dinero real.
         await tx.expense.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.additionalIncome.updateMany({ where: { accountId: id }, data: { accountId: null } });
         await tx.salary.updateMany({ where: { accountId: id }, data: { accountId: null } });
@@ -130,7 +148,7 @@ export async function deleteAccount(id: number): Promise<void> {
         });
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function getAccountTransactions(accountId: number) {
@@ -194,7 +212,12 @@ export async function getAccountTransactions(accountId: number) {
         })),
         ...transfersTo.map((t) => ({
             id: t.id,
-            amount: toNum(t.amount),
+            // La cuenta destino se acredito con destAmount, no con amount:
+            // en una transferencia con tipo de cambio, amount esta en la
+            // moneda de origen. Mostrar amount aqui enseña una cifra que
+            // nunca entro a esta cuenta. destAmount es null cuando no hubo
+            // conversion, y entonces ambos coinciden.
+            amount: toNum(t.destAmount ?? t.amount),
             description: `Transferencia de ${t.sourceAccount.name}`,
             type: 'TRANSFER_IN' as const,
             date: t.date,
@@ -305,7 +328,7 @@ export async function createTransfer(
         });
 
         logger.info(`Transfer created: ${amount} from account ${sourceAccountId} to ${destinationAccountId}`);
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
         logger.error('Error creating transfer:', error);
         throw error;

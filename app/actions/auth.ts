@@ -184,7 +184,7 @@ export async function generateAccessCode(profileId: number) {
             data: { accessCode: code }
         });
 
-        revalidatePath('/budget');
+        revalidatePath('/');
         return { success: true, code };
     } catch (error) {
         console.error("Generate Access Code Error:", error);
