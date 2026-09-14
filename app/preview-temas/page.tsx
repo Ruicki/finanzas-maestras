@@ -18,12 +18,19 @@ function PreviewTemasContent() {
     // porque el perfil de ejemplo ya la tiene marcada como vista. Es la unica
     // forma de revisarla sin una cuenta recien creada de verdad.
     const forzarBienvenida = params.get('bienvenida') === '1';
+    // ?vacio=1 deja el perfil sin datos, para revisar las pantallas vacias de
+    // las 7 pestañas tal como las ve alguien recien registrado.
+    const forzarVacio = params.get('vacio') === '1';
     const profile = useMemo(() => {
         const p = buildMockProfile();
-        return forzarBienvenida
-            ? { ...p, onboardingSeenAt: null } as typeof p
-            : p;
-    }, [forzarBienvenida]);
+        const conBienvenida = forzarBienvenida ? { ...p, onboardingSeenAt: null } : p;
+        if (!forzarVacio) return conBienvenida as typeof p;
+        return {
+            ...conBienvenida,
+            accounts: [], expenses: [], incomes: [], salaries: [],
+            creditCards: [], loans: [], goals: [], categories: [],
+        } as unknown as typeof p;
+    }, [forzarBienvenida, forzarVacio]);
 
     return (
         <>
