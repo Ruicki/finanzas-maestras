@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
 import { requireAuth, requireOwnership } from '@/lib/auth-utils';
+import { COLOR_THEME_IDS, type ColorThemeId } from '@/lib/color-themes';
 
 // ─── PROFILES ──────────────────────────────────────────────────────────────
 
@@ -162,6 +163,27 @@ export async function createProfile(name: string) {
 
     const profile = await prisma.profile.create({ data: { name } });
     await logAction('CREATE_PROFILE', `Nombre: ${name}`, profile.id);
+    revalidatePath('/');
+}
+
+/**
+ * Guarda el tema de color elegido en el perfil, para que viaje entre
+ * dispositivos en vez de quedarse en el localStorage de un solo navegador.
+ *
+ * El identificador llega del cliente, asi que se contrasta contra la lista real
+ * de temas antes de escribir: nunca entra a la base de datos sin validar.
+ */
+export async function updateColorTheme(profileId: number, theme: string): Promise<void> {
+    await requireOwnership(profileId);
+
+    if (!(COLOR_THEME_IDS as string[]).includes(theme)) {
+        throw new Error(`Tema de color desconocido: ${theme}`);
+    }
+
+    await prisma.profile.update({
+        where: { id: profileId },
+        data: { colorTheme: theme as ColorThemeId },
+    });
     revalidatePath('/');
 }
 

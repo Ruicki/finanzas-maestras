@@ -59,6 +59,10 @@ model Profile {
   password         String?
   accessCode       String?            @unique
   onboardingSeenAt DateTime?
+  // Tema de color elegido, para que viaje entre dispositivos en vez de quedarse
+  // en el localStorage de cada navegador. Admite nulo: un perfil sin elegir usa
+  // el tema por defecto. Los valores validos estan en lib/color-themes.ts.
+  colorTheme       String?
   accounts         Account[]
   incomes          AdditionalIncome[]
   categories       Category[]
