@@ -99,8 +99,10 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 mt-auto">
+                {/* Actions — flex-wrap: cuatro botones no caben en una sola
+                    fila en pantallas de 320px y el ultimo se salia de la
+                    tarjeta. Los de icono llevan shrink-0 para no deformarse. */}
+                <div className="flex flex-wrap gap-2 md:gap-3 mt-auto">
                     <button
                         onClick={() => onPay(loan)}
                         className="flex-1 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
@@ -110,7 +112,7 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                     {onEdit && (
                         <button
                             onClick={() => onEdit(loan)}
-                            className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
+                            className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
                             <PencilIcon size={20} />
@@ -118,14 +120,14 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                     )}
                     <button
                         onClick={() => setSimulating(!simulating)}
-                        className={`px-4 py-3 rounded-xl font-bold text-sm border transition-all flex items-center gap-2 ${simulating ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-400' : 'bg-white dark:bg-transparent border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                        className={`shrink-0 px-4 py-3 rounded-xl font-bold text-sm border transition-all flex items-center gap-2 ${simulating ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-800 dark:text-indigo-400' : 'bg-white dark:bg-transparent border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
                     >
                         <ZapIcon size={16} className={simulating ? "fill-current" : ""} />
                         <span>Ahorro</span>
                     </button>
                     <button
                         onClick={() => onDelete(loan.id)}
-                        className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
+                        className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
                         <MessageCircleMoreIcon size={20} />
                     </button>

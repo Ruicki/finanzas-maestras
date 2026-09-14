@@ -88,8 +88,10 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 mt-auto">
+                {/* Actions — flex-wrap: cuatro botones no caben en una sola
+                    fila en pantallas de 320px y el ultimo se salia de la
+                    tarjeta. Los de icono llevan shrink-0 para no deformarse. */}
+                <div className="flex flex-wrap gap-2 md:gap-3 mt-auto">
                     <button
                         onClick={() => onQuickPay(loan, 20)}
                         className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
@@ -106,7 +108,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     {onEdit && (
                         <button
                             onClick={() => onEdit(loan)}
-                            className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
+                            className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
                             <PencilIcon size={20} />
@@ -114,7 +116,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     )}
                     <button
                         onClick={() => onDelete(loan.id)}
-                        className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
+                        className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
                         <MessageCircleMoreIcon size={20} />
                     </button>

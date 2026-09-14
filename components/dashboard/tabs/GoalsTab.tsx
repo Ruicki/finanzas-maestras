@@ -131,13 +131,16 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                 </div>
             )}
 
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catInfo.color}`}>
+            <div className="flex justify-between items-start mb-4 gap-2">
+                {/* min-w-0 en la columna del nombre: sin el, el bloque de texto
+                    no puede encogerse por debajo de su contenido y empuja los
+                    cuatro iconos fuera de la tarjeta en pantallas estrechas. */}
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${catInfo.color}`}>
                         <CatIcon size={18} />
                     </div>
-                    <div>
-                        <h4 className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{goal.name}</h4>
+                    <div className="min-w-0">
+                        <h4 className="font-bold text-lg text-zinc-900 dark:text-white leading-tight wrap-break-word">{goal.name}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${priorityColors[goal.priority || 'MEDIUM']}`}>
                                 {priorityLabel[goal.priority || 'MEDIUM']}
@@ -146,7 +149,10 @@ function GoalCard({ goal, accounts, isExpanded, onToggleExpand, onOpenHistory, o
                         </div>
                     </div>
                 </div>
-                <div className="flex gap-1">
+                {/* shrink-0 para que los cuatro iconos no se compriman ni se
+                    salgan de la tarjeta cuando el nombre de la meta es largo en
+                    pantallas estrechas (se desbordaban 7px a 360px). */}
+                <div className="flex gap-1 shrink-0">
                     <button onClick={() => onOpenHistory(goal)} className="p-2 text-zinc-400 hover:text-indigo-500 transition-colors" title="Historial">
                         <HistoryIcon size={16} />
                     </button>
@@ -501,7 +507,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* HISTORY MODAL */}
             {historyModal.isOpen && historyModal.goal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85dvh] animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
                             <div>
                                 <h3 className="text-lg font-black text-zinc-900 dark:text-white">Historial</h3>
@@ -579,7 +585,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             {/* FORM MODAL */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">{editingGoalId ? 'Editar Meta' : 'Nueva Meta'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200 transition-colors"><XIcon size={20} /></button>

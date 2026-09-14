@@ -20,7 +20,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
 
 const DialogContent = ({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
     <div className={cn(
-        "relative z-50 w-full max-w-md rounded-3xl bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto",
+        "relative z-50 w-full max-w-md rounded-3xl bg-white dark:bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col overflow-y-auto",
         className
     )} {...props}>
         {children}

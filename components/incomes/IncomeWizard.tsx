@@ -407,7 +407,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className={`bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col ${type === 'SALARY' ? 'md:max-w-3xl' : ''}`}>
+            <div className={`bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col ${type === 'SALARY' ? 'md:max-w-3xl' : ''}`}>
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 hover:text-red-500 transition-colors z-10"

@@ -180,13 +180,18 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     />
                 </div>
 
+                {/* En movil los dos selectores comparten una fila en vez de
+                    apilarse: apilados dejaban medio ancho de pantalla vacio a su
+                    derecha. md:contents deja el envoltorio transparente para que
+                    en escritorio el flex de arriba siga colocandolos igual. */}
+                <div className="flex gap-2 md:contents">
                 {/* Filtro categoría */}
-                <div className="relative">
+                <div className="relative flex-1 md:flex-none">
                     <FilterIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                        className="w-full h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
                     >
                         <option value="ALL">Todas</option>
                         {categories.map(cat => (
@@ -196,17 +201,18 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 </div>
 
                 {/* Ordenamiento */}
-                <div className="relative">
+                <div className="relative flex-1 md:flex-none">
                     <ArrowUpDownIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as 'date' | 'amount' | 'name')}
-                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                        className="w-full h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
                     >
                         <option value="date">Más reciente</option>
                         <option value="amount">Mayor monto</option>
                         <option value="name">Nombre</option>
                     </select>
+                </div>
                 </div>
             </div>
 
@@ -265,7 +271,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                                 <div className="grid gap-3">
                                     {items.map((exp) => (
-                                        <div key={exp.id} className={`group relative bg-surface dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
+                                        <div key={exp.id} className={`group relative bg-surface dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
 
                                             {/* Caja de Icono */}
                                             <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(exp.category)} ${getCategoryColor(exp.category).includes('text-') ? getCategoryColor(exp.category).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
@@ -296,8 +302,12 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                 </div>
                                             </div>
 
-                                            {/* Acción: Botones (Confirmar/Edit/Delete) */}
-                                            <div className="flex flex-col gap-1 md:flex-row md:items-center">
+                                            {/* Acción: Botones (Confirmar/Edit/Delete)
+                                                En movil ocupan su propia linea alineados a la derecha, en vez
+                                                de apilarse en columna dentro de la fila: apilados estiraban la
+                                                tarjeta a mas del doble de alto y le robaban ancho al nombre y
+                                                al monto, que quedaban partidos en dos lineas cada uno. */}
+                                            <div className="flex flex-row items-center gap-1 w-full justify-end md:w-auto">
                                                 {exp.isProjected && (
                                                     <button
                                                         onClick={() => handleConfirm(exp.id)}
