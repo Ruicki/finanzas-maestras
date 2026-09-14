@@ -1,6 +1,7 @@
 'use client';
 
 import { formatMoney } from '@/lib/utils';
+import { montoDeAbonoRapido } from '@/lib/debts';
 import { ArrowUpRightIcon, UserIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { ProfileWithData } from '@/types';
@@ -23,6 +24,11 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
     // Progress logic
     const paidAmount = totalAmount - currentBalance;
     const progress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+
+    // Antes era un monto fijo de $20: insignificante en un préstamo grande, y
+    // en uno casi pagado podía superar el saldo y hacer fallar el pago. Ver
+    // lib/debts.ts para la regla completa.
+    const abonoSugerido = montoDeAbonoRapido(currentBalance);
 
     return (
         <div className="bg-surface dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
@@ -92,13 +98,15 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     fila en pantallas de 320px y el ultimo se salia de la
                     tarjeta. Los de icono llevan shrink-0 para no deformarse. */}
                 <div className="flex flex-wrap gap-2 md:gap-3 mt-auto">
-                    <button
-                        onClick={() => onQuickPay(loan, 20)}
-                        className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
-                    >
-                        <ArrowUpRightIcon size={16} />
-                        Abonar $20
-                    </button>
+                    {abonoSugerido > 0 && (
+                        <button
+                            onClick={() => onQuickPay(loan, abonoSugerido)}
+                            className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
+                        >
+                            <ArrowUpRightIcon size={16} />
+                            Abonar {formatMoney(abonoSugerido)}
+                        </button>
+                    )}
                     <button
                         onClick={() => onPay(loan)}
                         className="flex-1 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
