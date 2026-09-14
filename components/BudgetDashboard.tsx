@@ -13,6 +13,7 @@ import { Briefcase, Landmark, Target } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 import { esPagoDeDeuda } from '@/lib/expense-category';
+import { gastosVisiblesEnElMes, totalGastadoDelMes } from '@/lib/dashboard-expenses';
 
 // Tabs
 import IncomesTab from '@/components/dashboard/tabs/IncomesTab';
@@ -127,9 +128,6 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
-    // Normalize recurring expense amount — ANNUAL shows full amount in billing month (not divided)
-    const normalizeToMonthly = (amount: number): number => amount;
-
     // Helper: Filter by selected month
     // Helper: Filter by selected month using ISO String (UTC) to match database storage
     const isInSelectedMonth = (dateStr: Date | string) => {
@@ -143,30 +141,16 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         return iso.startsWith(targetMonth);
     };
 
-    // Filtered Lists — annual recurring appear only in their billing month (creation
-    // month, every year); one-time expenses AND monthly recurring templates only in
-    // their creation month. Monthly recurring templates are NOT repeated here in later
-    // months: processRecurringExpenses() (cron) creates a real isOneTime copy on each
-    // due date, and that copy is what represents the charge in those later months.
-    // Showing the template unconditionally every month used to double-count it
-    // alongside that copy.
-    const expensesList = activeProfile?.expenses?.filter((e) => {
-        if (esPagoDeDeuda(e)) return false;
-        if (e.isRecurring && e.recurrenceType === 'ANNUAL') {
-            // Annual: appears every year in the same month as creation
-            const created = new Date(e.createdAt);
-            return created.getMonth() === selectedMonth;
-        }
-        return isInSelectedMonth(e.createdAt);
-    }) || [];
-
-    // Monthly Totals (Filtered) — recurring expenses normalized to monthly
-    const totalExpenses = expensesList.reduce((sum, exp) => {
-        const monthly = exp.isRecurring
-            ? normalizeToMonthly(Number(exp.amount))
-            : Number(exp.amount);
-        return sum + monthly;
-    }, 0);
+    // Qué gastos se ven este mes, y cuánto suman de verdad: en lib/dashboard-expenses.ts,
+    // con pruebas. Las proyecciones se ven siempre, sin importar el mes —antes
+    // se filtraban igual que un gasto real, así que una proyección con fecha
+    // futura (el caso normal: "la renta del mes que viene") desaparecía de la
+    // pantalla justo después de crearla, sin fila ni botón para confirmarla o
+    // borrarla. El total del KPI, en cambio, SÍ las excluye —si no, ahora que
+    // se ven todos los meses, este numero pasaria a sumar proyecciones de
+    // cualquier mes en vez de solo el actual.
+    const expensesList = gastosVisiblesEnElMes(activeProfile?.expenses || [], selectedMonth, selectedYear);
+    const totalExpenses = totalGastadoDelMes(expensesList);
 
     // Debt Payments: use actual credit card minimums + loan payments (not expense category)
     const totalCCPayments = (activeProfile?.creditCards || []).reduce((sum, cc) => {
