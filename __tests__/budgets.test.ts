@@ -5,6 +5,7 @@ import {
     estadoDeCategorias,
     resumenDePresupuesto,
     costeAnualDeSuscripciones,
+    montoPendienteEsteMes,
 } from '../lib/budgets';
 
 /** Marzo de 2026: mes 2 en base 0. */
@@ -174,5 +175,35 @@ describe('costeAnualDeSuscripciones', () => {
 
     it('da cero sin suscripciones', () => {
         expect(costeAnualDeSuscripciones([])).toBe(0);
+    });
+});
+
+describe('montoPendienteEsteMes', () => {
+    const hoy = new Date(2026, 2, 20); // 20 marzo 2026
+
+    it('excluye una suscripción ya pagada este ciclo', () => {
+        const pagada = { amount: 15, dueDate: 15, graceDays: null, lastPaidAt: new Date(2026, 2, 15) };
+        expect(montoPendienteEsteMes([pagada], hoy)).toBe(0);
+    });
+
+    it('incluye una suscripción pendiente (aún no llega su día de cobro este ciclo... o ya pasó sin pagar)', () => {
+        const pendiente = { amount: 12, dueDate: 25, graceDays: null, lastPaidAt: null };
+        expect(montoPendienteEsteMes([pendiente], hoy)).toBe(12);
+    });
+
+    it('incluye una suscripción vencida', () => {
+        const vencida = { amount: 8, dueDate: 5, graceDays: null, lastPaidAt: null };
+        expect(montoPendienteEsteMes([vencida], hoy)).toBe(8);
+    });
+
+    it('suma varias, dejando fuera solo las ya pagadas', () => {
+        const pagada = { amount: 15, dueDate: 15, graceDays: null, lastPaidAt: new Date(2026, 2, 15) };
+        const pendiente = { amount: 12, dueDate: 25, graceDays: null, lastPaidAt: null };
+        const vencida = { amount: 8, dueDate: 5, graceDays: null, lastPaidAt: null };
+        expect(montoPendienteEsteMes([pagada, pendiente, vencida], hoy)).toBe(20);
+    });
+
+    it('da cero sin suscripciones', () => {
+        expect(montoPendienteEsteMes([], hoy)).toBe(0);
     });
 });

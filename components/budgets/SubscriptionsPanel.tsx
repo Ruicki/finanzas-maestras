@@ -6,10 +6,10 @@ import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { deleteExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
 import { getSubscriptionStatus } from '@/lib/subscription-status';
-import { costeAnualDeSuscripciones } from '@/lib/budgets';
+import { costeAnualDeSuscripciones, montoPendienteEsteMes } from '@/lib/budgets';
 import { formatMoney } from '@/lib/utils';
 import { toast } from 'sonner';
-import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, PencilIcon } from '@animateicons/react/lucide';
+import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, PencilIcon, ClockIcon } from '@animateicons/react/lucide';
 import { ProfileWithData } from '@/types';
 
 type Expense = ProfileWithData['expenses'][number];
@@ -47,13 +47,15 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
     const proximoDia = suscripciones.length > 0 ? Math.min(...suscripciones.map(s => s.dueDate || 1)) : null;
     const porcentajeDeIngresos = totalIngresos > 0 ? (costeMensual / totalIngresos) * 100 : 0;
     const costeAnual = costeAnualDeSuscripciones(suscripciones);
+    const pendienteEsteMes = montoPendienteEsteMes(suscripciones);
+    const cantidadPendientes = suscripciones.filter(s => !pagadaEsteMes(s)).length;
 
     return (
     <div className="space-y-6">
         {suscripciones.length > 0 ? (
             <>
                 {/* Summary Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="relative overflow-hidden rounded-3xl bg-indigo-600 text-white p-6 shadow-lg shadow-indigo-500/20">
                         <div className="flex items-center gap-3 mb-3">
                             <CreditCardIcon size={18} className="text-indigo-200" />
@@ -84,6 +86,19 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
                             </p>
                         </div>
                     )}
+
+                    <div className="relative overflow-hidden rounded-3xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                            <ClockIcon size={18} className="text-amber-500" />
+                            <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Proyección: Falta Este Mes</p>
+                        </div>
+                        <p className="text-3xl font-black text-zinc-900 dark:text-white">{formatMoney(pendienteEsteMes)}</p>
+                        <p className="text-xs text-zinc-400 mt-1">
+                            {cantidadPendientes === 0
+                                ? 'Ya pagaste todas este ciclo'
+                                : `${cantidadPendientes} ${cantidadPendientes === 1 ? 'suscripción pendiente' : 'suscripciones pendientes'} de cobrarse`}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Calendar View */}

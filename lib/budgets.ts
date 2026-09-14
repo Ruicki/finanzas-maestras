@@ -7,6 +7,8 @@
  * tarjetas que tiene debajo, sin que nadie sepa cuál de las dos miente.
  */
 
+import { getSubscriptionStatus } from './subscription-status';
+
 export interface PresupuestoDelMes {
     year: number;
     month: number; // 1-12
@@ -133,4 +135,23 @@ export function costeAnualDeSuscripciones(
         const importe = Number(s.amount);
         return suma + (s.recurrenceType === 'ANNUAL' ? importe : importe * 12);
     }, 0);
+}
+
+/**
+ * Lo que aún falta por cobrarte este mes de tus gastos recurrentes, si nada
+ * cambia — una proyección de "cómo va a quedar" sin crear ningún registro
+ * nuevo ni tocar isProjected/isRecurring: se calcula sobre lo que ya existe.
+ */
+export function montoPendienteEsteMes(
+    suscripciones: {
+        amount: number | string;
+        dueDate?: number | null;
+        graceDays?: number | null;
+        lastPaidAt?: Date | string | null;
+    }[],
+    today: Date = new Date(),
+): number {
+    return suscripciones
+        .filter(s => getSubscriptionStatus(s.dueDate || 1, s.graceDays, s.lastPaidAt, today) !== 'PAID')
+        .reduce((suma, s) => suma + Number(s.amount), 0);
 }
