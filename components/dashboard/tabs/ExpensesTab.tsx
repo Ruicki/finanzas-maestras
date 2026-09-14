@@ -11,6 +11,7 @@ type Category = ProfileWithData['categories'][number];
 
 import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
+import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
@@ -33,16 +34,23 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
     const [searchQuery, setSearchQuery] = useState('');
     const [expenseToEdit, setExpenseToEdit] = useState<ExpenseWithCategory | null>(null);
     const [sortBy, setSortBy] = useState<'date' | 'amount' | 'name'>('date');
+    // Guarda el id, no el nombre: filtrar por texto dejaba fuera los gastos de
+    // una categoría renombrada, que es justo lo que se está corrigiendo.
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
     // Evita doble clic disparando dos veces confirmar/eliminar sobre el mismo gasto.
     const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
     // Filtrar deudas, categoría y aplicar búsqueda
+    const categoriaFiltrada = filterCategory === 'ALL'
+        ? null
+        : categories.find(c => String(c.id) === filterCategory) ?? null;
+
     const expensesList = expenses.filter(e => {
-        const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            e.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const busqueda = searchQuery.toLowerCase();
+        const matchesSearch = e.name.toLowerCase().includes(busqueda) ||
+            nombreCategoria(e).toLowerCase().includes(busqueda) ||
             (e.amount.toString().includes(searchQuery));
-        const matchesCategory = filterCategory === 'ALL' || e.category === filterCategory;
+        const matchesCategory = !categoriaFiltrada || esDeCategoria(e, categoriaFiltrada);
         return matchesSearch && matchesCategory;
     });
 
@@ -195,7 +203,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     >
                         <option value="ALL">Todas</option>
                         {categories.map(cat => (
-                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                            <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                         ))}
                     </select>
                 </div>
@@ -274,8 +282,8 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                         <div key={exp.id} className={`group relative bg-surface dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
 
                                             {/* Caja de Icono */}
-                                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(exp.category)} ${getCategoryColor(exp.category).includes('text-') ? getCategoryColor(exp.category).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
-                                                <CategoryIcon iconName={exp.categoryRel?.icon || categories.find(c => c.name === exp.category)?.icon || 'HelpCircle'} size={20} />
+                                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(nombreCategoria(exp))} ${getCategoryColor(nombreCategoria(exp)).includes('text-') ? getCategoryColor(nombreCategoria(exp)).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
+                                                <CategoryIcon iconName={exp.categoryRel?.icon || categories.find(c => c.name === nombreCategoria(exp))?.icon || 'HelpCircle'} size={20} />
                                             </div>
 
                                             <div className="flex-1 min-w-0 text-sm md:text-base">
@@ -283,7 +291,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="font-bold text-zinc-900 dark:text-white wrap-break-word leading-tight">{exp.name}</h4>
                                                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            <span className="text-[10px] md:text-xs font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate max-w-[100px]">{exp.category}</span>
+                                                            <span className="text-[10px] md:text-xs font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate max-w-[100px]">{nombreCategoria(exp)}</span>
                                                             {exp.isRecurring && <span className="text-[10px] font-black bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">Suscripción</span>}
                                                             {exp.isProjected && <span className="flex items-center gap-1 text-[10px] font-black bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider"><ClockIcon size={10} /> Proyectado</span>}
                                                         </div>

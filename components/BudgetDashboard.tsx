@@ -11,6 +11,7 @@ import { SettingsIcon, LogOutIcon, EyeIcon, EyeOffIcon, WalletIcon, TrendingUpIc
 import { Briefcase, Landmark, Target } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
+import { esPagoDeDeuda } from '@/lib/expense-category';
 
 // Tabs
 import IncomesTab from '@/components/dashboard/tabs/IncomesTab';
@@ -125,7 +126,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     // Showing the template unconditionally every month used to double-count it
     // alongside that copy.
     const expensesList = activeProfile?.expenses?.filter((e) => {
-        if (e.category === 'Deudas' || e.category === 'Pagos Tarjeta') return false;
+        if (esPagoDeDeuda(e)) return false;
         if (e.isRecurring && e.recurrenceType === 'ANNUAL') {
             // Annual: appears every year in the same month as creation
             const created = new Date(e.createdAt);
@@ -480,7 +481,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             <BudgetsTab
                                 categories={activeProfile.categories || []}
                                 expenses={expensesList}
-                                allExpenses={activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta') || []}
+                                allExpenses={activeProfile?.expenses?.filter((e) => !esPagoDeDeuda(e)) || []}
                                 creditCards={activeProfile.creditCards || []}
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
@@ -497,7 +498,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {activeTab === 'insights' && (
                             <InsightsTab
                                 expenses={expensesList}
-                                allExpenses={activeProfile?.expenses?.filter((e) => e.category !== 'Deudas' && e.category !== 'Pagos Tarjeta') || []}
+                                allExpenses={activeProfile?.expenses?.filter((e) => !esPagoDeDeuda(e)) || []}
                                 categories={activeProfile.categories || []}
                                 incomes={additionalIncomes}
                                 salaries={allSalaries}

@@ -92,11 +92,13 @@
 - [x] 9.6 Unificar las pantallas vacías de las 7 pestañas con `EmptyState`.
 - [x] 9.7 Recorrido de bienvenida en 3 pasos, saltable, con "Ver la introducción
       otra vez" en Ajustes.
-- [ ] 9.8 Guardar el tema de color en el perfil en vez de en `localStorage`.
-      → **Bloqueado por 5.2.** Requiere una columna nueva en `Profile`, y sin
-      migraciones el esquema solo se cambia con `prisma db push` a mano. Desplegar
-      el código antes que la columna tumba la aplicación entera, porque toda
-      lectura de perfil pasaría a pedir un campo inexistente.
+- [x] 9.8 Guardar el tema de color en el perfil en vez de en `localStorage`.
+      → Desbloqueado a mano: la columna `Profile.colorTheme` se creó con un
+      `ALTER TABLE` directo en Neon antes de desplegar el código, que es el
+      orden obligatorio —al revés tumba la aplicación entera, porque toda
+      lectura de perfil pediría un campo inexistente—. `localStorage` deja de
+      ser la verdad y queda como caché por dispositivo para evitar el parpadeo
+      antes de que el servidor pueda opinar.
 
 ## Fase 10: Huecos de producto detectados
 
@@ -109,8 +111,28 @@
       fueran la misma.
 - [ ] 10.2 **Sin cascadas en la base de datos.** Solo 2 reglas `onDelete` en todo
       el esquema; los borrados se hacen a mano y ya han fallado por olvido.
-- [ ] 10.3 **Doble verdad en la categoría del gasto.** `Expense` guarda `category`
-      (texto) y `categoryId`; renombrar una categoría deja los gastos viejos con
-      el nombre antiguo.
+- [x] 10.3 **Doble verdad en la categoría del gasto.** Resuelto sin migración:
+      `category` deja de ser una segunda opinión y pasa a ser espejo de
+      `categoryId`. El servidor lo deriva de la relación al crear y al editar
+      (`app/actions/budget/expenses.ts`), y `updateCategory` lo arrastra al
+      renombrar, en la misma transacción. Las lecturas van por
+      `lib/expense-category.ts`, donde la relación manda y el texto es solo
+      respaldo para los gastos que no la tienen.
+      → De paso cerró dos fallos: `categoryId` llegaba del cliente **sin
+      comprobar que la categoría fuera del perfil**, y `BudgetCard` emparejaba
+      por relación *o* texto, así que un gasto con nombre viejo se contaba en
+      dos presupuestos a la vez.
+      → Retirar la columna sigue pendiente de 5.2 (migraciones). Está marcada
+      como obsoleta en `prisma/schema.prisma`.
+- [x] 10.4bis **Exportación incompleta.** El botón funcionaba, pero sacaba solo
+      salarios, ingresos y gastos: quedaban fuera transferencias, metas,
+      préstamos y saldos. Ahora son dos archivos, movimientos y situación
+      actual, con los datos pedidos al servidor al pulsar
+      (`app/actions/export.ts`) y BOM para que Excel no rompa los acentos.
 - [ ] 10.4 **Sin recuperación de contraseña.** El login remite al administrador.
-- [ ] 10.5 **Sin registro de errores en producción.** Todo va a `console.error`.
+- [x] 10.5 **Registro de errores en producción.** `lib/logger.ts` expone
+      `reportError(error, contexto)`, único punto de reporte: JSON de una línea
+      en producción —buscable por `accion` y `profileId` en los registros de
+      Vercel— y formato con color en desarrollo. Migradas las 9 acciones de
+      servidor; los `console.error` que quedan son de cliente, donde winston no
+      debe cargarse.
