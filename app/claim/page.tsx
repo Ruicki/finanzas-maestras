@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { HORAS_DE_VIGENCIA } from '@/lib/access-code';
 import { useRouter } from 'next/navigation';
 import { claimProfile } from '@/app/actions/auth';
 import { toast } from 'sonner';
@@ -20,7 +21,7 @@ export default function ClaimPage() {
             toast.error(res.error);
             setLoading(false);
         } else {
-            toast.success("¡Cuenta reclamada exitosamente!");
+            toast.success("Listo. Ya puedes entrar con tu contraseña nueva.");
             router.push('/');
         }
     }
@@ -33,11 +34,16 @@ export default function ClaimPage() {
 
             <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xl p-8 md:p-10 relative z-10 animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-center mb-10">
+                    {/* La misma pantalla sirve para estrenar un perfil y para recuperar
+                        el acceso: en los dos casos presentas el codigo y eliges correo y
+                        contraseña. El titulo lo dice, porque desde el login se llega aqui
+                        buscando lo segundo. */}
                     <h1 className="text-3xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight">
-                        Reclamar Cuenta
+                        Recuperar acceso
                     </h1>
                     <p className="text-zinc-500 dark:text-zinc-400">
-                        Ingresa el código que te dio el administrador para acceder a tus datos.
+                        Escribe el código que te dio el administrador y elige tu
+                        contraseña nueva. El código sirve una sola vez y caduca a las {HORAS_DE_VIGENCIA} horas.
                     </p>
                 </div>
 
@@ -49,7 +55,7 @@ export default function ClaimPage() {
                             <input
                                 name="code"
                                 type="text"
-                                placeholder="XXXXXX"
+                                placeholder="XXXXXXXXXX-XXXXXX"
                                 required
                                 className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-zinc-900 dark:text-white placeholder:text-zinc-400 uppercase tracking-widest font-mono"
                             />
@@ -91,7 +97,7 @@ export default function ClaimPage() {
                     >
                         {loading ? <LoaderIcon className="animate-spin w-5 h-5" /> : (
                             <>
-                                <span>Activar Cuenta</span>
+                                <span>Acceder</span>
                                 <ArrowRightIcon className="w-5 h-5" />
                             </>
                         )}

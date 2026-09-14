@@ -139,7 +139,23 @@
       préstamos y saldos. Ahora son dos archivos, movimientos y situación
       actual, con los datos pedidos al servidor al pulsar
       (`app/actions/export.ts`) y BOM para que Excel no rompa los acentos.
-- [ ] 10.4 **Sin recuperación de contraseña.** El login remite al administrador.
+- [x] 10.4 **Recuperación de contraseña con código de un solo uso.** El camino
+      medio existía —`/claim` ya canjeaba un código por correo y contraseña
+      nuevos—, pero faltaban las dos puntas: el botón de emitir código solo
+      aparecía para perfiles **sin correo**, así que a quien ya tenía cuenta no
+      se le podía emitir ninguno, y el login no explicaba qué pasaba después de
+      "contacta al administrador".
+      → Ahora el administrador emite el código para cualquier perfil, y la
+      contraseña nueva la elige la persona: con el `resetPassword` que había, la
+      contraseña la acababa sabiendo el administrador.
+      → Los códigos caducan a las 48 h (`lib/access-code.ts`). Sin caducidad
+      eran una llave permanente guardada en claro. La fecha va dentro del propio
+      código en vez de en una columna, porque añadir columnas depende de 5.2;
+      no se puede falsear, ya que el código se busca por igualdad exacta contra
+      la fila. Los códigos antiguos, sin caducidad, se tratan como caducados.
+      → El límite de intentos ya cubría este caso: `checkRateLimit` aplica un
+      tope grueso por IP+acción precisamente para que no se evada rotando el
+      correo.
 - [x] 10.5 **Registro de errores en producción.** `lib/logger.ts` expone
       `reportError(error, contexto)`, único punto de reporte: JSON de una línea
       en producción —buscable por `accion` y `profileId` en los registros de

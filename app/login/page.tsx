@@ -103,8 +103,16 @@ export default function LoginPage() {
                         */}
                     </div>
 
-                    <p className="text-center text-xs text-zinc-500 mt-6">
-                        Si olvidaste tu contraseña, contacta al administrador.
+                    {/* Antes esto decia solo "contacta al administrador", sin explicar
+                        que pasa despues. El camino existe y es concreto: te dan un
+                        codigo y eliges tu contraseña nueva tu, no te la dicen. */}
+                    <p className="text-center text-xs text-zinc-500 mt-6 leading-relaxed">
+                        ¿Olvidaste tu contraseña? Pídele un código de acceso al
+                        administrador y úsalo en{' '}
+                        <a href="/claim" className="font-bold text-zinc-700 dark:text-zinc-300 underline underline-offset-2">
+                            recuperar acceso
+                        </a>
+                        {' '}para elegir una nueva.
                     </p>
                 </form>
 
