@@ -5,6 +5,11 @@
  *   npm run seed:nuevo
  *   npm run seed:nuevo -- --email otro@correo.com
  *
+ * La contraseña NO esta escrita en el repositorio. Se toma de SEED_PASSWORD si
+ * existe —ponla en tu .env local si quieres que sea siempre la misma— y si no,
+ * se genera una al azar y se imprime al terminar. Una contraseña fija en el
+ * codigo es una credencial en el historial de git, aunque sea de prueba.
+ *
  * Reproduce exactamente lo que deja el registro real (app/actions/auth.ts):
  * el perfil, su contraseña hasheada con el mismo coste, y la cuenta "Efectivo"
  * por defecto. A proposito NO crea categorias ni marca onboardingSeenAt: eso es
@@ -16,6 +21,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 
 // Mismo coste que el registro real: si aqui fuera distinto, el seed no estaria
 // reproduciendo las credenciales que produce la app.
@@ -23,18 +29,28 @@ const BCRYPT_ROUNDS = 12;
 
 const DEFAULTS = {
     email: 'nuevo@finanzasmaestras.test',
-    password: process.env.SEED_PASSWORD || '',
     name: 'Usuario Nuevo',
 };
 
+/**
+ * Genera una contraseña que cumple la politica del registro (8+ caracteres con
+ * mayuscula, minuscula y numero) sin que quede escrita en ningun archivo.
+ */
+function generarPassword(): string {
+    const cuerpo = randomBytes(9).toString('base64url').replace(/[^A-Za-z0-9]/g, '');
+    return `Aa1${cuerpo}`;
+}
+
 function leerArgumentos(argv: string[]) {
-    const valores = { ...DEFAULTS };
+    const valores = {
+        ...DEFAULTS,
+        password: process.env.SEED_PASSWORD || generarPassword(),
+    };
     for (let i = 0; i < argv.length; i += 1) {
         const clave = argv[i];
         const valor = argv[i + 1];
         if (!valor || valor.startsWith('--')) continue;
         if (clave === '--email') valores.email = valor;
-        if (clave === '--password') valores.password = valor;
         if (clave === '--name') valores.name = valor;
     }
     return valores;
@@ -47,7 +63,7 @@ async function main() {
 
     if (process.env.NODE_ENV === 'production') {
         throw new Error(
-            'Este seed crea un usuario de prueba con contraseña conocida. No se ejecuta con NODE_ENV=production.',
+            'Este seed crea un usuario de prueba. No se ejecuta con NODE_ENV=production.',
         );
     }
 
