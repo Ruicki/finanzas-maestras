@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { nombreCategoria } from '@/lib/expense-category';
 import { formatMoney } from '@/lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { ShieldCheckIcon, TrendingUpIcon, CalculatorIcon, ArrowRightIcon, DollarSignIcon } from '@animateicons/react/lucide';
@@ -8,9 +9,10 @@ import { Target } from 'lucide-react';
 
 interface RuleExpense {
     name?: string;
-    category?: string;
+    category?: string | null;
+    categoryId?: number | null;
     amount: number;
-    categoryRel?: { type?: string | null } | null;
+    categoryRel?: { name?: string | null; type?: string | null } | null;
 }
 
 interface FinancialRulesProps {
@@ -57,7 +59,7 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     // --- RULE 1: 50/30/20 ---
     const getType = (e: RuleExpense): string => {
         if (e.categoryRel?.type) return e.categoryRel.type;
-        const name = (e.category || e.name || '').toLowerCase();
+        const name = `${nombreCategoria(e)} ${e.name || ''}`.toLowerCase();
         if (['alquiler', 'arriendo', 'servicio', 'servicios', 'internet', 'teléfono', 'teléfono celular', 'seguro', 'educación', 'colegio', 'matrícula', 'hipoteca', 'préstamo', 'loan'].some(k => name.includes(k))) return 'FIXED';
         if (['ahorro', 'inversión', 'inversion', 'fondo', 'meta'].some(k => name.includes(k))) return 'SAVING';
         return 'VARIABLE';

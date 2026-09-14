@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { reportError } from '@/lib/logger';
 import { revalidatePath } from "next/cache";
 import { SalaryRepository } from "@/lib/repositories/salary.repository";
 import { AccountRepository } from "@/lib/repositories/account.repository";
@@ -219,7 +220,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
             }
         };
     } catch (error) {
-        logger.error(`Error processing salary`, error);
+        reportError(error, { accion: 'procesar salario' });
         throw new Error("Failed to process and store salary calculation");
     }
 }
@@ -244,7 +245,7 @@ export async function deleteSalaryById(id: number): Promise<void> {
         });
         revalidatePath('/');
     } catch (err) {
-        logger.error(`Error deleting salary ${id}`, err);
+        reportError(err, { accion: 'borrar salario', targetId: id });
         throw err;
     }
 }
@@ -349,7 +350,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
         });
         revalidatePath('/');
     } catch (err) {
-        logger.error(`Error updating salary ${id}`, err);
+        reportError(err, { accion: 'actualizar salario', targetId: id });
         throw err;
     }
 }

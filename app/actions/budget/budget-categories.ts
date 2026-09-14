@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma';
+import { reportError } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { requireOwnership } from '@/lib/auth-utils';
 
@@ -19,7 +20,7 @@ export async function updateCategoryLimit(categoryId: number, limit: number) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
-        console.error('Error updating limit:', error);
+        reportError(error, { accion: 'actualizar limite de categoria' });
         return { success: false, error: 'Failed to update limit' };
     }
 }
@@ -37,7 +38,7 @@ export async function toggleCategoryRollover(categoryId: number, isRollover: boo
         revalidatePath('/');
         return { success: true };
     } catch (error) {
-        console.error('Error toggling rollover:', error);
+        reportError(error, { accion: 'alternar arrastre de categoria' });
         return { success: false, error: 'Failed to toggle rollover' };
     }
 }
@@ -55,7 +56,7 @@ export async function updateCategoryRolloverBalance(categoryId: number, balance:
         revalidatePath('/');
         return { success: true };
     } catch (error) {
-        console.error('Error updating rollover balance:', error);
+        reportError(error, { accion: 'actualizar saldo de arrastre' });
         return { success: false, error: 'Failed to update rollover balance' };
     }
 }

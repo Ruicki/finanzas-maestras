@@ -11,7 +11,14 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Global error:", error);
+    // Esto corre en el navegador, asi que el error del servidor ya no viene
+    // completo: Next solo deja pasar el `digest`. Ese digest es lo unico que
+    // permite emparejar lo que ve el usuario con la linea del registro del
+    // servidor, asi que se imprime con esa etiqueta y no suelto.
+    console.error("Fallo no controlado", {
+      digest: error.digest,
+      mensaje: error.message,
+    });
   }, [error]);
 
   return (
@@ -40,11 +47,14 @@ export default function GlobalError({
           >
             Intentar de nuevo
           </Button>
+          {/* Antes este boton iba a "/", que es justo la pagina que suele
+              fallar: dejaba al usuario dando vueltas entre el error y el
+              error. Cerrar sesion siempre es una salida real. */}
           <Button
             variant="outline"
-            onClick={() => (window.location.href = "/")}
+            onClick={() => (window.location.href = "/login?salir=1")}
           >
-            Ir al inicio
+            Cerrar sesión
           </Button>
         </div>
       </div>

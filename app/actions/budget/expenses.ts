@@ -3,15 +3,51 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
-import { logger } from '@/lib/logger';
+import { reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
+type ClientePrisma = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+/**
+ * El nombre de categoría que se guarda en el gasto.
+ *
+ * `Expense.category` es texto y `Expense.categoryId` la relación: dos sitios
+ * para el mismo dato. Hasta ahora el cliente mandaba los dos y nadie comprobaba
+ * que dijeran lo mismo, así que podían separarse desde el primer momento.
+ *
+ * Ahora el texto lo deriva el servidor de la relación, y pasa a ser un espejo,
+ * no una segunda opinión. De paso se comprueba que la categoría sea del perfil:
+ * `categoryId` venía del cliente y llegaba a la base de datos sin mirarlo, que
+ * es la misma puerta que ya cerramos en cuentas y tarjetas.
+ *
+ * `textoDeRespaldo` solo se usa cuando el gasto va sin categoría.
+ */
+async function resolverNombreCategoria(
+    tx: ClientePrisma,
+    categoryId: number | null | undefined,
+    profileId: number,
+    textoDeRespaldo?: string,
+): Promise<string> {
+    if (categoryId == null) return textoDeRespaldo?.trim() || 'Sin categoría';
+
+    const categoria = await tx.category.findUnique({ where: { id: categoryId } });
+    if (!categoria) throw new Error('Categoría no encontrada');
+    if (categoria.profileId !== profileId) {
+        throw new Error('La categoría no pertenece a este perfil');
+    }
+    return categoria.name;
+}
+
 export interface CreateExpenseInput {
     name: string;
     amount: number;
+    /**
+     * Solo se usa si el gasto va sin `categoryId`. Con categoría, el nombre lo
+     * pone el servidor a partir de la relación.
+     */
     category: string;
     profileId: number;
     dueDate?: number | null;
@@ -58,7 +94,9 @@ export async function createExpense(data: CreateExpenseInput) {
                 data: {
                     name: data.name,
                     amount: data.amount,
-                    category: data.category,
+                    category: await resolverNombreCategoria(
+                        tx, data.categoryId, data.profileId, data.category,
+                    ),
                     profileId: data.profileId,
                     dueDate: data.dueDate,
                     graceDays: data.graceDays,
@@ -93,7 +131,7 @@ export async function createExpense(data: CreateExpenseInput) {
         revalidatePath('/');
         return { ...expense, amount: toNum(expense.amount) };
     } catch (error) {
-        logger.error('Error creating expense:', error);
+        reportError(error, { accion: 'crear gasto', profileId: data.profileId });
         throw error;
     }
 }
@@ -170,12 +208,21 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                 }
             }
 
+            // `undefined` en Prisma significa "no lo toques". Si la edición no
+            // menciona la categoría, se queda la que hubiera; si la menciona, el
+            // texto se rehace desde la relación para que no se separen.
+            const nuevaCategoria = data.categoryId === undefined
+                ? undefined
+                : await resolverNombreCategoria(
+                      tx, data.categoryId, oldExpense.profileId, data.category,
+                  );
+
             await tx.expense.update({
                 where: { id },
                 data: {
                     name: data.name,
                     amount: newAmount,
-                    category: data.category,
+                    category: nuevaCategoria,
                     dueDate: data.dueDate,
                     graceDays: data.graceDays,
                     isRecurring: data.isRecurring,
@@ -192,7 +239,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error updating expense ${id}:`, error);
+        reportError(error, { accion: 'actualizar gasto', profileId: oldExpense.profileId, targetId: id });
         throw error;
     }
 }
@@ -231,7 +278,7 @@ export async function deleteExpense(id: number): Promise<void> {
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error deleting expense ${id}:`, error);
+        reportError(error, { accion: 'borrar gasto', targetId: id });
         throw error;
     }
 }
@@ -279,7 +326,7 @@ export async function confirmExpense(id: number) {
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error confirming expense ${id}:`, error);
+        reportError(error, { accion: 'confirmar gasto proyectado', profileId: expense.profileId, targetId: id });
         throw error;
     }
 }

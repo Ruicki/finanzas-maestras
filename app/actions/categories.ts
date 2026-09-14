@@ -4,19 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Category } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireOwnership } from "@/lib/auth-utils";
-
-// Configuración de Categorías Predeterminadas
-const DEFAULT_CATEGORIES = [
-    { name: 'Vivienda', icon: 'Home', color: 'text-blue-500', type: 'FIXED' },
-    { name: 'Comida', icon: 'ShoppingBag', color: 'text-orange-500', type: 'VARIABLE' },
-    { name: 'Transporte', icon: 'Car', color: 'text-zinc-500', type: 'FIXED' },
-    { name: 'Entretenimiento', icon: 'Coffee', color: 'text-pink-500', type: 'LUXURY' },
-    { name: 'Servicios', icon: 'Zap', color: 'text-yellow-500', type: 'FIXED' },
-    { name: 'Salud', icon: 'HeartPulse', color: 'text-red-500', type: 'VARIABLE' },
-    { name: 'Educación', icon: 'GraduationCap', color: 'text-indigo-500', type: 'FIXED' },
-    { name: 'Tecnología', icon: 'Smartphone', color: 'text-cyan-500', type: 'VARIABLE' },
-    { name: 'Viajes', icon: 'Plane', color: 'text-emerald-500', type: 'LUXURY' },
-];
+import { CATEGORIAS_POR_DEFECTO } from "@/lib/perfil-nuevo";
 
 export async function initializeDefaultCategories(profileId: number) {
     await requireOwnership(profileId);
@@ -26,7 +14,7 @@ export async function initializeDefaultCategories(profileId: number) {
 
     // Crear por lotes usando transacción para compatibilidad
     await prisma.$transaction(
-        DEFAULT_CATEGORIES.map(cat =>
+        CATEGORIAS_POR_DEFECTO.map(cat =>
             prisma.category.create({
                 data: {
                     ...cat,
@@ -84,15 +72,32 @@ export async function updateCategory(id: number, name: string, icon: string, col
     if (!existing) throw new Error('Categoría no encontrada');
     await requireOwnership(existing.profileId);
 
-    const category = await prisma.category.update({
-        where: { id },
-        data: {
-            name,
-            icon,
-            color,
-            type
+    // `Expense.category` guarda el nombre como texto además de la relación.
+    // Renombrar sin arrastrarlo dejaba los gastos ya escritos con el nombre
+    // anterior, que es de donde salía que un mismo gasto dijera una cosa por la
+    // relación y otra por la columna. Va en una transacción porque a medias es
+    // exactamente el estado que se intenta evitar.
+    const category = await prisma.$transaction(async (tx) => {
+        const actualizada = await tx.category.update({
+            where: { id },
+            data: {
+                name,
+                icon,
+                color,
+                type
+            }
+        });
+
+        if (existing.name !== name) {
+            await tx.expense.updateMany({
+                where: { categoryId: id },
+                data: { category: name },
+            });
         }
+
+        return actualizada;
     });
+
     revalidatePath('/');
     return serializeCategory(category);
 }

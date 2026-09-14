@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum, serializeCreditCard } from './serializers';
-import { logger } from '@/lib/logger';
+import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
 
@@ -205,7 +205,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
         logger.info(`Credit card payment: $${amount} to card ${cardId} from account ${accountId}`);
         revalidatePath('/');
     } catch (error) {
-        logger.error('Error paying credit card:', error);
+        reportError(error, { accion: 'pagar tarjeta de credito', targetId: cardId });
         throw error;
     }
 }

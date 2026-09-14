@@ -20,6 +20,7 @@
  * para que dos ejecuciones seguidas den el mismo resultado.
  */
 import { PrismaClient } from '@prisma/client';
+import { datosInicialesDelPerfil } from '../lib/perfil-nuevo';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 
@@ -78,9 +79,7 @@ async function main() {
             name,
             email,
             password: await bcrypt.hash(password, BCRYPT_ROUNDS),
-            accounts: {
-                create: { name: 'Efectivo', balance: 0, type: 'CASH', isDefault: true },
-            },
+            ...datosInicialesDelPerfil,
         },
     });
 

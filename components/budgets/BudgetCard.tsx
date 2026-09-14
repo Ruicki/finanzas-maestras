@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { esDeCategoria } from '@/lib/expense-category';
 import { formatMoney } from '@/lib/utils';
 import { setCategoryBudget } from '@/app/actions/budget';
 import { toast } from 'sonner';
@@ -37,7 +38,7 @@ export default function BudgetCard({ category, expenses, year, month, rollover =
     const [isEditing, setIsEditing] = useState(false);
 
     // Calculate stats
-    const catExpenses = expenses.filter(e => !e.isProjected && (e.categoryId === category.id || e.category === category.name));
+    const catExpenses = expenses.filter(e => !e.isProjected && esDeCategoria(e, category));
     const total = catExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
     // Límite del mes seleccionado: presupuesto específico del mes, o fallback al límite global

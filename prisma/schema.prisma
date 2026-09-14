@@ -77,6 +77,12 @@ model Expense {
   id              Int       @id @default(autoincrement())
   name            String
   amount          Decimal   @db.Decimal(10, 2)
+  /// OBSOLETO: espejo de categoryRel.name, no una segunda opinion.
+  /// Lo escribe el servidor a partir de categoryId y lo mantiene al renombrar
+  /// la categoria. Sobrevive porque hay gastos antiguos sin relacion y porque
+  /// borrar una categoria deja categoryId en null sin perder el nombre.
+  /// Para leerlo usa lib/expense-category.ts, nunca este campo directo.
+  /// Retirarlo pide una migracion (ver B7 en .specs/tasks.md).
   category        String
   categoryId      Int?
   dueDate         Int?
