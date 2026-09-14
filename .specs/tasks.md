@@ -66,9 +66,24 @@
 
 ## Fase 6: Refactorización y Principio SRP en UI
 
-- [ ] 6.1 Modularizar `DebtsTab.tsx` en subcomponentes atómicos.
-- [ ] 6.2 Modularizar `BudgetsTab.tsx` en subcomponentes atómicos.
-- [ ] 6.3 Desacoplar modales restantes en `GoalsTab.tsx`.
+- [x] 6.1 Modularizar `DebtsTab.tsx`. 779 → 474 líneas. Fuera:
+      `DebtFreedomHeader`, `DebtWizard`, `LoanPaymentModal` y, en `lib/debts.ts`,
+      las cuentas (fecha de libertad, deuda total, cuenta preferida para pagar)
+      con 13 pruebas.
+- [x] 6.2 Modularizar `BudgetsTab.tsx`. 466 → 186 líneas. Fuera:
+      `SubscriptionsPanel` y `lib/budgets.ts`.
+      → Lo que justificaba el cambio: la regla del arrastre del mes anterior
+      estaba escrita **dos veces**, una para el resumen y otra dentro del bucle
+      de las tarjetas. Dos copias de la misma regla es como el total acaba sin
+      cuadrar con lo que tiene debajo. Ahora hay una, con 18 pruebas.
+- [x] 6.3 Desacoplar modales restantes en `GoalsTab.tsx`. 717 → 274 líneas.
+      Fuera: `GoalCard`, `GoalFormModal`, `GoalHistoryModal`,
+      `GoalReclaimModal` y el catálogo de categorías.
+      → Verificado en navegador real contra `/preview-temas`, que renderiza el
+      dashboard con datos falsos: las 7 pestañas pintan, el asistente de
+      préstamo cambia entre Banco y Amigo, el formulario de meta abre y el panel
+      de suscripciones muestra bien el equivalente mensual de una anual. Cero
+      errores de consola.
 
 ## Fase 7: Testing y Rate Limiting Distribuido
 

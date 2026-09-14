@@ -4,15 +4,11 @@ import React, { useState } from 'react';
 import BudgetCard from '@/components/budgets/BudgetCard';
 import EmptyState from '@/components/shared/EmptyState';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
-import SubscriptionCalendar from '@/components/budgets/SubscriptionCalendar';
+import SubscriptionsPanel from '@/components/budgets/SubscriptionsPanel';
 import { formatMoney } from '@/lib/utils';
-import { PlusIcon, CalendarIcon, TrendingDownIcon, CreditCardIcon, RepeatIcon, WalletIcon, PencilIcon } from '@animateicons/react/lucide';
+import { RepeatIcon, WalletIcon } from '@animateicons/react/lucide';
 import { PieChart } from 'lucide-react';
-import { CategoryIcon } from '@/components/shared/CategoryIcon';
-import { confirmDelete } from '@/components/shared/DeleteConfirmation';
-import { deleteExpense, markSubscriptionPaid, markSubscriptionUnpaid } from '@/app/actions/budget';
-import { getSubscriptionStatus } from '@/lib/subscription-status';
-import { toast } from 'sonner';
+import { estadoDeCategorias, resumenDePresupuesto, sobranteDelMesAnterior } from '@/lib/budgets';
 import { ProfileWithData } from '@/types';
 
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -21,20 +17,6 @@ type Category = ProfileWithData['categories'][number];
 type Expense = ProfileWithData['expenses'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
 type Account = ProfileWithData['accounts'][number];
-
-const RECURRENCE_LABELS: Record<string, string> = {
-    MONTHLY: 'Mensual',
-    ANNUAL: 'Anual',
-};
-
-function normalizeToMonthly(amount: number): number {
-    // ANNUAL: full amount in billing month (not divided)
-    return amount;
-}
-
-function isPaidThisMonth(exp: Expense): boolean {
-    return getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt) === 'PAID';
-}
 
 interface BudgetsTabProps {
     categories: Category[];
@@ -55,25 +37,22 @@ interface BudgetsTabProps {
 
 type SubTab = 'resumen' | 'categorias' | 'suscripciones';
 
+
 export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [showWizard, setShowWizard] = useState(false);
-    // Evita doble clic disparando dos veces marcar-pagado/cancelar sobre la misma suscripción.
-    const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
     const [editingSub, setEditingSub] = useState<Partial<Expense> | null>(null);
 
-    // Subscriptions sorted by due date (each one individually)
+    // Suscripciones ordenadas por dia de cobro.
     const subscriptions = expenses
         .filter(e => e.isRecurring)
         .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
 
-    const totalSubscriptions = subscriptions.reduce((s, e) => s + normalizeToMonthly(Number(e.amount)), 0);
-    const nextDueDay = subscriptions.length > 0 ? Math.min(...subscriptions.map(s => s.dueDate || 1)) : null;
-    const subscriptionPctOfIncome = totalIncome > 0 ? (totalSubscriptions / totalIncome) * 100 : 0;
-    const annualCost = subscriptions.reduce((s, e) => {
-        if (e.recurrenceType === 'ANNUAL') return s + Number(e.amount);
-        return s + Number(e.amount) * 12;
-    }, 0);
+    // Las cuentas de las categorias viven en lib/budgets.ts. Estaban escritas
+    // dos veces —una para el resumen y otra dentro del bucle de las tarjetas—,
+    // que es como el total acaba sin cuadrar con lo que tiene debajo.
+    const estados = estadoDeCategorias(categories, expenses, allExpenses, currentMonth, currentYear);
+    const resumen = resumenDePresupuesto(estados);
 
     const subTabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
         { id: 'resumen', label: 'Regla 50/30/20', icon: <WalletIcon size={16} /> },
@@ -120,109 +99,40 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                     totalCash={totalCash}
                 />
             )}
-
             {subTab === 'categorias' && (
                 <div className="space-y-6">
-                    {/* Summary Cards Row */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {(() => {
-                            // Helper: get the budget limit for a specific month
-                            const getMonthLimit = (cat: Category, year: number, month1: number) => {
-                                const mb = cat.budgets?.find((b) => b.year === year && b.month === month1);
-                                return mb ? Number(mb.limit) : (Number(cat.monthlyLimit) || 0);
-                            };
-
-                            // Helper: calculate rollover from previous month — solo si la
-                            // categoría tiene el toggle "isRollover" activado; antes se
-                            // sumaba el sobrante del mes anterior a TODAS las categorías
-                            // sin importar si el usuario lo había activado o no.
-                            const getRollover = (cat: Category) => {
-                                if (!cat.isRollover) return 0;
-
-                                let prevMonth = currentMonth; // 0-indexed current
-                                let prevYear = currentYear;
-                                prevMonth -= 1;
-                                if (prevMonth < 0) { prevMonth = 11; prevYear -= 1; }
-                                const prevMonth1 = prevMonth + 1; // 1-indexed
-
-                                const prevLimit = getMonthLimit(cat, prevYear, prevMonth1);
-                                if (prevLimit <= 0) return 0;
-
-                                const prevSpent = allExpenses
-                                    .filter(e => {
-                                        if (e.categoryId !== cat.id || e.isProjected) return false;
-                                        const d = new Date(e.createdAt);
-                                        return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
-                                    })
-                                    .reduce((sum, e) => sum + Number(e.amount), 0);
-
-                                return Math.max(0, prevLimit - prevSpent);
-                            };
-
-                            // Límite del mes seleccionado por categoría (presupuesto específico o fallback global)
-                            const getCategoryLimit = (cat: Category) => {
-                                return getMonthLimit(cat, currentYear, currentMonth + 1);
-                            };
-
-                            const getCategoryRollover = (cat: Category) => {
-                                return getRollover(cat);
-                            };
-
-                            const catStats = categories.map(cat => {
-                                const spent = expenses
-                                    .filter(e => {
-                                        if (e.isProjected) return false; // aún no descuenta saldo real
-                                        const d = new Date(e.createdAt);
-                                        return e.categoryId === cat.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-                                    })
-                                    .reduce((sum, e) => sum + normalizeToMonthly(Number(e.amount)), 0);
-                                const rollover = getCategoryRollover(cat);
-                                const limit = getCategoryLimit(cat);
-                                const effective = limit + rollover;
-                                return { ...cat, spent, rollover, effective };
-                            });
-                            const totalSpent = catStats.reduce((s, c) => s + c.spent, 0);
-                            const totalAssigned = catStats.reduce((s, c) => s + c.effective, 0);
-                            const totalRollover = catStats.reduce((s, c) => s + c.rollover, 0);
-                            const overBudget = catStats.filter(c => c.effective > 0 && c.spent > c.effective);
-
-                            return (
-                                <>
-                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Total Gastado</p>
-                                        <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalSpent)}</p>
-                                        <p className="text-[10px] text-zinc-400 mt-1">este mes</p>
-                                    </div>
-                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Presupuesto</p>
-                                        <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(totalAssigned)}</p>
-                                        <p className="text-[10px] text-zinc-400 mt-1">
-                                            {totalRollover > 0
-                                                ? `${formatMoney(totalRollover)} del mes anterior`
-                                                : `${categories.length} categorías`
-                                            }
-                                        </p>
-                                    </div>
-                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Restante</p>
-                                        <p className={`text-2xl font-black ${totalAssigned - totalSpent >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                            {formatMoney(totalAssigned - totalSpent)}
-                                        </p>
-                                        <p className="text-[10px] text-zinc-400 mt-1">{totalAssigned > 0 ? `${((totalSpent / totalAssigned) * 100).toFixed(0)}% usado` : 'sin límite'}</p>
-                                    </div>
-                                    <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Alertas</p>
-                                        <p className={`text-2xl font-black ${overBudget.length > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            {overBudget.length}
-                                        </p>
-                                        <p className="text-[10px] text-zinc-400 mt-1">{overBudget.length === 0 ? 'todo OK' : 'excedidas'}</p>
-                                    </div>
-                                </>
-                            );
-                        })()}
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Total Gastado</p>
+                            <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(resumen.gastado)}</p>
+                            <p className="text-[10px] text-zinc-400 mt-1">este mes</p>
+                        </div>
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Presupuesto</p>
+                            <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(resumen.asignado)}</p>
+                            <p className="text-[10px] text-zinc-400 mt-1">
+                                {resumen.arrastre > 0
+                                    ? `${formatMoney(resumen.arrastre)} del mes anterior`
+                                    : `${categories.length} categorías`
+                                }
+                            </p>
+                        </div>
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Restante</p>
+                            <p className={`text-2xl font-black ${resumen.asignado - resumen.gastado >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                {formatMoney(resumen.asignado - resumen.gastado)}
+                            </p>
+                            <p className="text-[10px] text-zinc-400 mt-1">{resumen.asignado > 0 ? `${((resumen.gastado / resumen.asignado) * 100).toFixed(0)}% usado` : 'sin límite'}</p>
+                        </div>
+                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Alertas</p>
+                            <p className={`text-2xl font-black ${resumen.excedidas > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                {resumen.excedidas}
+                            </p>
+                            <p className="text-[10px] text-zinc-400 mt-1">{resumen.excedidas === 0 ? 'todo OK' : 'excedidas'}</p>
+                        </div>
                     </div>
 
-                    {/* Category Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {categories.length === 0 && (
                             <EmptyState
@@ -233,220 +143,31 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                                 onAction={() => setShowWizard(true)}
                             />
                         )}
-                        {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => {
-                            // Calculate rollover for this category — solo si tiene el
-                            // toggle activado (misma regla que el resumen de arriba).
-                            let prevM = currentMonth;
-                            let prevY = currentYear;
-                            prevM -= 1;
-                            if (prevM < 0) { prevM = 11; prevY -= 1; }
-                            const prevMb = categoryObj.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
-                            const prevLimit = prevMb ? Number(prevMb.limit) : (Number(categoryObj.monthlyLimit) || 0);
-                            const prevSpent = allExpenses
-                                .filter(e => e.categoryId === categoryObj.id && !e.isProjected)
-                                .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
-                                .reduce((sum, e) => sum + Number(e.amount), 0);
-                            const rollover = categoryObj.isRollover && prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;
-
-                            return (
-                                <BudgetCard
-                                    key={categoryObj.id}
-                                    category={categoryObj}
-                                    expenses={expenses}
-                                    year={currentYear}
-                                    month={currentMonth + 1}
-                                    rollover={rollover}
-                                    onUpdate={onUpdate}
-                                />
-                            );
-                        })}
+                        {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => (
+                            <BudgetCard
+                                key={categoryObj.id}
+                                category={categoryObj}
+                                expenses={expenses}
+                                year={currentYear}
+                                month={currentMonth + 1}
+                                rollover={sobranteDelMesAnterior(categoryObj, allExpenses, currentMonth, currentYear)}
+                                onUpdate={onUpdate}
+                            />
+                        ))}
                     </div>
                 </div>
             )}
 
             {subTab === 'suscripciones' && (
-                <div className="space-y-6">
-                    {subscriptions.length > 0 ? (
-                        <>
-                            {/* Summary Row */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="relative overflow-hidden rounded-3xl bg-indigo-600 text-white p-6 shadow-lg shadow-indigo-500/20">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <CreditCardIcon size={18} className="text-indigo-200" />
-                                        <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider">Costo Mensual</p>
-                                    </div>
-                                    <p className="text-3xl font-black">{formatMoney(totalSubscriptions)}</p>
-                                    <p className="text-xs text-indigo-200 mt-1">{subscriptionPctOfIncome.toFixed(0)}% de tus ingresos</p>
-                                </div>
-
-                                <div className="relative overflow-hidden rounded-3xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <TrendingDownIcon size={18} className="text-red-500" />
-                                        <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Costo Anual</p>
-                                    </div>
-                                    <p className="text-3xl font-black text-zinc-900 dark:text-white">{formatMoney(annualCost)}</p>
-                                    <p className="text-xs text-zinc-400 mt-1">{formatMoney(annualCost / 12)}/mes × 12</p>
-                                </div>
-
-                                {nextDueDay && (
-                                    <div className="relative overflow-hidden rounded-3xl bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <CalendarIcon size={18} className="text-purple-500" />
-                                            <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Próximo Cobro</p>
-                                        </div>
-                                        <p className="text-3xl font-black text-zinc-900 dark:text-white">Día {nextDueDay}</p>
-                                        <p className="text-xs text-zinc-400 mt-1">
-                                            {subscriptions.filter(s => s.dueDate === nextDueDay).length} {subscriptions.filter(s => s.dueDate === nextDueDay).length === 1 ? 'suscripción' : 'suscripciones'}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Calendar View */}
-                            <SubscriptionCalendar subscriptions={subscriptions} />
-
-                            {/* Subscription Cards — each one individually */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {subscriptions.map((exp) => {
-                                    const catColor = exp.categoryRel?.color || 'bg-zinc-400';
-                                    const catIcon = exp.categoryRel?.icon || 'RefreshCw';
-                                    return (
-                                        <div key={exp.id} className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md transition-all relative overflow-hidden">
-                                            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-purple-500 to-indigo-500" />
-
-                                            <div className="p-5">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catColor?.replace('text-', 'bg-').replace('500', '100') || 'bg-zinc-100'} ${catColor || 'text-zinc-500'}`}>
-                                                            <CategoryIcon iconName={catIcon} size={18} />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[140px]">{exp.name}</h4>
-                                                            <div className="flex items-center gap-1.5">
-                                                                {exp.categoryRel && (
-                                                                    <p className="text-[10px] font-bold text-zinc-400 uppercase">{exp.categoryRel.name}</p>
-                                                                )}
-                                                                {exp.recurrenceType && exp.recurrenceType !== 'MONTHLY' && (
-                                                                    <span className="text-[9px] font-bold text-purple-500 bg-purple-100 dark:bg-purple-500/20 px-1.5 py-0.5 rounded-full">
-                                                                        {RECURRENCE_LABELS[exp.recurrenceType] || 'Mensual'}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        {(() => {
-                                                            const status = getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt);
-                                                            if (status === 'PAID') {
-                                                                return <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">Pagado</span>;
-                                                            }
-                                                            if (status === 'OVERDUE') {
-                                                                return <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-500/20 px-2 py-0.5 rounded-full">Vencido</span>;
-                                                            }
-                                                            return <span className="text-[9px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Pendiente</span>;
-                                                        })()}
-                                                        <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-[10px] font-bold text-zinc-500">
-                                                            Día {exp.dueDate || '1'}{exp.graceDays ? ` (+${exp.graceDays}d gracia)` : ''}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex justify-between items-end mt-3">
-                                                    <div>
-                                                        <p className="text-2xl font-black text-zinc-900 dark:text-white">-{formatMoney(Number(exp.amount))}</p>
-                                                        {exp.recurrenceType === 'ANNUAL' && (
-                                                            <p className="text-[10px] text-zinc-400">{formatMoney(Number(exp.amount) / 12)}/mes equivalente</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Action Buttons */}
-                                            <div className="px-5 pb-4 flex items-center justify-between">
-                                                    <button
-                                                        disabled={processingIds.has(exp.id)}
-                                                        onClick={async () => {
-                                                            if (processingIds.has(exp.id)) return;
-                                                            setProcessingIds(prev => new Set(prev).add(exp.id));
-                                                            try {
-                                                                if (isPaidThisMonth(exp)) {
-                                                                    await markSubscriptionUnpaid(exp.id);
-                                                                    toast.success("Marcado como pendiente");
-                                                                } else {
-                                                                    await markSubscriptionPaid(exp.id);
-                                                                    toast.success("Marcado como pagado");
-                                                                }
-                                                                if (onUpdate) onUpdate();
-                                                            } catch (error) {
-                                                                toast.error(error instanceof Error ? error.message : "Error al actualizar");
-                                                            } finally {
-                                                                setProcessingIds(prev => { const next = new Set(prev); next.delete(exp.id); return next; });
-                                                            }
-                                                        }}
-                                                        className={`py-2 px-4 rounded-xl text-[10px] font-bold transition-all disabled:opacity-50 disabled:pointer-events-none ${isPaidThisMonth(exp) ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/30'}`}
-                                                    >
-                                                        {isPaidThisMonth(exp) ? 'Pagado ✓' : 'Marcar pagado'}
-                                                    </button>
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            onClick={() => setEditingSub(exp)}
-                                                            className="p-1.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                            title="Editar"
-                                                        >
-                                                            <PencilIcon size={12} />
-                                                        </button>
-                                                        <button
-                                                            disabled={processingIds.has(exp.id)}
-                                                            onClick={() => {
-                                                                confirmDelete(async () => {
-                                                                    if (processingIds.has(exp.id)) return;
-                                                                    setProcessingIds(prev => new Set(prev).add(exp.id));
-                                                                    try {
-                                                                        await deleteExpense(exp.id);
-                                                                        toast.success("Suscripción cancelada");
-                                                                        if (onUpdate) onUpdate();
-                                                                    } catch (error) {
-                                                                        toast.error(error instanceof Error ? error.message : "Error al cancelar la suscripción");
-                                                                    } finally {
-                                                                        setProcessingIds(prev => { const next = new Set(prev); next.delete(exp.id); return next; });
-                                                                    }
-                                                                });
-                                                            }}
-                                                            className="px-3 py-1.5 text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-all disabled:opacity-50 disabled:pointer-events-none"
-                                                        >
-                                                            Cancelar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                        </div>
-                                    );
-                                })}
-
-                                {/* Add Subscription Button */}
-                                <button
-                                    onClick={() => setShowWizard(true)}
-                                    className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl flex flex-col items-center justify-center min-h-[140px] text-zinc-400 hover:text-indigo-500 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all group"
-                                >
-                                    <PlusIcon size={28} className="mb-2 group-hover:scale-110 transition-transform" />
-                                    <span className="text-xs font-bold">Nueva Suscripción</span>
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
-                            <CreditCardIcon size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" />
-                            <p className="text-sm font-bold text-zinc-500 mb-1">No tienes suscripciones</p>
-                            <p className="text-xs text-zinc-400">Registra tus gastos recurrentes para controlar tu &quot;costo de vida&quot; base.</p>
-                            <button
-                                onClick={() => setShowWizard(true)}
-                                className="mt-4 px-4 py-2 bg-indigo-500 text-white text-xs font-bold rounded-xl hover:bg-indigo-600 transition-colors"
-                            >
-                                Agregar Suscripción
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <SubscriptionsPanel
+                    suscripciones={subscriptions}
+                    totalIngresos={totalIncome}
+                    onNueva={() => setShowWizard(true)}
+                    onEditar={setEditingSub}
+                    onUpdate={onUpdate}
+                />
             )}
+
 
             {(showWizard || editingSub) && profileId && (
                 <ExpenseWizard
