@@ -9,6 +9,7 @@ type Account = ProfileWithData['accounts'][number];
 import { createGoal, deleteGoal, handleGoalTransaction, updateGoal, deleteGoalWithReclaim, toggleGoalPaused, getGoalTransactions } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import EmptyState from '@/components/shared/EmptyState';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalculatorIcon, PlusIcon, CalendarIcon, PauseIcon, PlayIcon, HistoryIcon, FlagIcon, CarIcon, HouseIcon, BookOpenIcon, HeartIcon, RocketIcon, ShieldCheckIcon, WalletIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
@@ -496,11 +497,13 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
                     />
                 ))}
                 {goals.length === 0 && (
-                    <div className="col-span-full py-20 text-center text-zinc-400">
-                        <PiggyBankIcon size={64} className="mx-auto mb-4 opacity-20" />
-                        <p className="text-xl font-bold">Sin metas activas</p>
-                        <p>¡Crea tu primera alcancía virtual hoy!</p>
-                    </div>
+                    <EmptyState
+                        icon={<PiggyBankIcon size={36} />}
+                        title="Sin metas todavía"
+                        description="Una meta es una alcancía virtual: le pones nombre, cuánto quieres juntar y de qué cuenta sale el dinero. La app lleva la cuenta de cuánto te falta."
+                        actionLabel="Crear mi primera meta"
+                        onAction={openNewGoalModal}
+                    />
                 )}
             </div>
 

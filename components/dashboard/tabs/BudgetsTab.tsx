@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import BudgetCard from '@/components/budgets/BudgetCard';
+import EmptyState from '@/components/shared/EmptyState';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
 import SubscriptionCalendar from '@/components/budgets/SubscriptionCalendar';
 import { formatMoney } from '@/lib/utils';
@@ -223,6 +224,15 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
 
                     {/* Category Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {categories.length === 0 && (
+                            <EmptyState
+                                icon={<PieChart size={36} />}
+                                title="Aún no hay categorías"
+                                description="Las categorías agrupan tus gastos (vivienda, transporte, comida…) y te dejan ponerle un límite mensual a cada grupo. Normalmente se crean solas al entrar por primera vez; si esta pantalla sigue vacía, registra un gasto y elige su categoría."
+                                actionLabel="Registrar un gasto"
+                                onAction={() => setShowWizard(true)}
+                            />
+                        )}
                         {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map((categoryObj) => {
                             // Calculate rollover for this category — solo si tiene el
                             // toggle activado (misma regla que el resumen de arriba).

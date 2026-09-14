@@ -1,37 +1,109 @@
 # Seguimiento Maestro de Tareas — Finanzas Maestras
 
-- [ ] **Fase 1: Seguridad Crítica e Infraestructura (Prioridad Inmediata)**
-  - [ ] 1.1 Crear `lib/env.ts` con `getJwtSecretKey()` y validación Fail-Fast.
-  - [ ] 1.2 Actualizar `lib/auth-utils.ts` removiendo `'secret-key-change-me-in-prod'`.
-  - [ ] 1.3 Crear `middleware.ts` en la raíz con protección RBAC para `/admin` y eliminar `proxy.ts`.
-  - [ ] 1.4 Proteger `getGlobalStats` en `app/actions/budget/profiles.ts` (requerir rol `ADMIN`).
-  - [ ] 1.5 Mitigar IDOR en `app/actions/budget/expenses.ts` (`createExpense`, `updateExpense`).
-  - [ ] 1.6 Mitigar IDOR en `app/actions/budget/credit-cards.ts` (`payCreditCard`).
+> Estado verificado contra el código, no de memoria: cada casilla marcada se
+> comprobó buscando el archivo o la función concreta en el repositorio.
 
-- [ ] **Fase 2: Lógica Financiera y Motor de Cálculo (Prioridad Alta)**
-  - [ ] 2.1 Corregir cálculo de `getBestPurchaseDay` en `lib/financial-engine.ts`.
-  - [ ] 2.2 Corregir clasificación de `days === 0` en `getDaysToCutoff`.
-  - [ ] 2.3 Implementar utilidades de redondeo financiero estricto a 2 decimales.
+## Fase 1: Seguridad Crítica e Infraestructura
 
-- [ ] **Fase 3: Ciclo de Vida y Server Components (Prioridad Alta)**
-  - [ ] 3.1 Eliminar mutaciones de base de datos dentro del render de `app/page.tsx`.
-  - [ ] 3.2 Asegurar que el onboarding (creación de cuenta 'Efectivo' y categorías) se ejecute en `app/actions/auth.ts` (`register`).
+- [x] 1.1 Crear `lib/env.ts` con `getJwtSecretKey()` y validación Fail-Fast.
+- [x] 1.2 Actualizar `lib/auth-utils.ts` removiendo `'secret-key-change-me-in-prod'`.
+- [ ] 1.3 Crear `middleware.ts` en la raíz con protección RBAC para `/admin` y eliminar `proxy.ts`.
+      → **Pendiente.** `proxy.ts` sigue siendo el middleware y no existe `middleware.ts`.
+      Funciona, pero se aparta del nombre que espera Next.js y de lo acordado aquí.
+- [x] 1.4 Proteger `getGlobalStats` en `app/actions/budget/profiles.ts` (requerir rol `ADMIN`).
+- [x] 1.5 Mitigar IDOR en `app/actions/budget/expenses.ts` (`createExpense`, `updateExpense`).
+- [x] 1.6 Mitigar IDOR en `app/actions/budget/credit-cards.ts` (`payCreditCard`).
 
-- [ ] **Fase 4: Validación de Entradas con Zod (Prioridad Media)**
-  - [ ] 4.1 Instalar dependencia `zod`.
-  - [ ] 4.2 Crear esquemas de validación en `lib/validators/`.
-  - [ ] 4.3 Integrar `safeParse` en todas las Server Actions.
-  - [ ] 4.4 Aplicar política de complejidad de contraseñas en `register`.
+## Fase 2: Lógica Financiera y Motor de Cálculo
 
-- [ ] **Fase 5: Base de Datos y Rendimiento (Prioridad Media)**
-  - [ ] 5.1 Agregar índices `@@index` en claves foráneas en `prisma/schema.prisma`.
-  - [ ] 5.2 Ejecutar `npx prisma migrate dev` o actualizar cliente.
+- [x] 2.1 Corregir cálculo de `getBestPurchaseDay` en `lib/financial-engine.ts`.
+- [x] 2.2 Corregir clasificación de `days === 0` en `getDaysToCutoff`.
+- [x] 2.3 Implementar utilidades de redondeo financiero estricto a 2 decimales.
 
-- [ ] **Fase 6: Refactorización y Principio SRP en UI (Prioridad Normal)**
-  - [ ] 6.1 Modularizar `DebtsTab.tsx` en subcomponentes atómicos.
-  - [ ] 6.2 Modularizar `BudgetsTab.tsx` en subcomponentes atómicos.
-  - [ ] 6.3 Desacoplar modales restantes en `GoalsTab.tsx`.
+## Fase 3: Ciclo de Vida y Server Components
 
-- [ ] **Fase 7: Testing y Rate Limiting Distribuido (Prioridad Normal)**
-  - [ ] 7.1 Configurar rate limiting persistente por IP.
-  - [ ] 7.2 Crear suite de pruebas para Server Actions y motor financiero.
+- [ ] 3.1 Eliminar mutaciones de base de datos dentro del render de `app/page.tsx`.
+      → **Pendiente.** `ensureProfileIntegrity` sigue ejecutándose en el render.
+      Es la red de seguridad del primer uso, así que mientras siga ahí no puede
+      quitarse sin mover antes su trabajo al registro (tarea 3.2).
+- [ ] 3.2 Asegurar que el onboarding (cuenta 'Efectivo' y categorías) se ejecute en `register`.
+      → **A medias.** `register` ya crea la cuenta 'Efectivo'; las categorías
+      siguen sembrándose desde `ensureProfileIntegrity`.
+
+## Fase 4: Validación de Entradas con Zod
+
+- [x] 4.1 Instalar dependencia `zod`.
+- [x] 4.2 Crear esquemas de validación en `lib/validators/`.
+- [x] 4.3 Integrar `safeParse` en las Server Actions.
+- [x] 4.4 Aplicar política de complejidad de contraseñas en `register`.
+
+## Fase 5: Base de Datos y Rendimiento
+
+- [x] 5.1 Agregar índices `@@index` en claves foráneas (16 declarados).
+- [ ] 5.2 Ejecutar `npx prisma migrate dev` o actualizar cliente.
+      → **Bloqueado y con una trampa.** La carpeta `prisma/migrations/` se borró
+      del repositorio en el commit `e6a4865`, pero `package.json` conserva
+      `"release": "prisma migrate deploy && next start"`, que ya no tiene ninguna
+      migración que aplicar. Cualquier cambio de esquema depende hoy de
+      `prisma db push` ejecutado a mano. Ver Fase 9.
+
+## Fase 6: Refactorización y Principio SRP en UI
+
+- [ ] 6.1 Modularizar `DebtsTab.tsx` en subcomponentes atómicos.
+- [ ] 6.2 Modularizar `BudgetsTab.tsx` en subcomponentes atómicos.
+- [ ] 6.3 Desacoplar modales restantes en `GoalsTab.tsx`.
+
+## Fase 7: Testing y Rate Limiting Distribuido
+
+- [x] 7.1 Configurar rate limiting persistente por IP (`lib/rate-limit.ts`).
+- [x] 7.2 Crear suite de pruebas para el motor financiero (4 suites, 74 casos).
+
+## Fase 8: Integridad del dinero y presentación
+
+> Añadida tras una revisión motivada por un reporte de "un monto que se pierde".
+
+- [x] 8.1 Usar el guard `decrementCreditCardBalance` también al borrar y editar
+      gastos. Antes descontaban en crudo y el saldo de la tarjeta podía quedar
+      en negativo si el cargo ya estaba pagado.
+- [x] 8.2 Bloquear el borrado de una cuenta que tenga gastos ya pagados, en vez
+      de dejarlos huérfanos sin cuenta a la que devolver el dinero.
+- [x] 8.3 Mostrar `destAmount` en las transferencias entrantes con tipo de cambio.
+- [x] 8.4 Apuntar las 47 llamadas a `revalidatePath` a `/`, la ruta real del
+      dashboard, en vez de a `/budget`, que no existe.
+- [x] 8.5 Corregir el desbordamiento de elementos en pantallas estrechas y pasar
+      las 21 alturas de viewport de `vh` a `dvh`.
+
+## Fase 9: Primer uso
+
+- [x] 9.1 Arreglar el recorte de la ventana de bienvenida en móvil (tope de alto,
+      cuerpo desplazable y botones fijos abajo).
+- [x] 9.2 Que los botones de la bienvenida abran el asistente de destino, en vez
+      de dejar al usuario en una pestaña vacía.
+- [x] 9.3 Que el texto de la bienvenida no afirme lo que no puede garantizar.
+- [x] 9.4 Reiniciar `onboardingSeenAt` al resetear el perfil.
+- [x] 9.5 Crear `prisma/seed.ts` y `npm run seed:nuevo` para repetir el primer uso.
+- [x] 9.6 Unificar las pantallas vacías de las 7 pestañas con `EmptyState`.
+- [x] 9.7 Recorrido de bienvenida en 3 pasos, saltable, con "Ver la introducción
+      otra vez" en Ajustes.
+- [ ] 9.8 Guardar el tema de color en el perfil en vez de en `localStorage`.
+      → **Bloqueado por 5.2.** Requiere una columna nueva en `Profile`, y sin
+      migraciones el esquema solo se cambia con `prisma db push` a mano. Desplegar
+      el código antes que la columna tumba la aplicación entera, porque toda
+      lectura de perfil pasaría a pedir un campo inexistente.
+
+## Fase 10: Huecos de producto detectados
+
+> No son deuda técnica: son cosas que faltan para que la app se sostenga sola.
+> Ordenadas por lo que más daño hace hoy.
+
+- [ ] 10.1 **Multi-moneda a medias.** `Account.currency` y los tres campos de
+      conversión de `Transfer` existen, pero no hay moneda de perfil ni conversión
+      en los totales: el encabezado suma importes de monedas distintas como si
+      fueran la misma.
+- [ ] 10.2 **Sin cascadas en la base de datos.** Solo 2 reglas `onDelete` en todo
+      el esquema; los borrados se hacen a mano y ya han fallado por olvido.
+- [ ] 10.3 **Doble verdad en la categoría del gasto.** `Expense` guarda `category`
+      (texto) y `categoryId`; renombrar una categoría deja los gastos viejos con
+      el nombre antiguo.
+- [ ] 10.4 **Sin recuperación de contraseña.** El login remite al administrador.
+- [ ] 10.5 **Sin registro de errores en producción.** Todo va a `console.error`.

@@ -234,6 +234,14 @@ export async function resetProfileData(id: number) {
             await tx.creditCard.deleteMany({ where: { profileId: id } });
             await tx.account.deleteMany({ where: { profileId: id } });
             await tx.category.deleteMany({ where: { profileId: id } });
+
+            // El perfil vuelve a estar vacio, asi que vuelve a ser un primer uso:
+            // sin esto la bienvenida no reaparece y el usuario se queda con el
+            // dashboard en cero y sin ninguna guia.
+            await tx.profile.update({
+                where: { id },
+                data: { onboardingSeenAt: null },
+            });
         });
         revalidatePath('/');
     } catch (error) {

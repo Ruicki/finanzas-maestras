@@ -10,7 +10,8 @@
     "lint": "eslint",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "release": "prisma migrate deploy && next start"
+    "release": "prisma migrate deploy && next start",
+    "seed:nuevo": "node --env-file=.env --experimental-strip-types prisma/seed.ts"
   },
   "dependencies": {
     "@animateicons/react": "^0.4.3",

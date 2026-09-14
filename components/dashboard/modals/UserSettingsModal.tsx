@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
 import { resetProfileData } from '@/app/actions/budget';
+import { resetOnboarding } from '@/app/actions/onboarding';
 import { updateProfile } from '@/app/actions/auth';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useColorTheme } from '@/components/color-theme-provider';
@@ -28,6 +29,23 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [strength, setStrength] = useState(0);
     const [saving, setSaving] = useState(false);
+    const [reabriendoIntro, setReabriendoIntro] = useState(false);
+
+    async function verIntroOtraVez() {
+        if (reabriendoIntro) return;
+        setReabriendoIntro(true);
+        try {
+            await resetOnboarding(profile.id);
+            onClose();
+            // El dashboard decide si mostrar la introduccion a partir del perfil
+            // que le llega del servidor, asi que hay que recargar para que la vea
+            // con onboardingSeenAt ya en null.
+            window.location.reload();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo reabrir la introducción');
+            setReabriendoIntro(false);
+        }
+    }
 
     const checkStrength = (pass: string) => {
         let s = 0;
@@ -150,6 +168,21 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                                 </button>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                        <button
+                            onClick={verIntroOtraVez}
+                            disabled={reabriendoIntro}
+                            className="w-full text-left px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                        >
+                            <span className="block text-sm font-bold text-zinc-800 dark:text-zinc-100">
+                                {reabriendoIntro ? 'Abriendo…' : 'Ver la introducción otra vez'}
+                            </span>
+                            <span className="block text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                Repasa los pasos de bienvenida. No borra ninguno de tus datos.
+                            </span>
+                        </button>
                     </div>
 
                     <div className="space-y-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">

@@ -15,10 +15,15 @@ interface IncomesTabProps {
     profileId: number;
     customDeductions?: string | null;
     onUpdate: () => void;
+    /** El recorrido de bienvenida pide abrir el alta de ingreso al llegar aqui. */
+    autoOpenWizard?: boolean;
 }
 
-export default function IncomesTab({ incomes, salaries, accounts, profileId, onUpdate }: IncomesTabProps) {
-    const [showIncomeWizard, setShowIncomeWizard] = useState(false);
+export default function IncomesTab({ incomes, salaries, accounts, profileId, onUpdate, autoOpenWizard = false }: IncomesTabProps) {
+    // Arranca abierto si la bienvenida mando aqui a registrar el ingreso. Va en
+    // el estado inicial y no en un efecto porque la pestaña se monta de cero al
+    // navegar, y un setState dentro de un efecto solo añadiria un render extra.
+    const [showIncomeWizard, setShowIncomeWizard] = useState(autoOpenWizard);
     const [incomeToEdit, setIncomeToEdit] = useState<AdditionalIncome | Salary | null>(null);
 
     return (

@@ -8,6 +8,7 @@ type Loan = ProfileWithData['loans'][number];
 type Account = ProfileWithData['accounts'][number];
 import { PlusIcon, CreditCardIcon as CardIcon, FlagIcon, XIcon } from '@animateicons/react/lucide';
 import { Building } from 'lucide-react';
+import EmptyState from '@/components/shared/EmptyState';
 import { toast } from 'sonner';
 import { createLoan, deleteLoan, payLoan, updateLoan, CreateLoanInput } from '@/app/actions/debts';
 import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
@@ -43,13 +44,18 @@ type DebtsTabProps = {
     profileId: number;
     profileName: string;
     onUpdate: () => void;
+    /** La bienvenida pide abrir el alta de tarjeta nada mas entrar aqui. */
+    autoOpenCardWizard?: boolean;
 };
 
-export default function DebtsTab({ creditCards, loans, accounts, profileId, profileName, onUpdate }: DebtsTabProps) {
+export default function DebtsTab({ creditCards, loans, accounts, profileId, profileName, onUpdate, autoOpenCardWizard = false }: DebtsTabProps) {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [wizardType, setWizardType] = useState<'CARD' | 'LOAN'>('CARD');
     const [editingId, setEditingId] = useState<number | null>(null); // EDIT STATE
-    const [showCardWizard, setShowCardWizard] = useState(false);
+    // Arranca abierto si la bienvenida mando aqui a crear una tarjeta. Mismo
+    // motivo que en AccountsTab: estado inicial, no efecto. Los formularios ya
+    // estan en blanco en el primer montaje, asi que no hace falta resetearlos.
+    const [showCardWizard, setShowCardWizard] = useState(autoOpenCardWizard);
 
     // For Loans Wizard
     const [loanWizardMode, setLoanWizardMode] = useState<'BANK' | 'FRIEND'>('BANK');
@@ -460,6 +466,17 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     <CardIcon /> Tarjetas de Crédito
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {creditCards.length === 0 && loans.length === 0 && (
+                        <EmptyState
+                            icon={<CardIcon />}
+                            title="Todavía no registras deudas"
+                            description="Aquí llevas el control de tus tarjetas y préstamos: cuánto debes, cuándo corta cada una y cuál es el pago mínimo. Si no debes nada, puedes dejar esta pestaña vacía."
+                            actionLabel="Agregar tarjeta"
+                            onAction={() => { resetForms(); setShowCardWizard(true); }}
+                            secondaryLabel="Agregar préstamo"
+                            onSecondary={() => startCreate('LOAN')}
+                        />
+                    )}
                     {creditCards.map(card => (
                         <div key={card.id}>
                             <UltimateCreditCard
