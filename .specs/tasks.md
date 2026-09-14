@@ -242,3 +242,32 @@
       confirmar, y el KPI del encabezado no la contó ($545 = solo los gastos
       reales de septiembre, con las dos proyecciones —una del mismo mes, una
       de otro— excluidas de las dos).
+
+## Fase 13: Código muerto — 7 funciones sin ningún llamador
+
+> Auditoría honesta pedida por el dueño del repo tras varias sesiones de
+> trabajo seguidas: "revisa y dime qué apartados están inconclusos". Entre los
+> hallazgos, un grupo de funciones huérfanas confirmadas por grep exhaustivo
+> (cero importadores), sin relación entre sí salvo estar muertas.
+
+- [x] 13.1 `app/actions/budget/budget-categories.ts` — archivo entero huérfano,
+      borrado. Contenía un `updateCategoryLimit` duplicado (el real vive en
+      `app/actions/categories.ts`) más `toggleCategoryRollover` y
+      `updateCategoryRolloverBalance` — las dos acciones que habrían activado
+      `Category.isRollover`, sin ningún control en la interfaz que las llamara.
+      → Se consideró construir el toggle que les daba uso (el cálculo de
+      arrastre ya funciona en `lib/budgets.ts` e `InsightsTab.tsx`), pero se
+      decidió no hacerlo en esta pasada: el rollover sigue sin forma de
+      activarse desde la UI. Queda documentado como pendiente si se retoma.
+      → `app/actions/budget/index.ts` deja de reexportar ese archivo.
+- [x] 13.2 `impersonate` en `app/actions/auth.ts` — envoltorio redundante de
+      `startImpersonation`, que sigue siendo la función real. Borrado.
+- [x] 13.3 `updateCreditCardBalance` y `recalculateCardBalance` en
+      `app/actions/budget/credit-cards.ts` — sin llamadores. Borradas junto
+      con el import de `toNum`, que solo ellas usaban.
+- [x] 13.4 `getCategoryBudget` y `getProfileBudgets` en
+      `app/actions/budget/budgets.ts` — sin llamadores. Borradas junto con el
+      import de `toNum`. `setCategoryBudget` (la única función real de este
+      archivo, usada por `components/budgets/BudgetCard.tsx`) queda intacta.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (158/158) y
+      `npx next build` limpios tras el borrado.

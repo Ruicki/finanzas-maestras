@@ -318,7 +318,3 @@ export async function stopImpersonation() {
     revalidatePath('/');
     return { success: true };
 }
-
-export async function impersonate(targetProfileId: number) {
-    return startImpersonation(targetProfileId);
-}

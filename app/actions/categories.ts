@@ -52,7 +52,9 @@ export async function getCategories(profileId: number) {
     return categories.map(serializeCategory);
 }
 
-export async function createCategory(profileId: number, name: string, icon: string, color: string, type: string) {
+export async function createCategory(
+    profileId: number, name: string, icon: string, color: string, type: string,
+) {
     await requireOwnership(profileId);
     const category = await prisma.category.create({
         data: {
@@ -67,7 +69,9 @@ export async function createCategory(profileId: number, name: string, icon: stri
     return serializeCategory(category);
 }
 
-export async function updateCategory(id: number, name: string, icon: string, color: string, type: string) {
+export async function updateCategory(
+    id: number, name: string, icon: string, color: string, type: string,
+) {
     const existing = await prisma.category.findUnique({ where: { id } });
     if (!existing) throw new Error('Categoría no encontrada');
     await requireOwnership(existing.profileId);
@@ -84,7 +88,7 @@ export async function updateCategory(id: number, name: string, icon: string, col
                 name,
                 icon,
                 color,
-                type
+                type,
             }
         });
 
