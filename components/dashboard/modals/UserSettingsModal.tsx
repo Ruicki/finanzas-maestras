@@ -8,12 +8,12 @@ import { ProfileWithData } from '@/types';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
-import { resetProfileData } from '@/app/actions/budget';
+import { resetProfileData, updateColorTheme } from '@/app/actions/budget';
 import { resetOnboarding } from '@/app/actions/onboarding';
 import { updateProfile } from '@/app/actions/auth';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useColorTheme } from '@/components/color-theme-provider';
-import { COLOR_THEMES } from '@/lib/color-themes';
+import { COLOR_THEMES, type ColorThemeId } from '@/lib/color-themes';
 
 interface UserSettingsModalProps {
     isOpen: boolean;
@@ -30,6 +30,33 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
     const [strength, setStrength] = useState(0);
     const [saving, setSaving] = useState(false);
     const [reabriendoIntro, setReabriendoIntro] = useState(false);
+
+    /**
+     * El provider del tema vive en el layout raiz y no conoce la sesion —eso es
+     * lo que le permite servir tambien a /login y /register—, asi que quien
+     * persiste es este modal, que si tiene profile.id.
+     *
+     * El cambio visual se aplica primero y la escritura va detras: si la red
+     * falla, el usuario ya ve su tema y solo se pierde que viaje a otro
+     * dispositivo, que es lo menos grave de los dos.
+     */
+    async function elegirTema(theme: ColorThemeId) {
+        setColorTheme(theme);
+        try {
+            await updateColorTheme(profile.id, theme);
+        } catch (error) {
+            // Se conserva el detalle real —la sesion caducada, un tema invalido—
+            // pero siempre con el contexto de que el cambio SI se aplico aqui:
+            // "No autenticado" a secas, al pulsar un color, no le dice nada al
+            // usuario sobre lo que acaba de pasar.
+            const detalle = error instanceof Error ? error.message : null;
+            toast.error(
+                detalle
+                    ? `El tema se aplicó en este dispositivo, pero no se pudo guardar en tu cuenta: ${detalle}`
+                    : 'El tema se aplicó en este dispositivo, pero no se pudo guardar en tu cuenta',
+            );
+        }
+    }
 
     async function verIntroOtraVez() {
         if (reabriendoIntro) return;
@@ -153,7 +180,7 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                                 <button
                                     key={theme.id}
                                     type="button"
-                                    onClick={() => setColorTheme(theme.id)}
+                                    onClick={() => elegirTema(theme.id)}
                                     title={`${theme.label} · títulos en ${theme.fontLabel}`}
                                     className={`group flex flex-col items-center gap-1.5 rounded-xl p-1.5 border-2 transition-all ${colorTheme === theme.id ? 'border-indigo-500' : 'border-transparent hover:border-zinc-200 dark:hover:border-zinc-700'}`}
                                 >
