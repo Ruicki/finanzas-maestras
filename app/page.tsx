@@ -5,6 +5,9 @@ import { getProfileById } from "./actions/budget";
 import { ProfileWithData } from "@/types";
 import { COLOR_THEME_IDS } from "@/lib/color-themes";
 import { necesitaSiembraInicial } from "@/lib/perfil-nuevo";
+import { diagnosticarErrorDB, esErrorDeBaseDeDatos } from "@/lib/db-errors";
+import DatabaseErrorScreen from "@/components/shared/DatabaseErrorScreen";
+import { reportError } from "@/lib/logger";
 
 export default async function Home() {
   const realUserId = await getSession();
@@ -17,7 +20,23 @@ export default async function Home() {
   const effectiveUserId = impersonatedId || realUserId;
   const isImpersonating = !!impersonatedId;
 
-  const profile = await getProfileById(effectiveUserId);
+  // Si la lectura del perfil falla, esta pagina se caia entera y el usuario veia
+  // "Algo salio mal" con un identificador que solo se resuelve entrando en los
+  // registros de Vercel. Paso de verdad: un cambio de esquema se desplego sin
+  // aplicarlo a la base, y diagnosticarlo llevo horas porque la app no decia
+  // nada. Ahora dice que pasa y que hacer, sin ensenar nunca el error original
+  // —puede llevar dentro la cadena de conexion—, y el detalle completo va a los
+  // registros.
+  let profile: Awaited<ReturnType<typeof getProfileById>>;
+  try {
+    profile = await getProfileById(effectiveUserId);
+  } catch (error) {
+    reportError(error, { accion: 'cargar el dashboard', profileId: effectiveUserId });
+    // Lo que no sea de base de datos sigue subiendo: un fallo de autorizacion
+    // enseñado como "no se pudo conectar" seria mentir y esconderia el problema.
+    if (!esErrorDeBaseDeDatos(error)) throw error;
+    return <DatabaseErrorScreen diagnostico={diagnosticarErrorDB(error)} />;
+  }
 
   if (!profile) {
     return <LandingPage />;

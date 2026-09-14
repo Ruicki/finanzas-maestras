@@ -57,12 +57,26 @@
 ## Fase 5: Base de Datos y Rendimiento
 
 - [x] 5.1 Agregar índices `@@index` en claves foráneas (16 declarados).
-- [ ] 5.2 Ejecutar `npx prisma migrate dev` o actualizar cliente.
-      → **Bloqueado y con una trampa.** La carpeta `prisma/migrations/` se borró
-      del repositorio en el commit `e6a4865`, pero `package.json` conserva
-      `"release": "prisma migrate deploy && next start"`, que ya no tiene ninguna
-      migración que aplicar. Cualquier cambio de esquema depende hoy de
-      `prisma db push` ejecutado a mano. Ver Fase 9.
+- [x] 5.2 Migraciones restablecidas.
+      → **Resuelto, y era la causa de una caída real en producción.** El esquema
+      y la base viajaban por caminos separados: `prisma/migrations/` se borró en
+      `e6a4865`, y el script `"release"` que prometía aplicarlas **Vercel no lo
+      ejecuta nunca**, mientras `postinstall: prisma generate` sí corre. Así que
+      el cliente siempre esperaba el esquema nuevo, existiera o no la columna.
+      Al fusionar el PR #32 eso tumbó la aplicación entera.
+      → Ahora: baseline `0_init` del esquema completo, migración
+      `20260914120000_add_color_theme`, y `scripts/migrate-deploy.mjs` enganchado
+      al `build`, que es lo que Vercel sí ejecuta. Si una migración falla, falla
+      el despliegue: es preferible no desplegar a desplegar código que la base no
+      soporta.
+      → **La adopción es automática.** `prisma migrate deploy` se niega con
+      `P3005` sobre una base que tiene tablas pero no historial —justo el estado
+      de esta—, así que el script detecta ese código, marca la baseline como
+      aplicada y reintenta. Verificado contra un Postgres real en los tres casos:
+      base vacía, base con historial, y base con tablas sin historial.
+      → Retirado el script `release`, que prometía lo que no hacía.
+      → **Efecto en local:** `npm run build` ahora necesita base de datos. Para
+      construir sin ella, `npx next build` directamente.
 
 ## Fase 6: Refactorización y Principio SRP en UI
 
@@ -136,6 +150,7 @@
       fueran la misma.
 - [ ] 10.2 **Sin cascadas en la base de datos.** Solo 2 reglas `onDelete` en todo
       el esquema; los borrados se hacen a mano y ya han fallado por olvido.
+      → **Desbloqueado** por 5.2: ya hay migraciones con las que cambiar el esquema.
 - [x] 10.3 **Doble verdad en la categoría del gasto.** Resuelto sin migración:
       `category` deja de ser una segunda opinión y pasa a ser espejo de
       `categoryId`. El servidor lo deriva de la relación al crear y al editar
@@ -177,3 +192,24 @@
       Vercel— y formato con color en desarrollo. Migradas las 9 acciones de
       servidor; los `console.error` que quedan son de cliente, donde winston no
       debe cargarse.
+
+## Fase 11: Que la app sepa explicar sus propios fallos
+
+> Añadida tras una caída en producción que costó horas de diagnóstico, no porque
+> el fallo fuera sutil, sino porque la app no decía nada: un 500 daba un número
+> que solo se resuelve entrando en los registros de Vercel.
+
+- [x] 11.1 `lib/db-errors.ts` traduce un error de Prisma a un mensaje que se
+      puede leer: columna ausente (con su nombre), tabla ausente, sin conexión,
+      credenciales, base inexistente, saturada, variable sin definir.
+      → **Nunca devuelve el mensaje original:** puede llevar dentro la cadena de
+      conexión con la contraseña. Hay pruebas que lo comprueban.
+      → `esErrorDeBaseDeDatos()` distingue esto de un fallo de autorización, que
+      debe seguir subiendo en vez de disfrazarse de problema de base de datos.
+- [x] 11.2 `app/page.tsx` muestra ese diagnóstico en vez de la pantalla genérica,
+      y reporta el error completo a los registros.
+- [x] 11.3 Salida de emergencia. Con sesión válida, `proxy.ts` devuelve `/login`
+      a `/`; si `/` está rota, el usuario queda encerrado sin poder cerrar
+      sesión. `/login?salir=1` borra las cookies y deja pasar.
+      → De paso, si falta `JWT_SECRET` el middleware ya no redirige `/login` a sí
+      misma, que provocaba un bucle en vez de un mensaje.
