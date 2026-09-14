@@ -126,3 +126,34 @@ export function cuentaPreferidaParaPagar<T extends { purpose?: string | null; lo
         ) ?? cuentas[0]
     );
 }
+
+/**
+ * Cuánto sugerir en el botón de "abono rápido" de un préstamo personal.
+ *
+ * Antes era un monto fijo de $20 para cualquier préstamo: insignificante en
+ * uno grande, y en uno casi liquidado podía **superar el saldo pendiente** —
+ * `payLoan` rechaza un pago mayor a la deuda, así que el botón simplemente
+ * dejaba de funcionar en la recta final, justo cuando más se usa.
+ *
+ * Ahora es al menos el 5% del saldo pendiente. Y si con eso quedaría un
+ * remanente tan chico que nadie va a molestarse en abonar aparte, sugiere
+ * liquidar el saldo completo de una vez en vez de dejar una migaja.
+ *
+ * Nunca devuelve más que `saldoActual`, pase lo que pase: es justo la
+ * garantía que faltaba.
+ */
+export function montoDeAbonoRapido(
+    saldoActual: number,
+    opciones: { porcentaje?: number; pisoMinimo?: number; remanenteMinimo?: number } = {},
+): number {
+    const { porcentaje = 0.05, pisoMinimo = 5, remanenteMinimo = 10 } = opciones;
+    if (saldoActual <= 0) return 0;
+
+    const aMoneda = (n: number) => Math.round(n * 100) / 100;
+
+    const candidato = Math.max(saldoActual * porcentaje, Math.min(pisoMinimo, saldoActual));
+    const dejariaUnaMigaja = saldoActual - candidato < remanenteMinimo;
+    const monto = dejariaUnaMigaja ? saldoActual : candidato;
+
+    return Math.min(aMoneda(monto), aMoneda(saldoActual));
+}

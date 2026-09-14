@@ -3,6 +3,7 @@ import {
     calcularFechaDeLibertad,
     calcularDeudaTotal,
     cuentaPreferidaParaPagar,
+    montoDeAbonoRapido,
 } from '../lib/debts';
 import { calculateLoanPayoffDate, calculateMinimumPayment } from '../lib/financial-engine';
 
@@ -135,5 +136,40 @@ describe('cuentaPreferidaParaPagar', () => {
 
     it('no inventa una cuenta cuando no hay ninguna', () => {
         expect(cuentaPreferidaParaPagar([], AHORA)).toBeUndefined();
+    });
+});
+
+describe('montoDeAbonoRapido', () => {
+    it('sugiere el 5% en un préstamo grande, no un monto fijo insignificante', () => {
+        // Antes eran $20 fijos: para $2000 de deuda, casi nada.
+        expect(montoDeAbonoRapido(2000)).toBe(100);
+    });
+
+    it('nunca supera el saldo pendiente, sea cual sea el camino', () => {
+        // Este es el bug real: el boton fijo de $20 podia superar el saldo de
+        // un prestamo casi liquidado, y payLoan lo rechaza -el boton dejaba de
+        // funcionar justo en la recta final.
+        for (const saldo of [0.5, 3, 5, 8, 12, 19.99, 20, 20.01, 50, 400]) {
+            expect(montoDeAbonoRapido(saldo)).toBeLessThanOrEqual(saldo);
+        }
+    });
+
+    it('liquida el saldo completo si el 5% dejaría una migaja', () => {
+        // $12 con 5% -> $0.60, dejaria $11.40 de remanente: mejor liquidar.
+        expect(montoDeAbonoRapido(12)).toBe(12);
+    });
+
+    it('no liquida de mas cuando el remanente si vale la pena dejarlo', () => {
+        // $200 con 5% -> $10, remanente $190: no hay razon para liquidar todo.
+        expect(montoDeAbonoRapido(200)).toBe(10);
+    });
+
+    it('da cero en una deuda ya en cero, sin dividir por cero ni fallar', () => {
+        expect(montoDeAbonoRapido(0)).toBe(0);
+        expect(montoDeAbonoRapido(-5)).toBe(0);
+    });
+
+    it('redondea a centavos', () => {
+        expect(montoDeAbonoRapido(333.33)).toBe(16.67); // 5% = 16.6665 -> 16.67
     });
 });
