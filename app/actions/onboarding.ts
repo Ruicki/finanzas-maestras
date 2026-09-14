@@ -29,6 +29,20 @@ export async function ensureProfileIntegrity(profileId: number): Promise<void> {
     }
 }
 
+/**
+ * Vuelve a dejar el perfil como si nunca hubiera visto la introduccion. Sirve
+ * para el "Ver la introduccion otra vez" de Ajustes: sin esto, la unica forma
+ * de repasarla era borrar todos los datos.
+ */
+export async function resetOnboarding(profileId: number): Promise<void> {
+    await requireOwnership(profileId);
+    await prisma.profile.update({
+        where: { id: profileId },
+        data: { onboardingSeenAt: null },
+    });
+    revalidatePath('/');
+}
+
 export async function markOnboardingSeen(profileId: number): Promise<void> {
     await requireOwnership(profileId);
     await prisma.profile.update({

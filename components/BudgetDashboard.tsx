@@ -22,7 +22,7 @@ import AccountsTab from '@/components/dashboard/tabs/AccountsTab';
 import InsightsTab from '@/components/dashboard/tabs/InsightsTab';
 import UserSettingsModal from '@/components/dashboard/modals/UserSettingsModal';
 import ProfileManagerModal from '@/components/dashboard/modals/ProfileManagerModal';
-import OnboardingIntro from '@/components/shared/OnboardingIntro';
+import OnboardingIntro, { type OnboardingIntent } from '@/components/shared/OnboardingIntro';
 
 interface BudgetDashboardProps {
     initialProfile: ProfileWithData;
@@ -42,7 +42,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const [showOnboarding, setShowOnboarding] = useState(!initialProfile.onboardingSeenAt);
     // Lo que el usuario eligio en la bienvenida. La pestaña de destino lo consume
     // para abrir su asistente y lo limpia, para que no se reabra al volver.
-    const [onboardingIntent, setOnboardingIntent] = useState<'new-account' | 'new-card' | null>(null);
+    const [onboardingIntent, setOnboardingIntent] = useState<OnboardingIntent | null>(null);
     const [isPrivateMode, setIsPrivateMode] = useState(false);
 
     // Date State (New)
@@ -418,6 +418,11 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                     <div className="min-h-[500px]">
                         {activeTab === 'accounts' && (
                             <AccountsTab
+                                // key ligada a la intencion: "Cuentas" ya es la
+                                // pestaña activa por defecto, asi que navegar aqui
+                                // desde la bienvenida no la remonta y su estado
+                                // inicial (el asistente abierto) nunca se releia.
+                                key={`accounts-${onboardingIntent ?? 'none'}`}
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
                                 onUpdate={refreshData}
@@ -427,11 +432,13 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
                         {activeTab === 'incomes' && (
                             <IncomesTab
+                                key={`incomes-${onboardingIntent ?? 'none'}`}
                                 incomes={activeProfile.incomes || []}
                                 salaries={allSalaries}
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
                                 onUpdate={refreshData}
+                                autoOpenWizard={onboardingIntent === 'new-income'}
                             />
                         )}
 
@@ -458,6 +465,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
                         {activeTab === 'debts' && (
                             <DebtsTab
+                                key={`debts-${onboardingIntent ?? 'none'}`}
                                 creditCards={activeProfile.creditCards || []}
                                 loans={activeProfile.loans || []}
                                 accounts={activeProfile.accounts || []}
