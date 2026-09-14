@@ -271,3 +271,45 @@
       archivo, usada por `components/budgets/BudgetCard.tsx`) queda intacta.
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (158/158) y
       `npx next build` limpios tras el borrado.
+
+## Fase 14: Proyección de gastos recurrentes + estado del sistema de "suscripciones"
+
+> El usuario recordó dos cosas más tras el PR #36. Investigadas a fondo con
+> dos agentes en paralelo antes de tocar código.
+
+- [x] 14.1 **Un gasto recurrente y una proyección se excluían solo en la
+      interfaz**, no por una regla de negocio real: `ExpenseWizard.tsx`
+      ocultaba un toggle cuando el otro estaba activo, pero ni `createExpense`
+      ni `confirmExpense` lo impedían, y el cron (`processRecurringExpenses`,
+      `app/actions/budget/expenses.ts:373-383`) excluye explícitamente
+      `isProjected: true` de su consulta — un registro híbrido habría quedado
+      congelado para siempre frente al motor de recurrencia.
+      → Se le ofrecieron dos caminos al usuario: una vista de pronóstico sin
+      tocar el modelo de datos, o permitir el registro híbrido de verdad
+      (exige arreglar el cron y `confirmExpense`). Eligió la vista de
+      pronóstico.
+      → `lib/budgets.ts`: nueva función `montoPendienteEsteMes`, reutilizando
+      `getSubscriptionStatus` de `lib/subscription-status.ts` — suma el monto
+      de las suscripciones que aún no están `PAID` este ciclo. No crea ningún
+      registro nuevo, no toca `isProjected` ni `isRecurring`, no toca el cron
+      ni el wizard.
+      → Nueva tarjeta "Proyección: Falta Este Mes" en
+      `components/budgets/SubscriptionsPanel.tsx`, junto a Costo Mensual,
+      Costo Anual y Próximo Cobro. Verificado en navegador real contra
+      `/preview-temas`: Netflix pagada se excluye, Spotify vencida + Gimnasio
+      pendiente + Seguro del auto vencido suman $286.99, exactamente lo que
+      muestra la tarjeta ("3 suscripciones pendientes de cobrarse").
+      → Pruebas nuevas en `__tests__/budgets.test.ts`.
+- [ ] 14.2 **El sistema de "suscripciones" no es un modelo propio** — es solo
+      la etiqueta que `BudgetsTab.tsx:47-49` le pone a cualquier `Expense` con
+      `isRecurring: true`. `lib/subscription-status.ts` es una función pura de
+      cálculo de estado (`PAID`/`PENDING`/`OVERDUE`), sin ninguna acción de
+      servidor propia. "Cancelar" (`SubscriptionsPanel.tsx`) llama a
+      `deleteExpense` — borra el registro completo, sin conservar historial.
+      No existe pausar (`Goal.isPaused` sí existe en el esquema, `Expense` no
+      tiene equivalente), ni detección de aumentos de precio (el monto es un
+      valor fijo, sin historial).
+      → El usuario pidió solo conocer el estado esta vez, no construir nada
+      todavía. Queda pendiente para una pasada futura si se retoma: cancelar
+      sin borrar (conservando historial), pausar, y detectar cambios de
+      monto entre cobros.
