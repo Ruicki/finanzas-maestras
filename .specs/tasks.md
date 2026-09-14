@@ -29,13 +29,23 @@
 
 ## Fase 3: Ciclo de Vida y Server Components
 
-- [ ] 3.1 Eliminar mutaciones de base de datos dentro del render de `app/page.tsx`.
-      → **Pendiente.** `ensureProfileIntegrity` sigue ejecutándose en el render.
-      Es la red de seguridad del primer uso, así que mientras siga ahí no puede
-      quitarse sin mover antes su trabajo al registro (tarea 3.2).
-- [ ] 3.2 Asegurar que el onboarding (cuenta 'Efectivo' y categorías) se ejecute en `register`.
-      → **A medias.** `register` ya crea la cuenta 'Efectivo'; las categorías
-      siguen sembrándose desde `ensureProfileIntegrity`.
+- [x] 3.1 Eliminar mutaciones de base de datos dentro del render de `app/page.tsx`.
+      → El render ya no escribe. Antes llamaba a `ensureProfileIntegrity` y
+      **volvía a pedir el perfil entero**: dos consultas completas y una posible
+      escritura en cada carga, para reparar algo que solo le falta a los perfiles
+      anteriores a 3.2. Ahora lo que queda es una comprobación sobre datos ya
+      cargados (`necesitaSiembraInicial`), sin consulta; si de verdad falta algo,
+      el dashboard pide la reparación una vez, ya montado.
+      → `ensureProfileIntegrity` además se tragaba sus errores: podía no reparar
+      nada y nadie se enteraba. Ahora los propaga y el usuario ve el fallo.
+- [x] 3.2 Asegurar que el onboarding (cuenta 'Efectivo' y categorías) se ejecute en `register`.
+      → Cuenta y categorías se siembran en el mismo `create` del perfil
+      (`lib/perfil-nuevo.ts`), anidado, así que es una sola escritura atómica y
+      no existe el perfil a medio montar. Aplicado a las tres vías de alta que
+      hay —registro, alta por administrador y seed—; antes un perfil creado por
+      un administrador llegaba vacío. `resetProfileData` vuelve a sembrar en su
+      propia transacción, en vez de dejar el perfil sin categorías con las que
+      registrar un gasto.
 
 ## Fase 4: Validación de Entradas con Zod
 

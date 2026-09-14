@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getProfileById } from '@/app/actions/budget';
 import { logout, stopImpersonation } from '@/app/actions/auth';
+import { ensureProfileIntegrity } from '@/app/actions/onboarding';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import ExportMenu from '@/components/dashboard/ExportMenu';
 import { ProfileWithData } from '@/types';
@@ -28,9 +29,16 @@ import OnboardingIntro, { type OnboardingIntent } from '@/components/shared/Onbo
 interface BudgetDashboardProps {
     initialProfile: ProfileWithData;
     isImpersonating?: boolean;
+    /**
+     * Al perfil le falta la cuenta de Efectivo o las categorías: se creó antes
+     * de que la siembra formara parte del alta. Lo decide el servidor mirando
+     * datos que ya tenía cargados, y la reparación se pide desde aquí para que
+     * el render de la página no escriba en la base de datos.
+     */
+    reparacionPendiente?: boolean;
 }
 
-export default function BudgetDashboard({ initialProfile, isImpersonating = false }: BudgetDashboardProps) {
+export default function BudgetDashboard({ initialProfile, isImpersonating = false, reparacionPendiente = false }: BudgetDashboardProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -53,6 +61,23 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         // eslint-disable-next-line react-hooks/set-state-in-effect -- valor solo conocido en cliente, evita mismatch de hidratación SSR
         setSelectedDate(new Date());
     }, []);
+
+    // Reparar un perfil viejo al que le falta lo del primer día. Corre una sola
+    // vez y solo si de verdad falta algo: el caso normal no hace nada. El guard
+    // del ref evita que el Strict Mode de desarrollo lo dispare dos veces.
+    const reparando = useRef(false);
+    useEffect(() => {
+        if (!reparacionPendiente || reparando.current) return;
+        reparando.current = true;
+        ensureProfileIntegrity(initialProfile.id)
+            .then(() => router.refresh())
+            .catch((error) => {
+                // Antes esto se tragaba en el servidor y el usuario se quedaba
+                // con un perfil incompleto sin saberlo.
+                console.error('No se pudo completar el perfil:', error);
+                toast.error('No se pudieron crear tus categorías iniciales. Recarga la página.');
+            });
+    }, [reparacionPendiente, initialProfile.id, router]);
 
     useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());

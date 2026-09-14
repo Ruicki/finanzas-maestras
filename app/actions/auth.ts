@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { datosInicialesDelPerfil } from '@/lib/perfil-nuevo';
 import { reportError } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -96,14 +97,10 @@ export async function register(formData: FormData) {
                 name,
                 email,
                 password: hashedPassword,
-                accounts: {
-                    create: {
-                        name: 'Efectivo',
-                        balance: 0,
-                        type: 'CASH',
-                        isDefault: true
-                    }
-                }
+                // Cuenta de Efectivo y categorias en el mismo create: anidado es
+                // una sola escritura atomica, asi que no existe el perfil a
+                // medio montar que antes reparaba el render de la pagina.
+                ...datosInicialesDelPerfil,
             }
         });
 

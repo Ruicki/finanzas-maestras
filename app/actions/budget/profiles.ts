@@ -7,6 +7,7 @@ import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
 import { requireAuth, requireOwnership } from '@/lib/auth-utils';
 import { COLOR_THEME_IDS, type ColorThemeId } from '@/lib/color-themes';
+import { datosInicialesDelPerfil } from '@/lib/perfil-nuevo';
 
 // ─── PROFILES ──────────────────────────────────────────────────────────────
 
@@ -162,7 +163,12 @@ export async function createProfile(name: string) {
     const { role } = await requireAuth();
     if (role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
 
-    const profile = await prisma.profile.create({ data: { name } });
+    // Mismo estado inicial que un registro normal: antes un perfil creado por
+    // un administrador llegaba vacio y solo se completaba cuando su dueño
+    // cargaba el dashboard.
+    const profile = await prisma.profile.create({
+        data: { name, ...datosInicialesDelPerfil },
+    });
     await logAction('CREATE_PROFILE', `Nombre: ${name}`, profile.id);
     revalidatePath('/');
 }
@@ -261,9 +267,13 @@ export async function resetProfileData(id: number) {
             // El perfil vuelve a estar vacio, asi que vuelve a ser un primer uso:
             // sin esto la bienvenida no reaparece y el usuario se queda con el
             // dashboard en cero y sin ninguna guia.
+            //
+            // Y se vuelve a sembrar aqui mismo, en la misma transaccion, en vez
+            // de dejar el perfil sin cuenta ni categorias esperando a que algo
+            // lo repare: sin categorias no se puede registrar ni un gasto.
             await tx.profile.update({
                 where: { id },
-                data: { onboardingSeenAt: null },
+                data: { onboardingSeenAt: null, ...datosInicialesDelPerfil },
             });
         });
         revalidatePath('/');

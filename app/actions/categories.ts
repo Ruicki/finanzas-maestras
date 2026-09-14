@@ -4,19 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Category } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireOwnership } from "@/lib/auth-utils";
-
-// Configuración de Categorías Predeterminadas
-const DEFAULT_CATEGORIES = [
-    { name: 'Vivienda', icon: 'Home', color: 'text-blue-500', type: 'FIXED' },
-    { name: 'Comida', icon: 'ShoppingBag', color: 'text-orange-500', type: 'VARIABLE' },
-    { name: 'Transporte', icon: 'Car', color: 'text-zinc-500', type: 'FIXED' },
-    { name: 'Entretenimiento', icon: 'Coffee', color: 'text-pink-500', type: 'LUXURY' },
-    { name: 'Servicios', icon: 'Zap', color: 'text-yellow-500', type: 'FIXED' },
-    { name: 'Salud', icon: 'HeartPulse', color: 'text-red-500', type: 'VARIABLE' },
-    { name: 'Educación', icon: 'GraduationCap', color: 'text-indigo-500', type: 'FIXED' },
-    { name: 'Tecnología', icon: 'Smartphone', color: 'text-cyan-500', type: 'VARIABLE' },
-    { name: 'Viajes', icon: 'Plane', color: 'text-emerald-500', type: 'LUXURY' },
-];
+import { CATEGORIAS_POR_DEFECTO } from "@/lib/perfil-nuevo";
 
 export async function initializeDefaultCategories(profileId: number) {
     await requireOwnership(profileId);
@@ -26,7 +14,7 @@ export async function initializeDefaultCategories(profileId: number) {
 
     // Crear por lotes usando transacción para compatibilidad
     await prisma.$transaction(
-        DEFAULT_CATEGORIES.map(cat =>
+        CATEGORIAS_POR_DEFECTO.map(cat =>
             prisma.category.create({
                 data: {
                     ...cat,
