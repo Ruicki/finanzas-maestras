@@ -7,9 +7,16 @@
 
 - [x] 1.1 Crear `lib/env.ts` con `getJwtSecretKey()` y validación Fail-Fast.
 - [x] 1.2 Actualizar `lib/auth-utils.ts` removiendo `'secret-key-change-me-in-prod'`.
-- [ ] 1.3 Crear `middleware.ts` en la raíz con protección RBAC para `/admin` y eliminar `proxy.ts`.
-      → **Pendiente.** `proxy.ts` sigue siendo el middleware y no existe `middleware.ts`.
-      Funciona, pero se aparta del nombre que espera Next.js y de lo acordado aquí.
+- [x] 1.3 Middleware en la raíz con protección RBAC para `/admin`.
+      → **Hecho, y la premisa original era errónea.** La tarea pedía renombrar
+      `proxy.ts` a `middleware.ts` por ser "el nombre que espera Next.js". Es al
+      revés: Next.js 16 deprecó `middleware` en favor de `proxy`
+      (`next/dist/build/index.js`: *"The `middleware` file convention is
+      deprecated. Please use `proxy` instead"*, con codemod
+      `middleware-to-proxy`), y tener los dos archivos a la vez es un error de
+      compilación. `proxy.ts` es el nombre correcto y se queda.
+      La parte real de la tarea —RBAC— ya está: `proxy.ts:44` redirige a `/`
+      cualquier ruta `/admin` sin `payload.role === 'ADMIN'`.
 - [x] 1.4 Proteger `getGlobalStats` en `app/actions/budget/profiles.ts` (requerir rol `ADMIN`).
 - [x] 1.5 Mitigar IDOR en `app/actions/budget/expenses.ts` (`createExpense`, `updateExpense`).
 - [x] 1.6 Mitigar IDOR en `app/actions/budget/credit-cards.ts` (`payCreditCard`).

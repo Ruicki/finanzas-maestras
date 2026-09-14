@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma';
+import { reportError } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
@@ -267,7 +268,7 @@ export async function resetProfileData(id: number) {
         });
         revalidatePath('/');
     } catch (error) {
-        console.error('Error resetting profile data:', error);
+        reportError(error, { accion: 'resetear datos del perfil', profileId: id });
         throw new Error('Error al resetear los datos del perfil');
     }
 }

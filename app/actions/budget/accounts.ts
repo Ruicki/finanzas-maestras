@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
-import { logger } from '@/lib/logger';
+import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance } from '@/lib/ledger';
 
@@ -330,7 +330,7 @@ export async function createTransfer(
         logger.info(`Transfer created: ${amount} from account ${sourceAccountId} to ${destinationAccountId}`);
         revalidatePath('/');
     } catch (error) {
-        logger.error('Error creating transfer:', error);
+        reportError(error, { accion: 'crear transferencia', profileId: sourceAccount.profileId, targetId: sourceAccountId });
         throw error;
     }
 }

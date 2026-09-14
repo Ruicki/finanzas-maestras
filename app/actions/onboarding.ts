@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { reportError } from '@/lib/logger';
 import { createAccount } from './budget';
 import { initializeDefaultCategories } from './categories';
 import { requireOwnership } from '@/lib/auth-utils';
@@ -25,7 +26,7 @@ export async function ensureProfileIntegrity(profileId: number): Promise<void> {
             await initializeDefaultCategories(profileId);
         }
     } catch (e) {
-        console.error('ensureProfileIntegrity failed:', e);
+        reportError(e, { accion: 'asegurar integridad del perfil', profileId });
     }
 }
 

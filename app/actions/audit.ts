@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { reportError } from '@/lib/logger';
 import { getSession } from '@/lib/auth-utils';
 
 export async function logAction(action: string, details?: string, targetId?: number) {
@@ -20,7 +21,7 @@ export async function logAction(action: string, details?: string, targetId?: num
             }
         });
     } catch (error) {
-        console.error("Error logging action:", error);
+        reportError(error, { accion: 'escribir en el registro de auditoria' });
         // No lanzamos error para no interrumpir el flujo principal
     }
 }

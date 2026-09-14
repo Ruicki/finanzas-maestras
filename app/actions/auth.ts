@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { reportError } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -60,7 +61,7 @@ export async function login(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error('Login error:', error);
+        reportError(error, { accion: 'iniciar sesion' });
         return { error: 'Error interno del servidor' };
     }
 }
@@ -123,7 +124,7 @@ export async function register(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error("Register Error:", error);
+        reportError(error, { accion: 'registrar cuenta' });
         return { error: 'Error al registrar usuario' };
     }
 }
@@ -165,7 +166,7 @@ export async function updateProfile(profileId: number, formData: FormData) {
 
         return { success: true };
     } catch (error) {
-        console.error("Update Profile Error:", error);
+        reportError(error, { accion: 'actualizar perfil', profileId });
         return { error: 'Error actualizando perfil' };
     }
 }
@@ -187,7 +188,7 @@ export async function generateAccessCode(profileId: number) {
         revalidatePath('/');
         return { success: true, code };
     } catch (error) {
-        console.error("Generate Access Code Error:", error);
+        reportError(error, { accion: 'generar codigo de acceso' });
         return { error: 'Error generando código' };
     }
 }
@@ -252,7 +253,7 @@ export async function claimProfile(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error("Claim Profile Error:", error);
+        reportError(error, { accion: 'canjear codigo de acceso' });
         return { error: 'Error reclamando perfil' };
     }
 }
@@ -272,7 +273,7 @@ export async function resetPassword(profileId: number, newPassword: string) {
         });
         return { success: true };
     } catch (error) {
-        console.error("Reset Password Error:", error);
+        reportError(error, { accion: 'restablecer contrasena' });
         return { error: 'Error al restablecer la contraseña' };
     }
 }

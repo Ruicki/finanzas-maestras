@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
-import { logger } from '@/lib/logger';
+import { reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
 
@@ -93,7 +93,7 @@ export async function createExpense(data: CreateExpenseInput) {
         revalidatePath('/');
         return { ...expense, amount: toNum(expense.amount) };
     } catch (error) {
-        logger.error('Error creating expense:', error);
+        reportError(error, { accion: 'crear gasto', profileId: data.profileId });
         throw error;
     }
 }
@@ -192,7 +192,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error updating expense ${id}:`, error);
+        reportError(error, { accion: 'actualizar gasto', profileId: oldExpense.profileId, targetId: id });
         throw error;
     }
 }
@@ -231,7 +231,7 @@ export async function deleteExpense(id: number): Promise<void> {
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error deleting expense ${id}:`, error);
+        reportError(error, { accion: 'borrar gasto', targetId: id });
         throw error;
     }
 }
@@ -279,7 +279,7 @@ export async function confirmExpense(id: number) {
 
         revalidatePath('/');
     } catch (error) {
-        logger.error(`Error confirming expense ${id}:`, error);
+        reportError(error, { accion: 'confirmar gasto proyectado', profileId: expense.profileId, targetId: id });
         throw error;
     }
 }
