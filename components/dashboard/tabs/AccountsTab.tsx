@@ -18,6 +18,8 @@ interface AccountsTabProps {
     accounts: Account[];
     profileId: number;
     onUpdate: () => void;
+    /** La bienvenida pide abrir el alta de cuenta nada mas entrar aqui. */
+    autoOpenWizard?: boolean;
 }
 
 // ── Menú contextual de 3 puntos ────────────────────────────────────────────
@@ -88,8 +90,13 @@ function AccountMenu({
 }
 
 // ── Componente principal ───────────────────────────────────────────────────
-export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsTabProps) {
-    const [isCreating, setIsCreating] = useState(false);
+export default function AccountsTab({ accounts, profileId, onUpdate, autoOpenWizard = false }: AccountsTabProps) {
+    // La bienvenida manda aqui con la intencion de crear una cuenta, asi que el
+    // asistente arranca abierto: al recien llegado no se le deja ante una pestaña
+    // vacia buscando el boton. Va en el estado inicial y no en un efecto porque
+    // la pestaña se monta de cero al navegar, y un setState dentro de un efecto
+    // dispararia un render en cascada.
+    const [isCreating, setIsCreating] = useState(autoOpenWizard);
     const [isTransferring, setIsTransferring] = useState(false);
     // modal unificado: null = cerrado, 'movements' | 'settings' = pestaña inicial
     const [modalAccount, setModalAccount] = useState<Account | null>(null);

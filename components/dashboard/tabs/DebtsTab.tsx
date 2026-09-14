@@ -43,13 +43,18 @@ type DebtsTabProps = {
     profileId: number;
     profileName: string;
     onUpdate: () => void;
+    /** La bienvenida pide abrir el alta de tarjeta nada mas entrar aqui. */
+    autoOpenCardWizard?: boolean;
 };
 
-export default function DebtsTab({ creditCards, loans, accounts, profileId, profileName, onUpdate }: DebtsTabProps) {
+export default function DebtsTab({ creditCards, loans, accounts, profileId, profileName, onUpdate, autoOpenCardWizard = false }: DebtsTabProps) {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [wizardType, setWizardType] = useState<'CARD' | 'LOAN'>('CARD');
     const [editingId, setEditingId] = useState<number | null>(null); // EDIT STATE
-    const [showCardWizard, setShowCardWizard] = useState(false);
+    // Arranca abierto si la bienvenida mando aqui a crear una tarjeta. Mismo
+    // motivo que en AccountsTab: estado inicial, no efecto. Los formularios ya
+    // estan en blanco en el primer montaje, asi que no hace falta resetearlos.
+    const [showCardWizard, setShowCardWizard] = useState(autoOpenCardWizard);
 
     // For Loans Wizard
     const [loanWizardMode, setLoanWizardMode] = useState<'BANK' | 'FRIEND'>('BANK');

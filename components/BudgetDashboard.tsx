@@ -40,6 +40,9 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const [showUserSettings, setShowUserSettings] = useState(false);
     const [showProfileManager, setShowProfileManager] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(!initialProfile.onboardingSeenAt);
+    // Lo que el usuario eligio en la bienvenida. La pestaña de destino lo consume
+    // para abrir su asistente y lo limpia, para que no se reabra al volver.
+    const [onboardingIntent, setOnboardingIntent] = useState<'new-account' | 'new-card' | null>(null);
     const [isPrivateMode, setIsPrivateMode] = useState(false);
 
     // Date State (New)
@@ -86,7 +89,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
         }
     };
 
-    const updateTab = (tab: string) => setActiveTab(tab);
+    // Cambiar de pestaña consume la intencion de la bienvenida: asi el asistente
+    // se abre una sola vez y no vuelve a saltar si el usuario regresa despues.
+    const updateTab = (tab: string) => {
+        setActiveTab(tab);
+        setOnboardingIntent(null);
+    };
 
     // --- CÁLCULOS GLOBALES (Filtrados por FECHA) ---
     const currentDate = selectedDate ?? new Date(2000, 0, 1);
@@ -292,8 +300,14 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
             {showOnboarding && !isImpersonating && (
                 <OnboardingIntro
                     profileId={activeProfile.id}
+                    hasCashAccount={(activeProfile.accounts || []).length > 0}
                     onClose={() => setShowOnboarding(false)}
-                    onNavigate={(tab) => { setShowOnboarding(false); updateTab(tab); }}
+                    onNavigate={(tab, intent) => {
+                        setShowOnboarding(false);
+                        // updateTab limpia la intencion, asi que se fija despues.
+                        updateTab(tab);
+                        setOnboardingIntent(intent ?? null);
+                    }}
                 />
             )}
 
@@ -407,6 +421,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 accounts={activeProfile.accounts || []}
                                 profileId={activeProfile.id}
                                 onUpdate={refreshData}
+                                autoOpenWizard={onboardingIntent === 'new-account'}
                             />
                         )}
 
@@ -449,6 +464,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 profileId={activeProfile.id}
                                 profileName={activeProfile.name}
                                 onUpdate={refreshData}
+                                autoOpenCardWizard={onboardingIntent === 'new-card'}
                             />
                         )}
 
