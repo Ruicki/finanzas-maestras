@@ -213,3 +213,32 @@
       sesión. `/login?salir=1` borra las cookies y deja pasar.
       → De paso, si falta `JWT_SECRET` el middleware ya no redirige `/login` a sí
       misma, que provocaba un bucle en vez de un mensaje.
+
+## Fase 12: Gastos proyectados — bug reportado por el usuario
+
+> "Si se proyecta [un gasto] después no hay forma de eliminarlo ni de
+> volverlo un gasto." Investigado a fondo antes de tocar código: se
+> descartaron cinco hipótesis (serialización, condiciones JSX de los botones,
+> guard de doble clic, validación de `confirmExpense`, guard de
+> `deleteExpense`) antes de confirmar la causa real.
+
+- [x] 12.1 Causa raíz: `components/BudgetDashboard.tsx` filtraba `expensesList`
+      por el mes visible antes de pasarlo a `ExpensesTab`. El wizard invita a
+      poner fecha futura a una proyección ("Aún no ha pasado: no descuenta el
+      saldo hasta que lo confirmes"), así que una proyección con fecha de otro
+      mes quedaba fuera de la lista — su fila, y con ella los botones de
+      confirmar y eliminar, nunca se renderizaban. No estaban rotos: no
+      existían en el DOM.
+      → El fix va junto con un bug relacionado que ya estaba señalado: el KPI
+      "Gastos" del encabezado (línea 164-169 antes del cambio) no excluía
+      `isProjected`, al revés que Presupuesto, Insights y la exportación. Si
+      las proyecciones dejan de filtrarse por mes sin arreglar esto, el KPI
+      empeora: pasaría a sumar proyecciones de cualquier mes.
+      → Extraído a `lib/dashboard-expenses.ts` (`gastosVisiblesEnElMes`,
+      `totalGastadoDelMes`) con 9 pruebas — una regresión aquí es exactamente
+      cómo se llegó a este bug.
+      → Verificado en navegador real contra `/preview-temas` con una
+      proyección de prueba fechada en otro mes: apareció con su botón de
+      confirmar, y el KPI del encabezado no la contó ($545 = solo los gastos
+      reales de septiembre, con las dos proyecciones —una del mismo mes, una
+      de otro— excluidas de las dos).
