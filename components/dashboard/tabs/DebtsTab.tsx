@@ -478,7 +478,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             {/* --- WIZARD UNIFICADO --- */}
             {isWizardOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col overflow-y-auto">
+                    <div className="bg-surface dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col overflow-y-auto">
                         <button onClick={() => setIsWizardOpen(false)} className="absolute top-6 right-6 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full hover:bg-zinc-200"><XIcon size={20} /></button>
 
                         <h3 className="text-2xl font-black mb-1">

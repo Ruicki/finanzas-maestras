@@ -15,7 +15,7 @@ export default function SystemError({
   }, [error]);
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
+    <div className="min-h-[60dvh] flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-zinc-700 dark:text-zinc-300">

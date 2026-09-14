@@ -73,7 +73,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[95vh] sm:max-h-[85vh] flex flex-col">
+            <div className="bg-white dark:bg-zinc-900 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[95dvh] sm:max-h-[85dvh] flex flex-col">
 
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
