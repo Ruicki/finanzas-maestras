@@ -96,7 +96,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Desde (Origen)</label>
