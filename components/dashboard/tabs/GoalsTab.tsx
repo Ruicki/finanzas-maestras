@@ -391,8 +391,12 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
             priority: form.priority,
             category: form.category,
             notes: form.notes || null,
-            sourceAccountId: form.sourceAccountId ? parseInt(form.sourceAccountId) : undefined,
-            destinationAccountId: form.destinationAccountId ? parseInt(form.destinationAccountId) : undefined,
+            // null explícito (no undefined): al editar, si el usuario vuelve a
+            // "Seleccionar..." para desvincular la cuenta, undefined le dice a
+            // Prisma "no toques este campo" y la cuenta vieja se queda pegada
+            // sin ningún error visible. null sí la desvincula de verdad.
+            sourceAccountId: form.sourceAccountId ? parseInt(form.sourceAccountId) : null,
+            destinationAccountId: form.destinationAccountId ? parseInt(form.destinationAccountId) : null,
         };
 
         try {

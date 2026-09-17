@@ -5,6 +5,8 @@ import { createAccount } from './budget';
 import { initializeDefaultCategories } from './categories';
 import { requireOwnership } from '@/lib/auth-utils';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
+import { logAction } from './audit';
 
 export async function ensureProfileIntegrity(profileId: number): Promise<void> {
     try {
@@ -25,7 +27,19 @@ export async function ensureProfileIntegrity(profileId: number): Promise<void> {
             await initializeDefaultCategories(profileId);
         }
     } catch (e) {
-        console.error('ensureProfileIntegrity failed:', e);
+        // No relanzamos: esto corre en cada carga de "/" para el usuario logueado,
+        // así que un fallo transitorio de DB no debe tumbar el dashboard entero.
+        // Pero antes quedaba en silencio total (solo console.error, que en
+        // producción nadie revisa) - ahora queda logueado Y visible para un
+        // admin en el panel de auditoría, para poder detectar perfiles a medio
+        // armar (sin cuenta Efectivo/categorías) antes de que el usuario reporte
+        // que "la app se ve rara".
+        logger.error(`ensureProfileIntegrity failed for profile ${profileId}:`, e);
+        await logAction(
+            'PROFILE_INTEGRITY_CHECK_FAILED',
+            e instanceof Error ? e.message : String(e),
+            profileId,
+        );
     }
 }
 

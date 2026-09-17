@@ -52,3 +52,8 @@ next-env.d.ts
 *.db.old
 error_log.txt
 output.txt
+
+# playwright mcp debug output / capturas y scripts de prueba sueltos
+.playwright-mcp/
+tab-fallback-test.png
+scripts/_tmp-*.ts

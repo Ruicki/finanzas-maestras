@@ -30,13 +30,23 @@ interface BudgetDashboardProps {
     isImpersonating?: boolean;
 }
 
+// Únicos valores válidos de ?tab= — cualquier otro (link viejo, typo, un tab
+// renombrado en el futuro) debe caer de vuelta a "accounts" en vez de dejar el
+// dashboard en blanco sin ningún tab marcado como activo.
+const VALID_TABS = ['accounts', 'incomes', 'expenses', 'goals', 'debts', 'budgets', 'insights'] as const;
+type ValidTab = typeof VALID_TABS[number];
+
+function toValidTab(tab: string | null): ValidTab {
+    return (VALID_TABS as readonly string[]).includes(tab ?? '') ? (tab as ValidTab) : 'accounts';
+}
+
 export default function BudgetDashboard({ initialProfile, isImpersonating = false }: BudgetDashboardProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
 
-    const currentTab = searchParams.get('tab') || 'accounts';
-    const [activeTab, setActiveTab] = useState(currentTab);
+    const currentTab = toValidTab(searchParams.get('tab'));
+    const [activeTab, setActiveTab] = useState<string>(currentTab);
     const [activeProfile, setActiveProfile] = useState<ProfileWithData>(initialProfile);
     const [showUserSettings, setShowUserSettings] = useState(false);
     const [showProfileManager, setShowProfileManager] = useState(false);
