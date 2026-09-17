@@ -16,6 +16,7 @@ import GoalCard from '@/components/goals/GoalCard';
 import GoalHistoryModal, { type GoalTransactionRow } from '@/components/goals/GoalHistoryModal';
 import GoalReclaimModal from '@/components/goals/GoalReclaimModal';
 import GoalFormModal from '@/components/goals/GoalFormModal';
+import { parseDateOnly, formatDateOnly } from '@/lib/dates';
 
 interface GoalsTabProps {
     goals: Goal[];
@@ -57,7 +58,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
     useEffect(() => {
         if (form.targetAmount && form.deadline) {
             const target = parseFloat(form.targetAmount) || 0;
-            const deadlineDate = new Date(form.deadline);
+            const deadlineDate = parseDateOnly(form.deadline);
             const now = new Date();
             const daysLeft = Math.max(1, Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
             const monthsLeft = Math.max(1, daysLeft / 30);
@@ -86,7 +87,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         setForm({
             name: goal.name,
             targetAmount: Number(goal.targetAmount).toFixed(2),
-            deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
+            deadline: formatDateOnly(goal.deadline),
             type: goal.type,
             frequency: goal.frequency || 'MONTHLY',
             contributionAmount: Number(goal.contributionAmount || 0).toFixed(2),
@@ -120,7 +121,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         const data = {
             name: form.name,
             targetAmount: parseFloat(form.targetAmount),
-            deadline: form.deadline ? new Date(form.deadline) : undefined,
+            deadline: form.deadline ? parseDateOnly(form.deadline) : undefined,
             profileId,
             type: form.type,
             frequency: form.type === 'FIXED' ? form.frequency : null,

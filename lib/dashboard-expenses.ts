@@ -1,4 +1,5 @@
 import { esPagoDeDeuda, type GastoConCategoria } from './expense-category';
+import { businessMonthKey } from './dates';
 
 /**
  * Qué gastos aparecen en el encabezado y en la pestaña de Gastos, y cuánto
@@ -23,14 +24,15 @@ export interface GastoDelDashboard extends GastoConCategoria {
 /**
  * ¿Esta fecha cae en el mes dado?
  *
- * Compara el ISO en UTC, que es como se guardan las fechas (mediodía UTC), en
- * vez de dejar que `Date` reinterprete la zona horaria del navegador.
+ * Compara en la timezone de negocio (Panamá) vía `businessMonthKey`, no en
+ * UTC crudo ni en la timezone local del proceso que ejecuta el código —
+ * comparar en UTC corre el día (y a veces el mes) hacia atrás para cualquier
+ * fecha cerca de medianoche en una timezone al oeste de Greenwich.
  */
 function estaEnElMes(fecha: Date | string, month0: number, year: number): boolean {
     if (!fecha) return false;
-    const iso = typeof fecha === 'string' ? fecha : fecha.toISOString();
     const objetivo = `${year}-${String(month0 + 1).padStart(2, '0')}`;
-    return iso.startsWith(objetivo);
+    return businessMonthKey(fecha) === objetivo;
 }
 
 /**
@@ -58,8 +60,11 @@ export function gastosVisiblesEnElMes<T extends GastoDelDashboard>(
         if (esPagoDeDeuda(gasto)) return false;
         if (gasto.isProjected) return true;
         if (gasto.isRecurring && gasto.recurrenceType === 'ANNUAL') {
-            const creado = new Date(gasto.createdAt);
-            return creado.getMonth() === month0;
+            // Mismo criterio de timezone de negocio que estaEnElMes, pero
+            // comparando solo el mes (sin el año): un anual aparece cada año
+            // en su mes de cobro.
+            const mesDeCreacion = businessMonthKey(gasto.createdAt).slice(5, 7);
+            return mesDeCreacion === String(month0 + 1).padStart(2, '0');
         }
         return estaEnElMes(gasto.createdAt, month0, year);
     });

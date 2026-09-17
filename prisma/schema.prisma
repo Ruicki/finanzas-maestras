@@ -38,6 +38,11 @@ model Salary {
   bonus      Decimal  @db.Decimal(10, 2)
   absentDays Int      @default(0)
   createdAt  DateTime @default(now())
+  // Fecha de pago que el usuario elige en el formulario (puede diferir de
+  // createdAt si registra el salario dias despues de haberlo cobrado).
+  // Nullable: registros creados antes de este campo no lo tienen, el resto
+  // del codigo usa paymentDate ?? createdAt como fallback.
+  paymentDate DateTime?
   company    String?
   profileId  Int?
   accountId  Int?

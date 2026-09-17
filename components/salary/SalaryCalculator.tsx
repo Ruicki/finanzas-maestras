@@ -8,6 +8,7 @@ import { toast } from "sonner";
 type Account = ProfileWithData['accounts'][number];
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { formatDateOnly } from '@/lib/dates';
 
 interface FormData {
     grossVal: number;
@@ -38,7 +39,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
     });
 
     useEffect(() => {
-        setForm(prev => ({ ...prev, paymentDate: new Date().toISOString().split('T')[0] }));
+        setForm(prev => ({ ...prev, paymentDate: formatDateOnly(new Date()) }));
         setMounted(true);
     }, []);
 

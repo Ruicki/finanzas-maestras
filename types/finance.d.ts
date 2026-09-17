@@ -11,6 +11,7 @@ export interface SalaryData {
   profileId?: number;
   accountId?: number;
   isManualCalculation?: boolean;
+  paymentDate?: Date;
 }
 
 export interface TaxBreakdown {

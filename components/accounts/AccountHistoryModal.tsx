@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { ProfileWithData } from '@/types';
+import { parseDateOnly, formatDateOnly } from '@/lib/dates';
 
 type Account = ProfileWithData['accounts'][number];
 
@@ -57,9 +58,7 @@ export default function AccountHistoryModal({
     // ── Configuración ──────────────────────────────────────────────────────
     const [editName, setEditName] = useState(account.name);
     const [newBalance, setNewBalance] = useState(account.balance.toString());
-    const [editLockDate, setEditLockDate] = useState(
-        account.lockDate ? new Date(account.lockDate).toISOString().split('T')[0] : ''
-    );
+    const [editLockDate, setEditLockDate] = useState(formatDateOnly(account.lockDate));
     const [savingEdit, setSavingEdit] = useState(false);
 
     useScrollLock(true);
@@ -113,7 +112,7 @@ export default function AccountHistoryModal({
             await updateAccount(account.id, {
                 name: editName,
                 balance: val,
-                lockDate: editLockDate ? new Date(editLockDate) : null,
+                lockDate: editLockDate ? parseDateOnly(editLockDate) : null,
             });
             toast.success('Cuenta actualizada');
             onUpdate();

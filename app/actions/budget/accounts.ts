@@ -237,7 +237,7 @@ export async function getAccountTransactions(accountId: number) {
             name: 'Salario',
             description: `Salario${s.company ? ` - ${s.company}` : ''}`,
             type: 'SALARY' as const,
-            date: s.createdAt,
+            date: s.paymentDate || s.createdAt,
         })),
     ];
 

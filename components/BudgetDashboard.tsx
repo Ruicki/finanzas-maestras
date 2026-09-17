@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 import { esPagoDeDeuda } from '@/lib/expense-category';
 import { gastosVisiblesEnElMes, totalGastadoDelMes } from '@/lib/dashboard-expenses';
+import { businessMonthKey } from '@/lib/dates';
 
 // Tabs
 import IncomesTab from '@/components/dashboard/tabs/IncomesTab';
@@ -128,25 +129,22 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
     const selectedMonth = currentDate.getMonth();
     const selectedYear = currentDate.getFullYear();
 
-    // Helper: Filter by selected month
-    // Helper: Filter by selected month using ISO String (UTC) to match database storage
-    const isInSelectedMonth = (dateStr: Date | string) => {
+    // Helper: Filter by selected month, siempre en la timezone de negocio
+    // (Panamá) para que el mes de un dato no dependa de dónde corra el
+    // navegador ni de si el string es UTC — un solo criterio para toda la app.
+    const targetMonthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+    const isInSelectedMonth = (dateStr: Date | string | null | undefined) => {
         if (!dateStr) return false;
-        // Ensure we are working with an ISO string (UTC)
-        const iso = typeof dateStr === 'string' ? dateStr : dateStr.toISOString();
-        // Construct target YYYY-MM
-        const targetMonth = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
-        // Compare strictly with the start of the ISO string (e.g., "2024-02")
-        // This relies on our logic of saving dates as Noon UTC, so the UTC date IS the intended date.
-        return iso.startsWith(targetMonth);
+        return businessMonthKey(dateStr) === targetMonthKey;
     };
 
     // Qué gastos se ven este mes, y cuánto suman de verdad: en lib/dashboard-expenses.ts,
-    // con pruebas. Las proyecciones se ven siempre, sin importar el mes —antes
-    // se filtraban igual que un gasto real, así que una proyección con fecha
-    // futura (el caso normal: "la renta del mes que viene") desaparecía de la
-    // pantalla justo después de crearla, sin fila ni botón para confirmarla o
-    // borrarla. El total del KPI, en cambio, SÍ las excluye —si no, ahora que
+    // con pruebas (usa businessMonthKey internamente, misma timezone de negocio
+    // que el resto de este archivo). Las proyecciones se ven siempre, sin importar
+    // el mes —antes se filtraban igual que un gasto real, así que una proyección
+    // con fecha futura (el caso normal: "la renta del mes que viene") desaparecía
+    // de la pantalla justo después de crearla, sin fila ni botón para confirmarla
+    // o borrarla. El total del KPI, en cambio, SÍ las excluye —si no, ahora que
     // se ven todos los meses, este numero pasaria a sumar proyecciones de
     // cualquier mes en vez de solo el actual.
     const expensesList = gastosVisiblesEnElMes(activeProfile?.expenses || [], selectedMonth, selectedYear);
@@ -173,7 +171,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
 
     // Income Calculation (Filtered)
     const allSalaries = activeProfile?.salaries || [];
-    const currentMonthSalaries = allSalaries.filter((s) => isInSelectedMonth(s.createdAt));
+    const currentMonthSalaries = allSalaries.filter((s) => isInSelectedMonth(s.paymentDate || s.createdAt));
     const baseIncome = currentMonthSalaries.reduce((sum, s) => sum + Number(s.netVal), 0);
 
     const additionalIncomes = activeProfile?.incomes || [];

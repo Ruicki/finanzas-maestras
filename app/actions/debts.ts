@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { toNum, toNumOrNull } from './budget/serializers';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementLoanBalance } from '@/lib/ledger';
+import { businessToday, businessMonthKey } from '@/lib/dates';
 
 export type CreateLoanInput = {
     name: string;
@@ -169,10 +170,7 @@ export interface ProcessLoanInterestResult {
 
 function isInterestAppliedThisCycle(lastInterestAppliedAt: Date | null, today: Date): boolean {
     if (!lastInterestAppliedAt) return false;
-    return (
-        lastInterestAppliedAt.getMonth() === today.getMonth() &&
-        lastInterestAppliedAt.getFullYear() === today.getFullYear()
-    );
+    return businessMonthKey(lastInterestAppliedAt) === businessMonthKey(today);
 }
 
 /**
@@ -186,7 +184,9 @@ function isInterestAppliedThisCycle(lastInterestAppliedAt: Date | null, today: D
  * siguen restando directamente del saldo por separado.
  */
 export async function processLoanInterest(): Promise<ProcessLoanInterestResult> {
-    const today = new Date();
+    // Mismo fix de timezone que processRecurringExpenses: "hoy" en Panamá, no
+    // en la timezone del servidor del cron.
+    const today = businessToday();
     const currentDay = today.getDate();
     const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 

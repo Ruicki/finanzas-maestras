@@ -7,6 +7,7 @@ import { SalaryRepository } from "@/lib/repositories/salary.repository";
 import { AccountRepository } from "@/lib/repositories/account.repository";
 import { logger } from "@/lib/logger";
 import { requireOwnership } from '@/lib/auth-utils';
+import { parseDateOnly } from '@/lib/dates';
 
 interface ProcessSalaryRequest {
     grossVal: number;
@@ -142,6 +143,8 @@ export async function createSalary(data: ProcessSalaryRequest) {
             finalNetVal = (grossAfterAbsence + data.bonus + (isDecimoIncluded ? decimoNet : 0)) - finalTaxes;
         }
 
+        const paymentDate = parseDateOnly(data.paymentDate);
+
         const salaryData = {
             grossVal: data.grossVal,
             bonus: data.bonus,
@@ -155,12 +158,13 @@ export async function createSalary(data: ProcessSalaryRequest) {
             profileId: data.profileId,
             accountId: data.accountId,
             isManualCalculation: data.isManualCalculation ?? false,
+            paymentDate,
         };
 
         if (data.dryRun) {
             return {
                 id: 0,
-                createdAt: new Date(),
+                createdAt: paymentDate,
                 ...salaryData,
                 grossVal: Number(salaryData.grossVal),
                 netVal: Number(salaryData.netVal),
@@ -324,6 +328,7 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             absentDays: data.absentDays,
             profileId: data.profileId,
             accountId: data.accountId,
+            paymentDate: parseDateOnly(data.paymentDate),
         };
 
         await prisma.$transaction(async (tx) => {

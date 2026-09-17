@@ -10,7 +10,7 @@ import { CreditCardIcon, WalletIcon, CalendarIcon, SaveIcon, XIcon } from '@anim
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { parseDateNoon } from '@/lib/utils';
+import { parseDateOnly, formatDateOnly } from '@/lib/dates';
 
 type Account = ProfileWithData['accounts'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
@@ -51,10 +51,7 @@ export default function ExpenseWizard({
     const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CREDIT'>('CASH');
     const [accountId, setAccountId] = useState<string>('');
     const [cardId, setCardId] = useState<string>('');
-    const [date, setDate] = useState<string>(() => {
-        const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    });
+    const [date, setDate] = useState<string>(() => formatDateOnly(new Date()));
     const [isRecurring, setIsRecurring] = useState(false);
     const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
     const [graceDays, setGraceDays] = useState('');
@@ -73,7 +70,7 @@ export default function ExpenseWizard({
             setAmount(initialData.amount?.toString() ?? '');
             setName(initialData.name ?? '');
             setCategoryId(initialData.categoryId || null);
-            setDate(initialData.createdAt ? new Date(initialData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+            setDate(initialData.createdAt ? formatDateOnly(initialData.createdAt) : formatDateOnly(new Date()));
             setIsRecurring(initialData.isRecurring || false);
             setRecurrenceType(initialData.recurrenceType || 'MONTHLY');
             setGraceDays(initialData.graceDays != null ? initialData.graceDays.toString() : '');
@@ -145,7 +142,7 @@ export default function ExpenseWizard({
             category: selectedCat?.name || "Gasto",
             categoryId: categoryId,
             profileId,
-            dueDate: isRecurring ? parseDateNoon(date).getDate() : null,
+            dueDate: isRecurring ? parseDateOnly(date).getUTCDate() : null,
             graceDays: isRecurring && graceDays ? parseInt(graceDays, 10) : null,
             isRecurring,
             isOneTime: !isRecurring,
@@ -153,7 +150,7 @@ export default function ExpenseWizard({
             paymentMethod,
             accountId: paymentMethod === 'CASH' ? Number(accountId) : null,
             linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : null,
-            date: `${date}T12:00:00`,
+            date: parseDateOnly(date),
             isProjected: !isRecurring && isProjected,
         };
 

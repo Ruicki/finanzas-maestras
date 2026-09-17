@@ -17,6 +17,7 @@ export class SalaryRepository {
                 profileId: data.profileId,
                 accountId: data.accountId,
                 isManualCalculation: data.isManualCalculation ?? false,
+                paymentDate: data.paymentDate,
             },
         });
     }
@@ -45,6 +46,7 @@ export class SalaryRepository {
                 profileId: data.profileId,
                 accountId: data.accountId,
                 isManualCalculation: data.isManualCalculation ?? false,
+                paymentDate: data.paymentDate,
             }
         });
     }
