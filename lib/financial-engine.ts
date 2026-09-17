@@ -1,4 +1,5 @@
 import { Decimal, DecimalValue, toMoney } from './decimal';
+import { clampDayToMonth, addMonthsClamped } from './dates';
 
 export interface FinancialCreditCard {
     limit: number;
@@ -26,9 +27,13 @@ export function getBestPurchaseDay(cutoffDay: number): { date: Date; daysRemaini
     let bestDayDate: Date;
 
     if (currentDay > cutoffDay) {
-        bestDayDate = new Date(currentYear, currentMonth + 1, cutoffDay + 1);
+        const targetMonth = currentMonth + 1;
+        const targetYear = currentYear + Math.floor(targetMonth / 12);
+        const effectiveCutoff = clampDayToMonth(cutoffDay, targetYear, targetMonth % 12);
+        bestDayDate = new Date(targetYear, targetMonth % 12, effectiveCutoff + 1);
     } else {
-        bestDayDate = new Date(currentYear, currentMonth, cutoffDay + 1);
+        const effectiveCutoff = clampDayToMonth(cutoffDay, currentYear, currentMonth);
+        bestDayDate = new Date(currentYear, currentMonth, effectiveCutoff + 1);
     }
 
     const diffTime = bestDayDate.getTime() - today.getTime();
@@ -97,13 +102,16 @@ export function getDaysToCutoff(cutoffDay: number): { days: number; date: Date; 
     let nextCutoffDate: Date;
     let days: number;
 
-    if (currentDay <= cutoffDay) {
-        nextCutoffDate = new Date(currentYear, currentMonth, cutoffDay);
-        days = cutoffDay - currentDay;
+    const effectiveCutoffThisMonth = clampDayToMonth(cutoffDay, currentYear, currentMonth);
+    if (currentDay <= effectiveCutoffThisMonth) {
+        nextCutoffDate = new Date(currentYear, currentMonth, effectiveCutoffThisMonth);
+        days = effectiveCutoffThisMonth - currentDay;
     } else {
-        nextCutoffDate = new Date(currentYear, currentMonth + 1, cutoffDay);
-        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        days = (daysInMonth - currentDay) + cutoffDay;
+        const targetMonth = currentMonth + 1;
+        const targetYear = currentYear + Math.floor(targetMonth / 12);
+        const effectiveCutoffNextMonth = clampDayToMonth(cutoffDay, targetYear, targetMonth % 12);
+        nextCutoffDate = new Date(targetYear, targetMonth % 12, effectiveCutoffNextMonth);
+        days = Math.ceil((nextCutoffDate.getTime() - new Date(currentYear, currentMonth, currentDay).getTime()) / 86400000);
     }
 
     let status: 'normal' | 'warning' | 'urgent' | 'passed';
@@ -123,10 +131,14 @@ export function getDaysToPayment(paymentDay: number): { days: number; date: Date
 
     let nextPaymentDate: Date;
 
-    if (currentDay <= paymentDay) {
-        nextPaymentDate = new Date(currentYear, currentMonth, paymentDay);
+    const effectivePaymentDayThisMonth = clampDayToMonth(paymentDay, currentYear, currentMonth);
+    if (currentDay <= effectivePaymentDayThisMonth) {
+        nextPaymentDate = new Date(currentYear, currentMonth, effectivePaymentDayThisMonth);
     } else {
-        nextPaymentDate = new Date(currentYear, currentMonth + 1, paymentDay);
+        const targetMonth = currentMonth + 1;
+        const targetYear = currentYear + Math.floor(targetMonth / 12);
+        const effectivePaymentDayNextMonth = clampDayToMonth(paymentDay, targetYear, targetMonth % 12);
+        nextPaymentDate = new Date(targetYear, targetMonth % 12, effectivePaymentDayNextMonth);
     }
 
     const diffTime = nextPaymentDate.getTime() - today.getTime();
@@ -176,9 +188,7 @@ export function calculateLoanPayoffDate(balance: number, annualRate: number, mon
     if (monthlyRate.isZero()) {
         // Simple division
         const months = Math.ceil(balanceD.dividedBy(monthlyPaymentD).toNumber());
-        const date = new Date();
-        date.setMonth(date.getMonth() + months);
-        return date;
+        return addMonthsClamped(new Date(), months);
     }
 
     // Amortization Formula: n = -log(1 - (r*PV) / PMT) / log(1 + r)
@@ -189,9 +199,7 @@ export function calculateLoanPayoffDate(balance: number, annualRate: number, mon
 
     const nMonths = numeratorInner.ln().negated().dividedBy(new Decimal(1).plus(monthlyRate).ln());
 
-    const date = new Date();
-    date.setMonth(date.getMonth() + Math.ceil(nMonths.toNumber()));
-    return date;
+    return addMonthsClamped(new Date(), Math.ceil(nMonths.toNumber()));
 }
 
 /**

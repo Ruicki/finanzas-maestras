@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { Landmark, Wallet, PiggyBank, ArrowRight, X } from "lucide-react";
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { parseDateOnly } from '@/lib/dates';
 
 interface AccountWizardProps {
     profileId: number;
@@ -60,7 +61,7 @@ export default function AccountWizard({ profileId, onClose, onSuccess }: Account
 
         setLoading(true);
         try {
-            await createAccount(name, type, parseFloat(balance), profileId, lockDate ? new Date(lockDate) : undefined, purpose, type === 'WALLET' ? symbol : undefined);
+            await createAccount(name, type, parseFloat(balance), profileId, lockDate ? parseDateOnly(lockDate) : undefined, purpose, type === 'WALLET' ? symbol : undefined);
             toast.success("¡Cuenta creada!");
             onSuccess();
             onClose();

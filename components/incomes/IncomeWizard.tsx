@@ -9,7 +9,7 @@ import { Building2 } from 'lucide-react';
 import SalaryCalculator from '@/components/salary/SalaryCalculator';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
-import { parseDateNoon } from '@/lib/utils';
+import { parseDateOnly, formatDateOnly } from '@/lib/dates';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { CategoryIcon, AVAILABLE_ICONS } from '@/components/shared/CategoryIcon';
 
@@ -57,7 +57,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
             setDescription(initialData.name || '');
             setSelectedAccountId(initialData.accountId || null);
             setSelectedIcon(initialData.icon || 'Wallet');
-            setDate(initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+            setDate(initialData.date ? formatDateOnly(initialData.date) : formatDateOnly(new Date()));
 
             // Detectar tipo: SalaryHistory (el único origen real de ediciones)
             // ya etiqueta cada item con type: 'SALARY' | 'INCOME' explícitamente
@@ -140,7 +140,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                         profileId,
                         accountId: selectedAccountId || undefined,
                         icon: selectedIcon,
-                        date: parseDateNoon(date),
+                        date: parseDateOnly(date),
                     });
                     toast.success("Ingreso actualizado");
                 }
@@ -167,7 +167,7 @@ export default function IncomeWizard({ accounts, profileId, onClose, onSuccess, 
                     profileId,
                     accountId: selectedAccountId || undefined,
                     icon: selectedIcon,
-                    date: parseDateNoon(date),
+                    date: parseDateOnly(date),
                 });
                 toast.success("Ingreso registrado");
             }

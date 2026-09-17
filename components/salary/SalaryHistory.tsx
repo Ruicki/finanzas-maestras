@@ -32,8 +32,8 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
         ...salaries.map(s => ({ ...s, type: 'SALARY' as const })),
         ...incomes.map(i => ({ ...i, type: 'INCOME' as const }))
     ].sort((a, b) => {
-        const dateA = a.type === 'INCOME' ? (a.date || a.createdAt) : a.createdAt;
-        const dateB = b.type === 'INCOME' ? (b.date || b.createdAt) : b.createdAt;
+        const dateA = a.type === 'INCOME' ? (a.date || a.createdAt) : (a.paymentDate || a.createdAt);
+        const dateB = b.type === 'INCOME' ? (b.date || b.createdAt) : (b.paymentDate || b.createdAt);
         return new Date(dateB).getTime() - new Date(dateA).getTime();
     });
 
@@ -101,7 +101,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                             {isSalary ? (item.company || 'Salario Base') : item.name}
                                         </p>
                                         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 font-medium mt-1">
-                                            <span>{new Date(isSalary ? item.createdAt : (item.date || item.createdAt)).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                            <span>{new Date(isSalary ? (item.paymentDate || item.createdAt) : (item.date || item.createdAt)).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                                             <span className="hidden md:inline">•</span>
                                             <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-xs whitespace-nowrap">
                                                 {isSalary ? (item.company || 'Personal') : (item.frequency || 'Pago Único')}

@@ -7,6 +7,8 @@
  * Suscripciones sin graceDays (ej. Netflix, debito directo) se comportan como
  * antes: pendiente hasta el dia de cobro, vencido inmediatamente despues.
  */
+import { clampDayToMonth } from './dates';
+
 export type SubscriptionStatus = 'PAID' | 'PENDING' | 'OVERDUE';
 
 function atMidnight(date: Date): Date {
@@ -19,16 +21,14 @@ function atMidnight(date: Date): Date {
  * (ej. 31 en febrero -> 28/29).
  */
 export function getMostRecentDueDate(dueDay: number, today: Date = new Date()): Date {
-    const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const effectiveDayThisMonth = Math.min(dueDay, daysInCurrentMonth);
+    const effectiveDayThisMonth = clampDayToMonth(dueDay, today.getFullYear(), today.getMonth());
 
     if (today.getDate() >= effectiveDayThisMonth) {
         return new Date(today.getFullYear(), today.getMonth(), effectiveDayThisMonth);
     }
 
     const prevMonthAnchor = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const daysInPrevMonth = new Date(prevMonthAnchor.getFullYear(), prevMonthAnchor.getMonth() + 1, 0).getDate();
-    const effectiveDayPrevMonth = Math.min(dueDay, daysInPrevMonth);
+    const effectiveDayPrevMonth = clampDayToMonth(dueDay, prevMonthAnchor.getFullYear(), prevMonthAnchor.getMonth());
     return new Date(prevMonthAnchor.getFullYear(), prevMonthAnchor.getMonth(), effectiveDayPrevMonth);
 }
 

@@ -6,6 +6,7 @@ import { toNum } from './serializers';
 import { logger } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance } from '@/lib/ledger';
+import { businessToday, businessMonthKey } from '@/lib/dates';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
@@ -284,7 +285,7 @@ export interface ProcessRecurringResult {
 
 function isPaidThisCycle(lastPaidAt: Date | null, today: Date): boolean {
     if (!lastPaidAt) return false;
-    return lastPaidAt.getMonth() === today.getMonth() && lastPaidAt.getFullYear() === today.getFullYear();
+    return businessMonthKey(lastPaidAt) === businessMonthKey(today);
 }
 
 /**
@@ -301,7 +302,11 @@ function isPaidThisCycle(lastPaidAt: Date | null, today: Date): boolean {
  *   Pagado/Pendiente en la UI quede sincronizado con el cobro real.
  */
 export async function processRecurringExpenses(): Promise<ProcessRecurringResult> {
-    const today = new Date();
+    // "Hoy" siempre en la timezone de negocio (Panamá), no en la del proceso
+    // que ejecuta el cron (Vercel corre en UTC) — si no, cerca de la
+    // medianoche el cron cobra con hasta ~1 día de adelanto/atraso respecto
+    // al calendario real del usuario.
+    const today = businessToday();
     const currentDay = today.getDate();
     const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 

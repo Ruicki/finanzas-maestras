@@ -12,6 +12,7 @@ import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalculatorIcon, PlusIcon, CalendarIcon, PauseIcon, PlayIcon, HistoryIcon, FlagIcon, CarIcon, HouseIcon, BookOpenIcon, HeartIcon, RocketIcon, ShieldCheckIcon, WalletIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { parseDateOnly, formatDateOnly } from '@/lib/dates';
 
 const GOAL_CATEGORIES = [
     { id: 'SAVINGS', label: 'Ahorro General', icon: WalletIcon, color: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-500/20' },
@@ -319,7 +320,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
     useEffect(() => {
         if (form.targetAmount && form.deadline) {
             const target = parseFloat(form.targetAmount) || 0;
-            const deadlineDate = new Date(form.deadline);
+            const deadlineDate = parseDateOnly(form.deadline);
             const now = new Date();
             const daysLeft = Math.max(1, Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
             const monthsLeft = Math.max(1, daysLeft / 30);
@@ -348,7 +349,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         setForm({
             name: goal.name,
             targetAmount: Number(goal.targetAmount).toFixed(2),
-            deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
+            deadline: formatDateOnly(goal.deadline),
             type: goal.type,
             frequency: goal.frequency || 'MONTHLY',
             contributionAmount: Number(goal.contributionAmount || 0).toFixed(2),
@@ -382,7 +383,7 @@ export default function GoalsTab({ goals, accounts, profileId, onUpdate }: Goals
         const data = {
             name: form.name,
             targetAmount: parseFloat(form.targetAmount),
-            deadline: form.deadline ? new Date(form.deadline) : undefined,
+            deadline: form.deadline ? parseDateOnly(form.deadline) : undefined,
             profileId,
             type: form.type,
             frequency: form.type === 'FIXED' ? form.frequency : null,

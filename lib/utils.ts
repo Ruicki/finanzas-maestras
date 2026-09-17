@@ -15,11 +15,3 @@ export const formatMoney = (amount: number) => {
 };
 
 export const formatCurrency = formatMoney;
-
-/**
- * Parsea un string de fecha tipo "2026-07-21" y retorna un Date a las 12:00 UTC
- * para evitar que el timezone local (ej. UTC-5) lo convierta en el día anterior.
- */
-export function parseDateNoon(dateStr: string): Date {
-    return new Date(dateStr + 'T12:00:00Z');
-}

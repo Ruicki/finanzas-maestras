@@ -38,6 +38,11 @@ model Salary {
   bonus      Decimal  @db.Decimal(10, 2)
   absentDays Int      @default(0)
   createdAt  DateTime @default(now())
+  // Fecha de pago que el usuario elige en el formulario (puede diferir de
+  // createdAt si registra el salario dias despues de haberlo cobrado).
+  // Nullable: registros creados antes de este campo no lo tienen, el resto
+  // del codigo usa paymentDate ?? createdAt como fallback.
+  paymentDate DateTime?
   company    String?
   profileId  Int?
   accountId  Int?
@@ -59,6 +64,11 @@ model Profile {
   password         String?
   accessCode       String?            @unique
   onboardingSeenAt DateTime?
+  // Columna preexistente en la DB de produccion, sin uso en el codigo actual.
+  // Se declara aqui (en vez de dejarla fuera del schema) para que `prisma db
+  // push` no la interprete como "columna a borrar" y proponga destruir datos
+  // reales de un perfil al aplicar cambios no relacionados de este schema.
+  colorTheme       String?
   accounts         Account[]
   incomes          AdditionalIncome[]
   categories       Category[]
