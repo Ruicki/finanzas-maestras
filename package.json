@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@animateicons/react": "^0.4.3",
-    "@prisma/client": "^5.10.0",
+    "@prisma/client": "^7.10.0",
     "@radix-ui/react-tabs": "^1.1.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
