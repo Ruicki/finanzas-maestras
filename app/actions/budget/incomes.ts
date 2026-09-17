@@ -102,7 +102,7 @@ export async function updateIncome(id: number, data: Partial<CreateIncomeInput>)
         });
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function deleteIncome(id: number): Promise<void> {
@@ -121,5 +121,5 @@ export async function deleteIncome(id: number): Promise<void> {
         }
     });
 
-    revalidatePath('/budget');
+    revalidatePath('/');
 }

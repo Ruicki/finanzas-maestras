@@ -176,7 +176,7 @@ export default function ExpenseWizard({
         <div className="space-y-6">
             <h2 className="text-2xl font-black text-center mb-2 text-zinc-900 dark:text-white">¿Qué estás pagando?</h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto p-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60dvh] overflow-y-auto p-1">
                 {categories.filter(cat => cat.type !== 'SAVING').map(cat => (
                     <button
                         key={cat.id}
@@ -425,7 +425,7 @@ export default function ExpenseWizard({
             <div className="pt-2 flex justify-end">
                 <button
                     onClick={handleSave}
-                    className="w-full md:w-auto md:max-w-[240px] bg-zinc-900 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
+                    className="w-full md:w-auto md:max-w-[240px] bg-indigo-600 dark:bg-white text-white dark:text-black py-4 rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2"
                 >
                     <SaveIcon className="w-5 h-5" />
                     {!isEditing && isProjected ? 'Guardar Proyección' : 'Guardar'}
@@ -436,7 +436,7 @@ export default function ExpenseWizard({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 hover:text-red-500 transition-colors z-10"

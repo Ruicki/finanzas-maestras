@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate-deploy.mjs && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "release": "prisma migrate deploy && next start"
+    "seed:nuevo": "node --env-file=.env --experimental-strip-types prisma/seed.ts"
   },
   "dependencies": {
     "@animateicons/react": "^0.4.3",

@@ -1,9 +1,11 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { generarCodigo, codigoVigente, normalizarCodigo } from '@/lib/access-code';
+import { datosInicialesDelPerfil } from '@/lib/perfil-nuevo';
+import { reportError } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signSession, verifySession, requireAuth, requireOwnership } from '@/lib/auth-utils';
@@ -60,7 +62,7 @@ export async function login(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error('Login error:', error);
+        reportError(error, { accion: 'iniciar sesion' });
         return { error: 'Error interno del servidor' };
     }
 }
@@ -95,14 +97,10 @@ export async function register(formData: FormData) {
                 name,
                 email,
                 password: hashedPassword,
-                accounts: {
-                    create: {
-                        name: 'Efectivo',
-                        balance: 0,
-                        type: 'CASH',
-                        isDefault: true
-                    }
-                }
+                // Cuenta de Efectivo y categorias en el mismo create: anidado es
+                // una sola escritura atomica, asi que no existe el perfil a
+                // medio montar que antes reparaba el render de la pagina.
+                ...datosInicialesDelPerfil,
             }
         });
 
@@ -123,7 +121,7 @@ export async function register(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error("Register Error:", error);
+        reportError(error, { accion: 'registrar cuenta' });
         return { error: 'Error al registrar usuario' };
     }
 }
@@ -165,29 +163,39 @@ export async function updateProfile(profileId: number, formData: FormData) {
 
         return { success: true };
     } catch (error) {
-        console.error("Update Profile Error:", error);
+        reportError(error, { accion: 'actualizar perfil', profileId });
         return { error: 'Error actualizando perfil' };
     }
 }
 
+/**
+ * Emite un codigo de un solo uso para un perfil.
+ *
+ * Sirve para estrenar un perfil creado por un administrador y, desde ahora,
+ * para recuperar el acceso de quien olvido su contraseña: antes esto solo se
+ * ofrecia a perfiles sin correo, asi que el unico camino para el resto era que
+ * un administrador le pusiera una contraseña nueva y se la dijera —y esa
+ * contraseña la sigue sabiendo el administrador—. Con el codigo, la elige la
+ * persona.
+ *
+ * Emitir uno nuevo invalida el anterior: solo hay un `accessCode` por perfil.
+ */
 export async function generateAccessCode(profileId: number) {
     try {
         const { role } = await requireAuth();
         if (role !== 'ADMIN') return { error: 'Acceso denegado: solo administradores' };
 
-        // 8 bytes (64 bits) para que el código no sea adivinable por fuerza bruta
-        const bytes = crypto.randomBytes(8);
-        const code = bytes.toString('base64url').toUpperCase();
+        const { codigo, expira } = generarCodigo();
 
         await prisma.profile.update({
             where: { id: profileId },
-            data: { accessCode: code }
+            data: { accessCode: codigo }
         });
 
-        revalidatePath('/budget');
-        return { success: true, code };
+        revalidatePath('/');
+        return { success: true, code: codigo, expiresAt: expira.toISOString() };
     } catch (error) {
-        console.error("Generate Access Code Error:", error);
+        reportError(error, { accion: 'generar codigo de acceso', targetId: profileId });
         return { error: 'Error generando código' };
     }
 }
@@ -206,7 +214,7 @@ export async function claimProfile(formData: FormData) {
         return { error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimit.retryAfterMs / 60000)} minutos` };
     }
 
-    const code = rawCode.trim().toUpperCase();
+    const code = normalizarCodigo(rawCode);
 
     try {
         // verificar código
@@ -214,8 +222,10 @@ export async function claimProfile(formData: FormData) {
             where: { accessCode: code }
         });
 
-        if (!profile) {
-            return { error: 'Código inválido o expirado' };
+        // El mismo mensaje para "no existe" y "caducado": distinguirlos le diria
+        // a quien prueba codigos cuales llegaron a ser validos alguna vez.
+        if (!profile || !codigoVigente(code)) {
+            return { error: 'Código inválido o expirado. Pide uno nuevo al administrador.' };
         }
 
         // verificar unicidad del correo (a menos que sea el mismo perfil)
@@ -252,7 +262,7 @@ export async function claimProfile(formData: FormData) {
         return { success: true };
 
     } catch (error) {
-        console.error("Claim Profile Error:", error);
+        reportError(error, { accion: 'canjear codigo de acceso' });
         return { error: 'Error reclamando perfil' };
     }
 }
@@ -272,7 +282,7 @@ export async function resetPassword(profileId: number, newPassword: string) {
         });
         return { success: true };
     } catch (error) {
-        console.error("Reset Password Error:", error);
+        reportError(error, { accion: 'restablecer contrasena' });
         return { error: 'Error al restablecer la contraseña' };
     }
 }
@@ -307,8 +317,4 @@ export async function stopImpersonation() {
     cookieStore.delete(IMPERSONATE_COOKIE);
     revalidatePath('/');
     return { success: true };
-}
-
-export async function impersonate(targetProfileId: number) {
-    return startImpersonation(targetProfileId);
 }

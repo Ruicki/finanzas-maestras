@@ -18,6 +18,8 @@ interface AccountsTabProps {
     accounts: Account[];
     profileId: number;
     onUpdate: () => void;
+    /** La bienvenida pide abrir el alta de cuenta nada mas entrar aqui. */
+    autoOpenWizard?: boolean;
 }
 
 // ── Menú contextual de 3 puntos ────────────────────────────────────────────
@@ -54,7 +56,7 @@ function AccountMenu({
             </button>
 
             {open && (
-                <div className="absolute right-0 top-10 z-50 w-44 bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-10 z-50 w-44 bg-surface dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                     <button
                         onClick={() => { setOpen(false); onView(); }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
@@ -88,8 +90,13 @@ function AccountMenu({
 }
 
 // ── Componente principal ───────────────────────────────────────────────────
-export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsTabProps) {
-    const [isCreating, setIsCreating] = useState(false);
+export default function AccountsTab({ accounts, profileId, onUpdate, autoOpenWizard = false }: AccountsTabProps) {
+    // La bienvenida manda aqui con la intencion de crear una cuenta, asi que el
+    // asistente arranca abierto: al recien llegado no se le deja ante una pestaña
+    // vacia buscando el boton. Va en el estado inicial y no en un efecto porque
+    // la pestaña se monta de cero al navegar, y un setState dentro de un efecto
+    // dispararia un render en cascada.
+    const [isCreating, setIsCreating] = useState(autoOpenWizard);
     const [isTransferring, setIsTransferring] = useState(false);
     // modal unificado: null = cerrado, 'movements' | 'settings' = pestaña inicial
     const [modalAccount, setModalAccount] = useState<Account | null>(null);
@@ -148,19 +155,19 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                 relative group overflow-hidden rounded-[2.5rem] p-8 shadow-lg
                 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1
                 ${acc.type === 'BANK'
-                    ? 'bg-gradient-to-br from-[#d1ecf1] to-[#a8d4ec] dark:from-[#1591DC] dark:to-[#2C5EAD] text-[#2C5EAD] dark:text-white'
+                    ? 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-600 dark:to-blue-800 text-blue-800 dark:text-white'
                     : ''}
                 ${acc.type === 'CASH'
-                    ? 'bg-gradient-to-br from-[#d4edda] to-[#b0d9ba] dark:from-[#519A66] dark:to-[#237227] text-[#237227] dark:text-white'
+                    ? 'bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-600 dark:to-teal-800 text-teal-800 dark:text-white'
                     : ''}
                 ${acc.type === 'WALLET'
-                    ? 'bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8] dark:from-[#0B0909] dark:to-[#1a1a1a] text-[#0B0909] dark:text-[#FFBF00]'
+                    ? 'bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-600 dark:to-pink-800 text-pink-800 dark:text-white'
                     : ''}
                 ${acc.type === 'SAVINGS'
-                    ? 'bg-gradient-to-br from-[#ffe4f1] to-[#ffd6ea] dark:from-[#FF62BB] dark:to-[#FF97D0] text-[#d44d94] dark:text-white'
+                    ? 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-600 dark:to-purple-800 text-purple-800 dark:text-white'
                     : ''}
                 ${!['BANK','CASH','WALLET','SAVINGS'].includes(acc.type)
-                    ? 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
+                    ? 'bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white' : ''}
             `}
         >
             {/* Decoración de fondo */}
@@ -207,7 +214,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             {/* ── Encabezado ── */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold dark:text-white">Cuentas y Efectivo</h2>
+                    <h2 className="font-title text-2xl font-semibold dark:text-white">Cuentas y Efectivo</h2>
                     <p className="text-zinc-500 dark:text-zinc-400">
                         Total disponible:
                         <span className="ml-2 font-bold text-emerald-600 dark:text-emerald-400 text-xl">
@@ -225,7 +232,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </button>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all"
+                        className="flex items-center gap-2 bg-indigo-600 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all"
                     >
                         <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva Cuenta</span>
@@ -293,7 +300,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
             {/* Estado vacío */}
             {accounts.length === 0 && !isCreating && (
                 <div className="col-span-full py-24 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[3rem] bg-zinc-50/50 dark:bg-zinc-900/50">
-                    <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <div className="w-20 h-20 bg-surface dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                         <Landmark className="w-10 h-10 text-zinc-300 lucide-animated" />
                     </div>
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Sin cuentas activas</h3>
@@ -302,7 +309,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate }: AccountsT
                     </p>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
+                        className="px-8 py-3 bg-indigo-600 dark:bg-white text-white dark:text-black rounded-xl font-bold hover:scale-105 transition-transform"
                     >
                         Crear Cuenta
                     </button>

@@ -82,7 +82,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[85vh]">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[85dvh]">
 
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ export default function TransferModal({ accounts, onClose, onSuccess }: Transfer
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider ml-1">Desde (Origen)</label>

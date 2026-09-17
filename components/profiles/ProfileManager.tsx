@@ -108,7 +108,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
 
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col">
 
                 {/* ENCABEZADO */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50 shrink-0 backdrop-blur-sm">
@@ -280,15 +280,31 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                             </button>
                                         )}
 
-                                        {/* Generar Código (Solo otros sin email) */}
-                                        {Number(profile.id) !== currentIdNum && !profile.email && (
+                                        {/* Generar Código. Tambien para perfiles CON correo: es
+                                            la via de recuperacion cuando alguien olvida su
+                                            contraseña, y deja que la elija esa persona en vez
+                                            de que la sepa el administrador. */}
+                                        {Number(profile.id) !== currentIdNum && (
                                             <button
                                                 onClick={async () => {
                                                     const res = await generateAccessCode(profile.id);
-                                                    if ('code' in res) {
-                                                        window.prompt("Copia este código:", res.code);
+                                                    if ('code' in res && res.code) {
+                                                        const vence = res.expiresAt
+                                                            ? new Date(res.expiresAt).toLocaleString('es-PA', {
+                                                                  day: '2-digit', month: '2-digit',
+                                                                  hour: '2-digit', minute: '2-digit',
+                                                              })
+                                                            : null;
+                                                        window.prompt(
+                                                            profile.email
+                                                                ? `Código para que ${profile.name} recupere su acceso en /claim.` +
+                                                                  (vence ? ` Vence el ${vence}.` : '')
+                                                                : `Código para estrenar el perfil de ${profile.name} en /claim.` +
+                                                                  (vence ? ` Vence el ${vence}.` : ''),
+                                                            res.code,
+                                                        );
                                                     } else {
-                                                        toast.error(res.error);
+                                                        toast.error('error' in res ? res.error : 'Error generando código');
                                                     }
                                                 }}
                                                 className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-500 px-3 py-2 rounded-xl font-bold text-xs transition-transform hover:scale-105 active:scale-95 border border-amber-100 dark:border-amber-500/20"

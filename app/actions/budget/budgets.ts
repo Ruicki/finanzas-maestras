@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { toNum } from './serializers';
 import { requireOwnership } from '@/lib/auth-utils';
 
 // ─── PRESUPUESTO POR MES (CATEGORY BUDGET) ────────────────────────────────
@@ -54,27 +53,6 @@ export async function setCategoryBudget(data: CategoryBudgetInput) {
         });
     }
 
-    revalidatePath('/budget');
+    revalidatePath('/');
     return { success: true };
-}
-
-export async function getCategoryBudget(categoryId: number, year: number, month: number) {
-    const category = await prisma.category.findUnique({ where: { id: categoryId } });
-    if (!category) throw new Error('Categoría no encontrada');
-    await requireOwnership(category.profileId);
-
-    const b = await prisma.categoryBudget.findUnique({
-        where: {
-            categoryId_year_month: { categoryId, year, month },
-        },
-    });
-    return b ? { ...b, limit: toNum(b.limit) } : null;
-}
-
-export async function getProfileBudgets(profileId: number) {
-    await requireOwnership(profileId);
-    const budgets = await prisma.categoryBudget.findMany({
-        where: { category: { profileId } },
-    });
-    return budgets.map((b) => ({ ...b, limit: toNum(b.limit) }));
 }

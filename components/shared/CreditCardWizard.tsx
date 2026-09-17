@@ -124,7 +124,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     if (step === 1) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+                <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col">
                     {/* Header */}
                     <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                         <h2 className="font-bold text-lg text-zinc-900 dark:text-white">{editingCard ? 'Editar Tarjeta de Crédito' : 'Nueva Tarjeta de Crédito'}</h2>
@@ -168,7 +168,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                         <button
                             onClick={() => setStep(2)}
                             disabled={!bank}
-                            className="w-full py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                         >
                             Siguiente
                             <ChevronRightIcon className="w-4 h-4" />
@@ -182,7 +182,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     // Step 2: Details
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[85dvh] flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
@@ -365,7 +365,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                     <button
                         onClick={handleCreate}
                         disabled={!limit || loading}
-                        className="w-full py-4 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
