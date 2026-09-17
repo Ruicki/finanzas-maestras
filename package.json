@@ -16,7 +16,7 @@
     "@animateicons/react": "^0.4.3",
     "@prisma/client": "^5.10.0",
     "@radix-ui/react-tabs": "^1.1.13",
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "@types/canvas-confetti": "^1.9.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.4",
