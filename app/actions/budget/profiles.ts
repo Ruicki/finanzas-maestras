@@ -1,10 +1,13 @@
 'use server'
 
 import { prisma } from '@/lib/prisma';
+import { reportError } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { logAction } from '../audit';
 import { toNum, toNumOrNull, serializeCreditCard } from './serializers';
 import { requireAuth, requireOwnership } from '@/lib/auth-utils';
+import { COLOR_THEME_IDS, type ColorThemeId } from '@/lib/color-themes';
+import { datosInicialesDelPerfil } from '@/lib/perfil-nuevo';
 
 // ─── PROFILES ──────────────────────────────────────────────────────────────
 
@@ -160,9 +163,35 @@ export async function createProfile(name: string) {
     const { role } = await requireAuth();
     if (role !== 'ADMIN') throw new Error('Acceso denegado: solo administradores');
 
-    const profile = await prisma.profile.create({ data: { name } });
+    // Mismo estado inicial que un registro normal: antes un perfil creado por
+    // un administrador llegaba vacio y solo se completaba cuando su dueño
+    // cargaba el dashboard.
+    const profile = await prisma.profile.create({
+        data: { name, ...datosInicialesDelPerfil },
+    });
     await logAction('CREATE_PROFILE', `Nombre: ${name}`, profile.id);
-    revalidatePath('/budget');
+    revalidatePath('/');
+}
+
+/**
+ * Guarda el tema de color elegido en el perfil, para que viaje entre
+ * dispositivos en vez de quedarse en el localStorage de un solo navegador.
+ *
+ * El identificador llega del cliente, asi que se contrasta contra la lista real
+ * de temas antes de escribir: nunca entra a la base de datos sin validar.
+ */
+export async function updateColorTheme(profileId: number, theme: string): Promise<void> {
+    await requireOwnership(profileId);
+
+    if (!(COLOR_THEME_IDS as string[]).includes(theme)) {
+        throw new Error(`Tema de color desconocido: ${theme}`);
+    }
+
+    await prisma.profile.update({
+        where: { id: profileId },
+        data: { colorTheme: theme as ColorThemeId },
+    });
+    revalidatePath('/');
 }
 
 export async function deleteProfile(id: number) {
@@ -204,7 +233,7 @@ export async function deleteProfile(id: number) {
         await tx.profile.delete({ where: { id } });
     });
     await logAction('DELETE_PROFILE', `Perfil ID: ${id} eliminado`, id);
-    revalidatePath('/budget');
+    revalidatePath('/');
 }
 
 export async function resetProfileData(id: number) {
@@ -234,10 +263,22 @@ export async function resetProfileData(id: number) {
             await tx.creditCard.deleteMany({ where: { profileId: id } });
             await tx.account.deleteMany({ where: { profileId: id } });
             await tx.category.deleteMany({ where: { profileId: id } });
+
+            // El perfil vuelve a estar vacio, asi que vuelve a ser un primer uso:
+            // sin esto la bienvenida no reaparece y el usuario se queda con el
+            // dashboard en cero y sin ninguna guia.
+            //
+            // Y se vuelve a sembrar aqui mismo, en la misma transaccion, en vez
+            // de dejar el perfil sin cuenta ni categorias esperando a que algo
+            // lo repare: sin categorias no se puede registrar ni un gasto.
+            await tx.profile.update({
+                where: { id },
+                data: { onboardingSeenAt: null, ...datosInicialesDelPerfil },
+            });
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (error) {
-        console.error('Error resetting profile data:', error);
+        reportError(error, { accion: 'resetear datos del perfil', profileId: id });
         throw new Error('Error al resetear los datos del perfil');
     }
 }

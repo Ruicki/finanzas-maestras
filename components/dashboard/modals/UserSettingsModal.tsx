@@ -8,9 +8,12 @@ import { ProfileWithData } from '@/types';
 import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from '@animateicons/react/lucide';
-import { resetProfileData } from '@/app/actions/budget';
+import { resetProfileData, updateColorTheme } from '@/app/actions/budget';
+import { resetOnboarding } from '@/app/actions/onboarding';
 import { updateProfile } from '@/app/actions/auth';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import { useColorTheme } from '@/components/color-theme-provider';
+import { COLOR_THEMES, type ColorThemeId } from '@/lib/color-themes';
 
 interface UserSettingsModalProps {
     isOpen: boolean;
@@ -21,10 +24,55 @@ interface UserSettingsModalProps {
 
 export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }: UserSettingsModalProps) {
     useScrollLock(isOpen);
+    const { colorTheme, setColorTheme } = useColorTheme();
     const [showPassword, setShowPassword] = useState(false);
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
     const [strength, setStrength] = useState(0);
     const [saving, setSaving] = useState(false);
+    const [reabriendoIntro, setReabriendoIntro] = useState(false);
+
+    /**
+     * El provider del tema vive en el layout raiz y no conoce la sesion —eso es
+     * lo que le permite servir tambien a /login y /register—, asi que quien
+     * persiste es este modal, que si tiene profile.id.
+     *
+     * El cambio visual se aplica primero y la escritura va detras: si la red
+     * falla, el usuario ya ve su tema y solo se pierde que viaje a otro
+     * dispositivo, que es lo menos grave de los dos.
+     */
+    async function elegirTema(theme: ColorThemeId) {
+        setColorTheme(theme);
+        try {
+            await updateColorTheme(profile.id, theme);
+        } catch (error) {
+            // Se conserva el detalle real —la sesion caducada, un tema invalido—
+            // pero siempre con el contexto de que el cambio SI se aplico aqui:
+            // "No autenticado" a secas, al pulsar un color, no le dice nada al
+            // usuario sobre lo que acaba de pasar.
+            const detalle = error instanceof Error ? error.message : null;
+            toast.error(
+                detalle
+                    ? `El tema se aplicó en este dispositivo, pero no se pudo guardar en tu cuenta: ${detalle}`
+                    : 'El tema se aplicó en este dispositivo, pero no se pudo guardar en tu cuenta',
+            );
+        }
+    }
+
+    async function verIntroOtraVez() {
+        if (reabriendoIntro) return;
+        setReabriendoIntro(true);
+        try {
+            await resetOnboarding(profile.id);
+            onClose();
+            // El dashboard decide si mostrar la introduccion a partir del perfil
+            // que le llega del servidor, asi que hay que recargar para que la vea
+            // con onboardingSeenAt ya en null.
+            window.location.reload();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo reabrir la introducción');
+            setReabriendoIntro(false);
+        }
+    }
 
     const checkStrength = (pass: string) => {
         let s = 0;
@@ -123,6 +171,45 @@ export default function UserSettingsModal({ isOpen, onClose, profile, onUpdate }
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-zinc-500">Nombre</label>
                         <Input defaultValue={profile.name} disabled className="bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700" />
+                    </div>
+
+                    <div className="space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                        <label className="text-sm font-bold">Tema de color</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {COLOR_THEMES.map((theme) => (
+                                <button
+                                    key={theme.id}
+                                    type="button"
+                                    onClick={() => elegirTema(theme.id)}
+                                    title={`${theme.label} · títulos en ${theme.fontLabel}`}
+                                    className={`group flex flex-col items-center gap-1.5 rounded-xl p-1.5 border-2 transition-all ${colorTheme === theme.id ? 'border-indigo-500' : 'border-transparent hover:border-zinc-200 dark:hover:border-zinc-700'}`}
+                                >
+                                    <div className="w-full h-10 rounded-lg overflow-hidden flex flex-col shadow-inner">
+                                        {[theme.accent, theme.secondary, theme.surface, theme.background].map((hex, i) => (
+                                            <div key={i} className="flex-1" style={{ backgroundColor: hex }} />
+                                        ))}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 truncate w-full text-center">
+                                        {theme.label}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                        <button
+                            onClick={verIntroOtraVez}
+                            disabled={reabriendoIntro}
+                            className="w-full text-left px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                        >
+                            <span className="block text-sm font-bold text-zinc-800 dark:text-zinc-100">
+                                {reabriendoIntro ? 'Abriendo…' : 'Ver la introducción otra vez'}
+                            </span>
+                            <span className="block text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                Repasa los pasos de bienvenida. No borra ninguno de tus datos.
+                            </span>
+                        </button>
                     </div>
 
                     <div className="space-y-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">

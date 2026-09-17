@@ -73,7 +73,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[95vh] sm:max-h-[85vh] flex flex-col">
+            <div className="bg-white dark:bg-zinc-900 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[95dvh] sm:max-h-[85dvh] flex flex-col">
 
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center shrink-0">
@@ -184,7 +184,7 @@ export default function PaymentModal({ card, accounts, onConfirm, onClose }: Pay
                     <button
                         onClick={handleConfirm}
                         disabled={!isValid || loading}
-                        className="flex-1 py-3 rounded-xl font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                        className="flex-1 py-3 rounded-xl font-bold bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />

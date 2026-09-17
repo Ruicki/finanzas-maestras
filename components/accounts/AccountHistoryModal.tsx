@@ -159,7 +159,7 @@ export default function AccountHistoryModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85dvh]">
 
                 {/* ── Cabecera con gradiente ── */}
                 <div className={`bg-gradient-to-br ${bg} p-6 text-white relative overflow-hidden shrink-0`}>

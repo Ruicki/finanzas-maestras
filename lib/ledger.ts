@@ -25,17 +25,25 @@ export async function decrementAccountBalance(
     }
 }
 
+/**
+ * Mismo UPDATE condicionado para el saldo de una tarjeta. Ademas de cerrar la
+ * carrera, impide dejar el saldo en negativo: un saldo de tarjeta negativo no
+ * representa nada real y descuadra el patrimonio neto, que lo resta como deuda.
+ * `message` permite explicar el caso concreto, porque no es lo mismo un pago
+ * que excede el saldo que borrar un gasto que ya se pago.
+ */
 export async function decrementCreditCardBalance(
     tx: TxClient,
     cardId: number,
     amount: number,
+    message = 'El pago excede el saldo actual de la tarjeta',
 ): Promise<void> {
     const { count } = await tx.creditCard.updateMany({
         where: { id: cardId, balance: { gte: amount } },
         data: { balance: { decrement: amount } },
     });
     if (count === 0) {
-        throw new Error('El pago excede el saldo actual de la tarjeta');
+        throw new Error(message);
     }
 }
 

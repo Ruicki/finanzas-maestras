@@ -11,6 +11,7 @@ type Category = ProfileWithData['categories'][number];
 
 import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
+import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
@@ -33,16 +34,23 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
     const [searchQuery, setSearchQuery] = useState('');
     const [expenseToEdit, setExpenseToEdit] = useState<ExpenseWithCategory | null>(null);
     const [sortBy, setSortBy] = useState<'date' | 'amount' | 'name'>('date');
+    // Guarda el id, no el nombre: filtrar por texto dejaba fuera los gastos de
+    // una categoría renombrada, que es justo lo que se está corrigiendo.
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
     // Evita doble clic disparando dos veces confirmar/eliminar sobre el mismo gasto.
     const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
     // Filtrar deudas, categoría y aplicar búsqueda
+    const categoriaFiltrada = filterCategory === 'ALL'
+        ? null
+        : categories.find(c => String(c.id) === filterCategory) ?? null;
+
     const expensesList = expenses.filter(e => {
-        const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            e.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const busqueda = searchQuery.toLowerCase();
+        const matchesSearch = e.name.toLowerCase().includes(busqueda) ||
+            nombreCategoria(e).toLowerCase().includes(busqueda) ||
             (e.amount.toString().includes(searchQuery));
-        const matchesCategory = filterCategory === 'ALL' || e.category === filterCategory;
+        const matchesCategory = !categoriaFiltrada || esDeCategoria(e, categoriaFiltrada);
         return matchesSearch && matchesCategory;
     });
 
@@ -93,7 +101,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             {/* --- ENCABEZADO Y ACCIONES --- */}
             <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-end">
                 <div>
-                    <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Mis Gastos</h2>
+                    <h2 className="font-title text-3xl md:text-4xl font-semibold text-zinc-900 dark:text-white tracking-tight mb-2">Mis Gastos</h2>
                     <p className="text-zinc-500 dark:text-zinc-400 font-medium max-w-md">
                         Controla cada centavo. Gestiona tus salidas, suscripciones y límites de presupuesto.
                     </p>
@@ -102,7 +110,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <button
                         onClick={() => setShowCategoryManager(true)}
-                        className="h-12 px-6 rounded-2xl font-bold bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
+                        className="h-12 px-6 rounded-2xl font-bold bg-surface dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
                     >
                         Categorías
                     </button>
@@ -122,26 +130,26 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             {/* --- TARJETA DE RESUMEN --- */}
             {/* ... (Keep existing summary cards) ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="col-span-1 md:col-span-2 relative overflow-hidden rounded-4xl bg-white dark:bg-zinc-950 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 p-10 shadow-2xl group">
-                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-48 w-48 rounded-full bg-[#1591DC]/10 dark:bg-indigo-500/30 blur-3xl group-hover:bg-[#1591DC]/15 dark:group-hover:bg-indigo-500/40 transition-all duration-1000" />
-                    <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-48 w-48 rounded-full bg-[#FF62BB]/10 dark:bg-pink-500/20 blur-3xl group-hover:bg-[#FF62BB]/15 dark:group-hover:bg-pink-500/30 transition-all duration-1000" />
+                <div className="col-span-1 md:col-span-2 relative overflow-hidden rounded-4xl bg-surface dark:bg-zinc-950 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 p-10 shadow-2xl group">
+                    <div className="absolute top-0 right-0 -mr-8 -mt-8 h-48 w-48 rounded-full bg-blue-500/10 dark:bg-indigo-500/30 blur-3xl group-hover:bg-blue-500/15 dark:group-hover:bg-indigo-500/40 transition-all duration-1000" />
+                    <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-48 w-48 rounded-full bg-pink-500/10 dark:bg-pink-500/20 blur-3xl group-hover:bg-pink-500/15 dark:group-hover:bg-pink-500/30 transition-all duration-1000" />
 
                     <div className="relative z-10 flex flex-col justify-between h-full gap-6">
                         <div className="flex items-center gap-3">
                             <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/10 backdrop-blur-md border border-zinc-200 dark:border-white/10">
-                                <DollarSignIcon className="w-6 h-6 text-[#1591DC] dark:text-white" />
+                                <DollarSignIcon className="w-6 h-6 text-blue-500 dark:text-white" />
                             </div>
                             <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Total este mes</span>
                         </div>
                         <div>
-                            <h3 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900 dark:text-white drop-shadow-none dark:drop-shadow-lg dark:shadow-black">
+                            <h3 className="font-accent text-6xl md:text-8xl tracking-tight text-zinc-900 dark:text-white drop-shadow-none dark:drop-shadow-lg dark:shadow-black">
                                 ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h3>
                         </div>
                     </div>
                 </div>
 
-                <div className="col-span-1 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden shadow-sm">
+                <div className="col-span-1 rounded-[2.5rem] bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-center items-center text-center relative overflow-hidden shadow-sm">
                     <div className="bg-zinc-100 dark:bg-zinc-800 rounded-full h-32 w-32 flex items-center justify-center mb-4">
                         <span className="text-4xl">📊</span>
                     </div>
@@ -180,33 +188,39 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                     />
                 </div>
 
+                {/* En movil los dos selectores comparten una fila en vez de
+                    apilarse: apilados dejaban medio ancho de pantalla vacio a su
+                    derecha. md:contents deja el envoltorio transparente para que
+                    en escritorio el flex de arriba siga colocandolos igual. */}
+                <div className="flex gap-2 md:contents">
                 {/* Filtro categoría */}
-                <div className="relative">
+                <div className="relative flex-1 md:flex-none">
                     <FilterIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                        className="w-full h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
                     >
                         <option value="ALL">Todas</option>
                         {categories.map(cat => (
-                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                            <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                         ))}
                     </select>
                 </div>
 
                 {/* Ordenamiento */}
-                <div className="relative">
+                <div className="relative flex-1 md:flex-none">
                     <ArrowUpDownIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as 'date' | 'amount' | 'name')}
-                        className="h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                        className="w-full h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
                     >
                         <option value="date">Más reciente</option>
                         <option value="amount">Mayor monto</option>
                         <option value="name">Nombre</option>
                     </select>
+                </div>
                 </div>
             </div>
 
@@ -240,7 +254,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                 </p>
                                 <button
                                     onClick={() => { setExpenseToEdit(null); setShowWizard(true); }}
-                                    className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm"
+                                    className="px-6 py-3 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-sm"
                                 >
                                     Registrar Primer Gasto
                                 </button>
@@ -265,11 +279,11 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
 
                                 <div className="grid gap-3">
                                     {items.map((exp) => (
-                                        <div key={exp.id} className={`group relative bg-white dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
+                                        <div key={exp.id} className={`group relative bg-surface dark:bg-zinc-900 border rounded-3xl p-4 md:p-5 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5 transition-all hover:shadow-xl hover:-translate-y-0.5 ${exp.isProjected ? 'border-dashed border-amber-300 dark:border-amber-500/30 hover:border-amber-400 hover:shadow-amber-500/5' : 'border-zinc-100 dark:border-zinc-800 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:shadow-indigo-500/5'}`}>
 
                                             {/* Caja de Icono */}
-                                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(exp.category)} ${getCategoryColor(exp.category).includes('text-') ? getCategoryColor(exp.category).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
-                                                <CategoryIcon iconName={exp.categoryRel?.icon || categories.find(c => c.name === exp.category)?.icon || 'HelpCircle'} size={20} />
+                                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${getCategoryColor(nombreCategoria(exp))} ${getCategoryColor(nombreCategoria(exp)).includes('text-') ? getCategoryColor(nombreCategoria(exp)).replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100'} wrap-break-word`}>
+                                                <CategoryIcon iconName={exp.categoryRel?.icon || categories.find(c => c.name === nombreCategoria(exp))?.icon || 'HelpCircle'} size={20} />
                                             </div>
 
                                             <div className="flex-1 min-w-0 text-sm md:text-base">
@@ -277,7 +291,7 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="font-bold text-zinc-900 dark:text-white wrap-break-word leading-tight">{exp.name}</h4>
                                                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            <span className="text-[10px] md:text-xs font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate max-w-[100px]">{exp.category}</span>
+                                                            <span className="text-[10px] md:text-xs font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md truncate max-w-[100px]">{nombreCategoria(exp)}</span>
                                                             {exp.isRecurring && <span className="text-[10px] font-black bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider">Suscripción</span>}
                                                             {exp.isProjected && <span className="flex items-center gap-1 text-[10px] font-black bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md uppercase tracking-wider"><ClockIcon size={10} /> Proyectado</span>}
                                                         </div>
@@ -296,8 +310,12 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                                                 </div>
                                             </div>
 
-                                            {/* Acción: Botones (Confirmar/Edit/Delete) */}
-                                            <div className="flex flex-col gap-1 md:flex-row md:items-center">
+                                            {/* Acción: Botones (Confirmar/Edit/Delete)
+                                                En movil ocupan su propia linea alineados a la derecha, en vez
+                                                de apilarse en columna dentro de la fila: apilados estiraban la
+                                                tarjeta a mas del doble de alto y le robaban ancho al nombre y
+                                                al monto, que quedaban partidos en dos lineas cada uno. */}
+                                            <div className="flex flex-row items-center gap-1 w-full justify-end md:w-auto">
                                                 {exp.isProjected && (
                                                     <button
                                                         onClick={() => handleConfirm(exp.id)}

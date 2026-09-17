@@ -12,5 +12,4 @@ export * from './expenses';
 export * from './incomes';
 export * from './goals';
 export * from './credit-cards';
-export * from './budget-categories';
 export * from './budgets';

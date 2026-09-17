@@ -72,28 +72,28 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                         <TrendingDownIcon size={14} className="text-red-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Deuda Total</span>
                     </div>
                     <p className="text-xl font-black text-red-500">${totalDebt.toFixed(2)}</p>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <CreditCardIcon size={14} className="text-[#1591DC]" />
+                        <CreditCardIcon size={14} className="text-blue-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Disponible</span>
                     </div>
-                    <p className="text-xl font-black text-[#1591DC]">${totalAvailable.toFixed(2)}</p>
+                    <p className="text-xl font-black text-blue-500">${totalAvailable.toFixed(2)}</p>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                         <BadgePercentIcon size={14} className="text-amber-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Utilización</span>
                     </div>
                     <p className={`text-xl font-black ${avgUtilization > 75 ? 'text-red-500' : avgUtilization > 30 ? 'text-amber-500' : 'text-emerald-500'}`}>{avgUtilization.toFixed(0)}%</p>
                 </div>
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                         <CreditCardIcon size={14} className="text-zinc-400" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Tarjetas</span>
@@ -129,7 +129,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                     {/* Add button */}
                     <button
                         onClick={() => setShowWizard(true)}
-                        className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="flex items-center gap-2 bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Nueva</span>
@@ -171,7 +171,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         <p className="text-sm mt-2 text-zinc-500">Agrega tus tarjetas para visualizar deudas y fechas de corte.</p>
                         <button
                             onClick={() => setShowWizard(true)}
-                            className="mt-6 px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:scale-105 transition-transform"
+                            className="mt-6 px-6 py-3 bg-indigo-600 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:scale-105 transition-transform"
                         >
                             Crear Primera Tarjeta
                         </button>

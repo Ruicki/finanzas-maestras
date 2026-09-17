@@ -1,6 +1,7 @@
 'use client';
 
 import { formatMoney } from '@/lib/utils';
+import { montoDeAbonoRapido } from '@/lib/debts';
 import { ArrowUpRightIcon, UserIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { ProfileWithData } from '@/types';
@@ -24,8 +25,13 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
     const paidAmount = totalAmount - currentBalance;
     const progress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
 
+    // Antes era un monto fijo de $20: insignificante en un préstamo grande, y
+    // en uno casi pagado podía superar el saldo y hacer fallar el pago. Ver
+    // lib/debts.ts para la regla completa.
+    const abonoSugerido = montoDeAbonoRapido(currentBalance);
+
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+        <div className="bg-surface dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
 
             {/* Top Decoration (Amber for Personal to distinguish from Indigo Bank) */}
             <div className="h-1.5 w-full bg-linear-to-r from-amber-400 via-orange-400 to-amber-400" />
@@ -88,25 +94,29 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 mt-auto">
-                    <button
-                        onClick={() => onQuickPay(loan, 20)}
-                        className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
-                    >
-                        <ArrowUpRightIcon size={16} />
-                        Abonar $20
-                    </button>
+                {/* Actions — flex-wrap: cuatro botones no caben en una sola
+                    fila en pantallas de 320px y el ultimo se salia de la
+                    tarjeta. Los de icono llevan shrink-0 para no deformarse. */}
+                <div className="flex flex-wrap gap-2 md:gap-3 mt-auto">
+                    {abonoSugerido > 0 && (
+                        <button
+                            onClick={() => onQuickPay(loan, abonoSugerido)}
+                            className="flex-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-sm border border-amber-200 dark:border-amber-800/50 flex items-center justify-center gap-2"
+                        >
+                            <ArrowUpRightIcon size={16} />
+                            Abonar {formatMoney(abonoSugerido)}
+                        </button>
+                    )}
                     <button
                         onClick={() => onPay(loan)}
-                        className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
+                        className="flex-1 bg-indigo-600 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md"
                     >
                         Pagar
                     </button>
                     {onEdit && (
                         <button
                             onClick={() => onEdit(loan)}
-                            className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
+                            className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-blue-500 rounded-xl transition-colors"
                             title="Editar"
                         >
                             <PencilIcon size={20} />
@@ -114,7 +124,7 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                     )}
                     <button
                         onClick={() => onDelete(loan.id)}
-                        className="px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
+                        className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
                     >
                         <MessageCircleMoreIcon size={20} />
                     </button>

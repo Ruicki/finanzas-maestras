@@ -32,7 +32,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4 relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
             {/* Decoraciones de Fondo */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -103,8 +103,16 @@ export default function LoginPage() {
                         */}
                     </div>
 
-                    <p className="text-center text-xs text-zinc-400 mt-6">
-                        Si olvidaste tu contraseña, contacta al administrador.
+                    {/* Antes esto decia solo "contacta al administrador", sin explicar
+                        que pasa despues. El camino existe y es concreto: te dan un
+                        codigo y eliges tu contraseña nueva tu, no te la dicen. */}
+                    <p className="text-center text-xs text-zinc-500 mt-6 leading-relaxed">
+                        ¿Olvidaste tu contraseña? Pídele un código de acceso al
+                        administrador y úsalo en{' '}
+                        <a href="/claim" className="font-bold text-zinc-700 dark:text-zinc-300 underline underline-offset-2">
+                            recuperar acceso
+                        </a>
+                        {' '}para elegir una nueva.
                     </p>
                 </form>
 

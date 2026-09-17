@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
+import { reportError } from '@/lib/logger';
 import { revalidatePath } from "next/cache";
 import { SalaryRepository } from "@/lib/repositories/salary.repository";
 import { AccountRepository } from "@/lib/repositories/account.repository";
@@ -201,7 +202,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
 
         logger.info(`Salary created successfully: ID ${newSalary.id}`);
 
-        revalidatePath('/budget');
+        revalidatePath('/');
         return {
             ...newSalary,
             grossVal: Number(newSalary.grossVal),
@@ -223,7 +224,7 @@ export async function createSalary(data: ProcessSalaryRequest) {
             }
         };
     } catch (error) {
-        logger.error(`Error processing salary`, error);
+        reportError(error, { accion: 'procesar salario' });
         throw new Error("Failed to process and store salary calculation");
     }
 }
@@ -246,9 +247,9 @@ export async function deleteSalaryById(id: number): Promise<void> {
                 await SalaryRepository.delete(tx, id);
             }
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (err) {
-        logger.error(`Error deleting salary ${id}`, err);
+        reportError(err, { accion: 'borrar salario', targetId: id });
         throw err;
     }
 }
@@ -352,9 +353,9 @@ export async function updateSalary(id: number, data: ProcessSalaryRequest) {
             // 3. Update Record
             await SalaryRepository.update(tx, id, salaryData);
         });
-        revalidatePath('/budget');
+        revalidatePath('/');
     } catch (err) {
-        logger.error(`Error updating salary ${id}`, err);
+        reportError(err, { accion: 'actualizar salario', targetId: id });
         throw err;
     }
 }

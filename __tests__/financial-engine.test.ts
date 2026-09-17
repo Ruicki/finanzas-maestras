@@ -251,3 +251,51 @@ describe('calculatePayoffImpact', () => {
         expect(result).toBeNull();
     });
 });
+
+/**
+ * Perfil recien creado: todo en cero. Un usuario que entra por primera vez
+ * atraviesa exactamente este estado, asi que ninguna de estas funciones puede
+ * devolver NaN o Infinity — cualquiera de los dos llega hasta la pantalla y se
+ * muestra como cifra.
+ */
+describe('perfil vacio (primer uso)', () => {
+    const esNumeroReal = (v: number) => Number.isFinite(v);
+
+    it('calculateCreditHealth no rompe con utilizacion 0/0', () => {
+        // Sin tarjetas, el uso de credito se calcula sobre un limite de 0.
+        const utilizacionSinLimite = 0 / 0; // NaN, que es lo que llega desde la UI
+        expect(() => calculateCreditHealth(utilizacionSinLimite)).not.toThrow();
+        expect(() => calculateCreditHealth(0)).not.toThrow();
+        expect(calculateCreditHealth(0).status).toBe('Excellent');
+    });
+
+    it('calculateMinimumPayment con saldo 0 devuelve un numero real', () => {
+        const pago = calculateMinimumPayment(0, 0, 0);
+        const valor = typeof pago === 'number' ? pago : Number(Object.values(pago)[0]);
+        expect(esNumeroReal(valor)).toBe(true);
+    });
+
+    it('calculateProjectedInterest con saldo 0 no genera NaN', () => {
+        expect(calculateProjectedInterest(0, 0)).toBe(0);
+        expect(esNumeroReal(calculateProjectedInterest(0, 0.02))).toBe(true);
+    });
+
+    it('calculateMonthlyCharges con todo en cero devuelve numeros reales', () => {
+        const cargos = calculateMonthlyCharges(0, 0);
+        for (const [campo, valor] of Object.entries(cargos)) {
+            expect({ campo, esReal: esNumeroReal(valor as number) })
+                .toEqual({ campo, esReal: true });
+        }
+    });
+
+    it('calculateLoanPayoffDate sin pago mensual no devuelve una fecha inventada', () => {
+        // Un pago de 0 nunca amortiza: debe rendirse con null en vez de
+        // calcular una fecha infinita.
+        expect(calculateLoanPayoffDate(1000, 10, 0)).toBeNull();
+    });
+
+    it('roundToCents mantiene el cero como cero', () => {
+        expect(roundToCents(0)).toBe(0);
+        expect(Object.is(roundToCents(0), -0)).toBe(false);
+    });
+});

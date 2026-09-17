@@ -135,10 +135,12 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                 {/* A. Gráfico de Flujo (Grande) */}
                 <div className="lg:col-span-2 relative h-80 w-full bg-linear-to-b from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 rounded-[2.5rem] overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800 group">
                     <div className="absolute top-6 left-8 z-10">
-                        <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
+                        {/* div y no p: los iconos de @animateicons envuelven el svg en un
+                            div, y un div dentro de un p es HTML inválido — rompía la hidratación. */}
+                        <div className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
                             <TrendingUpIcon size={14} className="text-zinc-400 dark:text-zinc-600" />
                             Evolución de Gasto Mensual
-                        </p>
+                        </div>
                         <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
                             {currency}{totalExpense.toLocaleString()}
                             <span className="text-sm font-medium text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded-lg">Acumulado</span>
@@ -161,7 +163,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl shadow-xl">
+                                                <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl shadow-xl">
                                                     <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-1 font-bold uppercase">Día {data.day}</p>
                                                     <p className="text-indigo-500 dark:text-indigo-400 text-xl font-black">{currency}{data.cumulative.toLocaleString()}</p>
                                                     <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-1">Gasto del día: +{currency}{data.expense.toLocaleString()}</p>
@@ -186,7 +188,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                 </div>
 
                 {/* B. Tarjeta de Resumen Mensual (Pequeña) */}
-                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-5">
                         <WalletIcon className="w-32 h-32" />
                     </div>
@@ -218,7 +220,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
 
 
             {/* --- 2. TABLA DE PRESUPUESTO AVANZADA --- */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-none overflow-hidden hover:shadow-2xl transition-shadow duration-500">
+            <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-none overflow-hidden hover:shadow-2xl transition-shadow duration-500">
                 <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-50/50 dark:bg-zinc-900/50">
                     <div>
                         <h3 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
@@ -311,7 +313,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {topCategories.map((cat, idx) => (
                     <div key={cat.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl flex items-center gap-4">
-                        <div className={`text-3xl p-3 rounded-2xl shadow-sm ${cat.color || 'text-zinc-500'} ${cat.color?.includes('text-') ? cat.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-white dark:bg-zinc-800'}`}>
+                        <div className={`text-3xl p-3 rounded-2xl shadow-sm ${cat.color || 'text-zinc-500'} ${cat.color?.includes('text-') ? cat.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-surface dark:bg-zinc-800'}`}>
                             <CategoryIcon iconName={cat.icon} size={32} />
                         </div>
                         <div>

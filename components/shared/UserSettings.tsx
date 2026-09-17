@@ -40,7 +40,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col">
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                     <h3 className="font-black text-xl text-zinc-900 dark:text-white flex items-center gap-2">
                         <span className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl">⚙️</span>
@@ -119,7 +119,7 @@ export default function UserSettings({ profile, onClose, onUpdate }: UserSetting
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black dark:bg-white text-white dark:text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
+                        className="w-full bg-indigo-600 dark:bg-white text-white dark:text-black font-black py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
                     >
                         {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <><SaveIcon size={18} /> Guardar Cambios</>}
                     </button>

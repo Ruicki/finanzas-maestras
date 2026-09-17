@@ -45,7 +45,7 @@ export default function SubscriptionCalendar({ subscriptions }: SubscriptionCale
     const maxDailyTotal = Math.max(...Object.values(totalPerDay), 1);
 
     return (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
+        <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
                 <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Calendario de Cobros</p>
                 <p className="text-[10px] text-zinc-400">{activeDays.length} días con cobros</p>
