@@ -119,23 +119,69 @@ export async function updateGoal(id: number, data: Partial<CreateGoalInput>) {
         if (destAccount.profileId !== existing.profileId) throw new Error('La cuenta destino no pertenece a este perfil');
     }
 
-    const goal = await prisma.goal.update({
-        where: { id },
-        data: {
-            name: data.name,
-            targetAmount: data.targetAmount,
-            deadline: data.deadline,
-            type: data.type,
-            frequency: data.frequency,
-            contributionAmount: data.contributionAmount,
-            priority: data.priority,
-            category: data.category,
-            notes: data.notes,
-            isPaused: data.isPaused,
-            sourceAccountId: data.sourceAccountId,
-            destinationAccountId: data.destinationAccountId,
-        },
+    const goal = await prisma.$transaction(async (tx) => {
+        // Si destinationAccountId realmente cambia, hay que mover el dinero ya
+        // ahorrado (currentAmount) de la cuenta vieja a la nueva - si solo se
+        // actualiza el FK, el saldo se queda "atrapado" en la cuenta anterior
+        // mientras la meta pasa a apuntar a otra cuenta vacía.
+        const destinationChanging =
+            data.destinationAccountId !== undefined &&
+            data.destinationAccountId !== existing.destinationAccountId;
+
+        let finalDestinationId = existing.destinationAccountId;
+
+        if (destinationChanging) {
+            const amount = Number(existing.currentAmount);
+
+            if (existing.destinationAccountId && amount > 0) {
+                await tx.account.update({
+                    where: { id: existing.destinationAccountId },
+                    data: { balance: { decrement: amount } },
+                });
+            }
+
+            if (data.destinationAccountId) {
+                finalDestinationId = data.destinationAccountId;
+                if (amount > 0) {
+                    await tx.account.update({
+                        where: { id: data.destinationAccountId },
+                        data: { balance: { increment: amount } },
+                    });
+                }
+            } else {
+                // "Crear cuenta de ahorro automáticamente" (mismo comportamiento que createGoal)
+                const savingsAccount = await tx.account.create({
+                    data: {
+                        name: `Ahorro: ${data.name ?? existing.name}`,
+                        type: 'SAVINGS',
+                        purpose: 'SAVINGS',
+                        balance: amount,
+                        profileId: existing.profileId,
+                    },
+                });
+                finalDestinationId = savingsAccount.id;
+            }
+        }
+
+        return tx.goal.update({
+            where: { id },
+            data: {
+                name: data.name,
+                targetAmount: data.targetAmount,
+                deadline: data.deadline,
+                type: data.type,
+                frequency: data.frequency,
+                contributionAmount: data.contributionAmount,
+                priority: data.priority,
+                category: data.category,
+                notes: data.notes,
+                isPaused: data.isPaused,
+                sourceAccountId: data.sourceAccountId,
+                destinationAccountId: finalDestinationId,
+            },
+        });
     });
+
     revalidatePath('/budget');
     return serializeGoal(goal);
 }

@@ -24,6 +24,7 @@ export interface CreateCreditCardInput {
     annualFeeMonth?: number | null;
     bank?: string | null;
     initialBalance?: number;
+    lateFee?: number | null;
 }
 
 export async function createCreditCard(data: CreateCreditCardInput) {
@@ -44,6 +45,7 @@ export async function createCreditCard(data: CreateCreditCardInput) {
             annualFeeMonth: data.annualFeeMonth,
             bank: data.bank,
             balance: data.initialBalance ?? 0,
+            lateFee: data.lateFee,
         },
     });
     revalidatePath('/budget');
@@ -73,6 +75,7 @@ export async function updateCreditCardDetails(
             annualFee: data.annualFee,
             annualFeeMonth: data.annualFeeMonth,
             bank: data.bank,
+            lateFee: data.lateFee,
         },
     });
     revalidatePath('/budget');
@@ -98,7 +101,17 @@ export async function deleteCreditCard(id: number) {
     const card = await prisma.creditCard.findUnique({ where: { id } });
     if (!card) throw new Error('Tarjeta no encontrada');
     await requireOwnership(card.profileId);
-    await prisma.creditCard.delete({ where: { id } });
+
+    // linkedCardId no es una foreign key real en el schema, así que borrar la
+    // tarjeta sin esto no falla — pero deja gastos apuntando a un id
+    // inexistente, y la próxima vez que se editen/confirmen (que sí hacen
+    // tx.creditCard.update({ where: { id: linkedCardId } })) revientan con
+    // "Record not found". Mismo patrón que deleteAccount para accountId.
+    await prisma.$transaction(async (tx) => {
+        await tx.expense.updateMany({ where: { linkedCardId: id }, data: { linkedCardId: null } });
+        await tx.creditCard.delete({ where: { id } });
+    });
+
     revalidatePath('/budget');
 }
 

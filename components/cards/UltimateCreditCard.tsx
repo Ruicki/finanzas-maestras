@@ -2,7 +2,7 @@
 
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, MessageCircleMoreIcon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
+import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, Trash2Icon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
 import React from 'react';
 import { ProfileWithData } from '@/types';
 
@@ -208,8 +208,9 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                     <button
                         onClick={() => onDelete(card.id)}
                         className="px-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 rounded-xl transition-colors"
+                        title="Eliminar"
                     >
-                        <MessageCircleMoreIcon size={20} />
+                        <Trash2Icon size={20} />
                     </button>
                 </div>
             </div>

@@ -202,6 +202,7 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         itbmsRate: editingCard.itbmsRate != null ? Number(editingCard.itbmsRate) : undefined,
                         minPaymentFloor: editingCard.minPaymentFloor != null ? Number(editingCard.minPaymentFloor) : undefined,
                         minPaymentPercentage: editingCard.minPaymentPercentage != null ? Number(editingCard.minPaymentPercentage) : undefined,
+                        lateFee: editingCard.lateFee != null ? Number(editingCard.lateFee) : undefined,
                     } : undefined}
                 />
             )}

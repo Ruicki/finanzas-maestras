@@ -1,0 +1,69 @@
+- generic [active] [ref=f4e1]:
+  - region "Notifications alt+T"
+  - main [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - generic [ref=f4e4]:
+        - generic [ref=f4e5]:
+          - heading "Finanzas Maestras" [level=1] [ref=f4e6]
+          - generic [ref=f4e7]:
+            - paragraph [ref=f4e8]: Control total de tu flujo.
+            - generic [ref=f4e9]:
+              - button [ref=f4e10]
+              - button [ref=f4e20]
+        - generic [ref=f4e25]:
+          - button "Modo Privado (Blur)" [ref=f4e26]
+          - button "Toggle Theme" [ref=f4e31]:
+            - generic [ref=f4e38]: Toggle theme
+          - button "Exportar" [ref=f4e41]
+          - button "Ajustes" [ref=f4e48]
+          - button "Salir" [ref=f4e63]
+          - button "Gestionar" [ref=f4e69]
+      - generic [ref=f4e74]:
+        - generic [ref=f4e75]:
+          - paragraph [ref=f4e82]: Dinero disponible
+          - paragraph [ref=f4e83]: $0.00
+        - generic [ref=f4e84]:
+          - paragraph [ref=f4e90]: Patrimonio Neto
+          - paragraph [ref=f4e91]: $0.00
+          - generic [ref=f4e92]:
+            - generic [ref=f4e93]: Ingresos $0
+            - generic [ref=f4e94]: vs
+            - generic [ref=f4e95]: Gastos $0
+            - generic [ref=f4e96]: vs
+            - generic [ref=f4e97]: Deudas $0
+        - generic [ref=f4e98]:
+          - paragraph [ref=f4e103]: Ingresos (Mes)
+          - paragraph [ref=f4e104]: +$0.00
+        - generic [ref=f4e105]:
+          - paragraph [ref=f4e111]: Deuda Total
+          - paragraph [ref=f4e112]: "-$0.00"
+      - generic [ref=f4e114]:
+        - button "Cuentas" [ref=f4e115]
+        - button "Ingresos" [ref=f4e119]
+        - button "Gastos" [ref=f4e124]
+        - button "Metas" [ref=f4e130]
+        - button "Deudas" [ref=f4e136]
+        - button "Presupuesto" [ref=f4e142]
+        - button "Análisis" [ref=f4e148]
+      - generic [ref=f4e154]:
+        - generic [ref=f4e155]:
+          - generic [ref=f4e156]:
+            - heading "Cuentas y Efectivo" [level=2] [ref=f4e157]
+            - paragraph [ref=f4e158]:
+              - text: "Total disponible:"
+              - generic [ref=f4e159]: $0.00
+          - generic [ref=f4e160]:
+            - button "Transferir" [ref=f4e161]
+            - button "Nueva Cuenta" [ref=f4e167]
+        - generic [ref=f4e171]:
+          - generic [ref=f4e172]:
+            - heading "Cuentas" [level=3] [ref=f4e173]
+            - generic [ref=f4e174]: $0.00
+          - generic [ref=f4e177] [cursor=pointer]:
+            - button "Opciones" [ref=f4e185]
+            - generic [ref=f4e189]:
+              - paragraph [ref=f4e190]: Efectivo
+              - heading "Efectivo" [level=3] [ref=f4e191]
+              - paragraph [ref=f4e192]: $0.00
+  - button "Open Next.js Dev Tools" [ref=f4e198] [cursor=pointer]
+  - alert [ref=f4e202]

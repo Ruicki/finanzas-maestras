@@ -29,6 +29,7 @@ interface CreditCardWizardProps {
         itbmsRate?: number;
         minPaymentFloor?: number;
         minPaymentPercentage?: number;
+        lateFee?: number;
     };
 }
 
@@ -54,6 +55,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
     const [itbmsRate, setItbmsRate] = useState(editingCard?.itbmsRate?.toString() ?? '0.07');
     const [minPaymentFloor, setMinPaymentFloor] = useState(editingCard?.minPaymentFloor?.toString() ?? '0');
     const [minPaymentPercentage, setMinPaymentPercentage] = useState(editingCard?.minPaymentPercentage?.toString() ?? '3.0');
+    const [lateFee, setLateFee] = useState(editingCard?.lateFee?.toString() ?? '25');
 
     useScrollLock(true);
 
@@ -71,6 +73,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
             setItbmsRate(preset.itbmsRate.toString());
             setMinPaymentFloor(preset.minPaymentFloor.toString());
             setMinPaymentPercentage(preset.minPaymentPercentage.toString());
+            setLateFee(preset.lateFee.toString());
         }
     };
 
@@ -94,6 +97,7 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                 itbmsRate: parseFloat(itbmsRate) || 0.07,
                 minPaymentFloor: parseFloat(minPaymentFloor) || 0,
                 minPaymentPercentage: parseFloat(minPaymentPercentage) || 3.0,
+                lateFee: parseFloat(lateFee) || 0,
                 cutoffDay: parseInt(cutoffDay) || 1,
                 paymentDay: parseInt(paymentDay) || 1,
                 annualFee: hasAnnualFee ? (parseFloat(annualFee) || 0) : null,
@@ -254,7 +258,21 @@ export default function CreditCardWizard({ profileId, onClose, onSuccess, onCrea
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">%</span>
                         </div>
-                        <p className="text-xs text-zinc-500 mt-1">Seguro de desgravamen (一般的 0.2% - 0.33%)</p>
+                        <p className="text-xs text-zinc-500 mt-1">Seguro de desgravamen (0.2% - 0.33%)</p>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Cargo por mora</label>
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
+                            <SmartMoneyInput
+                                value={lateFee}
+                                onMoneyChange={setLateFee}
+                                placeholder={getPreset() ? getPreset()!.lateFee.toString() : '25.00'}
+                                className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-zinc-900 dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                            />
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1">Lo que cobra el banco si el pago llega tarde</p>
                     </div>
 
                     {/* Fechas */}
