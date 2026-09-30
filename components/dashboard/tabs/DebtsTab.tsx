@@ -415,6 +415,8 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     guardando={submitting}
                     onGuardar={handleSave}
                     onClose={() => setIsWizardOpen(false)}
+                    loanId={editingId ?? undefined}
+                    onSaldoAjustado={onUpdate}
                 />
             )}
 

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
-import { XIcon } from '@animateicons/react/lucide';
+import React, { useState } from 'react';
+import { XIcon, TriangleAlertIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
-import type { CreateLoanInput } from '@/app/actions/debts';
+import { adjustLoanBalance, type CreateLoanInput } from '@/app/actions/debts';
+import { toast } from 'sonner';
 
 /** Lo que el formulario simplificado de tarjeta mantiene en pantalla. */
 export interface CardFormState {
@@ -40,6 +41,10 @@ interface DebtWizardProps {
     guardando: boolean;
     onGuardar: () => void;
     onClose: () => void;
+    /** Id del préstamo que se está editando — solo existe si tipo=LOAN y editando=true. */
+    loanId?: number;
+    /** Refresca los datos del perfil tras corregir el saldo a mano. */
+    onSaldoAjustado?: () => void;
 }
 
 /**
@@ -64,7 +69,55 @@ export default function DebtWizard({
     guardando,
     onGuardar,
     onClose,
+    loanId,
+    onSaldoAjustado,
 }: DebtWizardProps) {
+    // ── Tasa de interés: mensual o anual ────────────────────────────────────
+    // interestRate siempre se guarda como tasa ANUAL (lib/financial-engine.ts
+    // la divide entre 12 para el cálculo mensual). Muchos préstamos cortos
+    // (ej. un "extracrédito" de tarjeta) se cotizan directo en tasa mensual, y
+    // convertir a mano a ojo es como se termina con una tasa aproximada en vez
+    // de exacta. Este selector no cambia qué se guarda, solo en qué unidad se
+    // escribe: siempre se convierte a anual antes de tocar loanForm.
+    const [rateUnit, setRateUnit] = useState<'ANNUAL' | 'MONTHLY'>('ANNUAL');
+    const tasaAnual = loanForm.interestRate || 0;
+    const tasaMostrada = rateUnit === 'MONTHLY' ? tasaAnual / 12 : tasaAnual;
+    function handleTasaChange(val: string) {
+        const parsed = parseFloat(val) || 0;
+        setLoanForm({ ...loanForm, interestRate: rateUnit === 'MONTHLY' ? parsed * 12 : parsed });
+    }
+    const tasaEquivalente = rateUnit === 'MONTHLY'
+        ? `≈ ${tasaAnual.toFixed(2)}% anual`
+        : `≈ ${(tasaAnual / 12).toFixed(2)}% mensual`;
+
+    // ── Corrección de saldo (solo al editar un préstamo) ────────────────────
+    // Mismo patrón que adjustAccountBalance en AccountHistoryModal: "Pagar
+    // Cuota" es la única vía normal para bajar el saldo, y es un pago real e
+    // inmediato. Esto es para cuando el saldo no coincide con lo que dice el
+    // banco (o se registró un pago por error) y hay que corregirlo sin pagar.
+    const [isAdjusting, setIsAdjusting] = useState(false);
+    const [correctionBalance, setCorrectionBalance] = useState((loanForm.currentBalance ?? 0).toString());
+    const [adjustmentReason, setAdjustmentReason] = useState('');
+    const [savingAdjust, setSavingAdjust] = useState(false);
+
+    async function handleAjustarSaldo() {
+        if (!loanId) return;
+        const val = parseFloat(correctionBalance);
+        if (isNaN(val) || val < 0) { toast.error('Ingresa un monto válido'); return; }
+        if (!adjustmentReason.trim()) { toast.error('Escribe una razón para el ajuste'); return; }
+        setSavingAdjust(true);
+        try {
+            await adjustLoanBalance(loanId, val, adjustmentReason);
+            toast.success('Saldo corregido correctamente');
+            setIsAdjusting(false);
+            onSaldoAjustado?.();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo corregir el saldo');
+        } finally {
+            setSavingAdjust(false);
+        }
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-surface dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 max-h-[85dvh] flex flex-col overflow-y-auto">
@@ -86,6 +139,61 @@ export default function DebtWizard({
                         <button onClick={() => onModoPrestamo('FRIEND')} className={`flex-1 py-2 rounded-lg text-sm font-black transition-all ${modoPrestamo === 'FRIEND' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'text-zinc-400'}`}>
                             👤 Amigo / Familia
                         </button>
+                    </div>
+                )}
+
+                {/* Corrección de saldo — solo al editar un préstamo existente */}
+                {tipo === 'LOAN' && editando && loanId && (
+                    <div className="mb-6">
+                        {!isAdjusting ? (
+                            <button
+                                onClick={() => { setCorrectionBalance((loanForm.currentBalance ?? 0).toString()); setIsAdjusting(true); }}
+                                className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-amber-500 transition-colors"
+                            >
+                                <TriangleAlertIcon className="w-3.5 h-3.5" />
+                                ¿El saldo no coincide con el banco? Corrígelo aquí
+                            </button>
+                        ) : (
+                            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 animate-in slide-in-from-top-2">
+                                <p className="text-sm font-bold text-amber-700 dark:text-amber-400 mb-1">Corrección de saldo</p>
+                                <p className="text-xs text-amber-600/80 dark:text-amber-500/80 mb-3">
+                                    Usa esto solo si el saldo real es distinto al que aparece aquí — no descuenta ninguna cuenta ni registra un gasto.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                                    <div className="relative flex-1">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">$</span>
+                                        <SmartMoneyInput
+                                            value={correctionBalance}
+                                            onMoneyChange={setCorrectionBalance}
+                                            className="w-full bg-white dark:bg-zinc-800 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2.5 pl-7 font-bold outline-none focus:ring-2 ring-amber-400"
+                                            placeholder="Saldo real"
+                                        />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={adjustmentReason}
+                                        onChange={e => setAdjustmentReason(e.target.value)}
+                                        className="flex-1 bg-white dark:bg-zinc-800 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 ring-amber-400"
+                                        placeholder="Razón (ej: pago hecho por error)"
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        onClick={() => { setIsAdjusting(false); setAdjustmentReason(''); }}
+                                        className="text-xs font-bold text-zinc-500 hover:text-zinc-700 px-3 py-2"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleAjustarSaldo}
+                                        disabled={savingAdjust}
+                                        className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                                    >
+                                        {savingAdjust ? 'Guardando...' : 'Guardar corrección'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -169,16 +277,25 @@ export default function DebtWizard({
                             <div className="animate-in fade-in slide-in-from-top-2 space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase ml-1 mb-1 block">Tasa Anual</label>
+                                        <div className="flex items-center justify-between ml-1 mb-1">
+                                            <label className="text-xs font-bold text-zinc-500 uppercase">Tasa</label>
+                                            <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-md p-0.5">
+                                                <button type="button" onClick={() => setRateUnit('MONTHLY')} className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${rateUnit === 'MONTHLY' ? 'bg-white dark:bg-zinc-700 shadow-xs' : 'text-zinc-400'}`}>Mensual</button>
+                                                <button type="button" onClick={() => setRateUnit('ANNUAL')} className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${rateUnit === 'ANNUAL' ? 'bg-white dark:bg-zinc-700 shadow-xs' : 'text-zinc-400'}`}>Anual</button>
+                                            </div>
+                                        </div>
                                         <div className="relative">
                                             <SmartMoneyInput
                                                 placeholder="0.0"
-                                                value={loanForm.interestRate || ''}
-                                                onMoneyChange={(val) => setLoanForm({ ...loanForm, interestRate: parseFloat(val) })}
+                                                value={tasaMostrada || ''}
+                                                onMoneyChange={handleTasaChange}
                                                 className="w-full p-3 pr-8 bg-zinc-50 dark:bg-zinc-800 rounded-xl font-bold outline-none"
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">%</span>
                                         </div>
+                                        {tasaAnual > 0 && (
+                                            <p className="text-[10px] text-zinc-400 font-medium ml-1 mt-1">{tasaEquivalente}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-zinc-500 uppercase ml-1 mb-1 block">Plazo</label>
@@ -228,16 +345,25 @@ export default function DebtWizard({
                                 {amigoConInteres && (
                                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
                                         <div>
-                                            <label className="text-xs font-bold text-zinc-500 uppercase ml-1 mb-1 block">Tasa Aproximada</label>
+                                            <div className="flex items-center justify-between ml-1 mb-1">
+                                                <label className="text-xs font-bold text-zinc-500 uppercase">Tasa Aprox.</label>
+                                                <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-md p-0.5">
+                                                    <button type="button" onClick={() => setRateUnit('MONTHLY')} className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${rateUnit === 'MONTHLY' ? 'bg-white dark:bg-zinc-700 shadow-xs' : 'text-zinc-400'}`}>Mensual</button>
+                                                    <button type="button" onClick={() => setRateUnit('ANNUAL')} className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${rateUnit === 'ANNUAL' ? 'bg-white dark:bg-zinc-700 shadow-xs' : 'text-zinc-400'}`}>Anual</button>
+                                                </div>
+                                            </div>
                                             <div className="relative">
                                                 <SmartMoneyInput
                                                     placeholder="0.0"
-                                                    value={loanForm.interestRate || ''}
-                                                    onMoneyChange={(val) => setLoanForm({ ...loanForm, interestRate: parseFloat(val) })}
+                                                    value={tasaMostrada || ''}
+                                                    onMoneyChange={handleTasaChange}
                                                     className="w-full p-3 pr-8 bg-zinc-50 dark:bg-zinc-800 rounded-xl font-bold outline-none"
                                                 />
                                                 <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">%</span>
                                             </div>
+                                            {tasaAnual > 0 && (
+                                                <p className="text-[10px] text-zinc-400 font-medium ml-1 mt-1">{tasaEquivalente}</p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-zinc-500 uppercase ml-1 mb-1 block">Plazo Estimado</label>
