@@ -75,6 +75,48 @@ export async function updateLoan(id: number, data: Partial<CreateLoanInput>) {
     revalidatePath('/');
 }
 
+/**
+ * Corrige el saldo de un préstamo a mano, sin pasar por payLoan.
+ *
+ * payLoan es la única vía para bajar currentBalance, pero es un pago real e
+ * inmediato (descuenta cuenta y registra un gasto si hay cuenta de origen).
+ * No sirve para el caso "el saldo no coincide con lo que dice el banco" —
+ * mismo patrón que adjustAccountBalance en app/actions/budget/accounts.ts.
+ */
+export async function adjustLoanBalance(
+    loanId: number,
+    newBalance: number,
+    reason: string,
+) {
+    if (newBalance < 0) throw new Error('El saldo no puede ser negativo');
+
+    await prisma.$transaction(async (tx) => {
+        const loan = await tx.loan.findUnique({ where: { id: loanId } });
+        if (!loan) throw new Error('Préstamo no encontrado');
+        await requireOwnership(loan.profileId);
+
+        const oldBalance = Number(loan.currentBalance);
+
+        await tx.loan.update({
+            where: { id: loanId },
+            data: { currentBalance: newBalance },
+        });
+
+        await tx.auditLog.create({
+            data: {
+                action: 'LOAN_BALANCE_ADJUSTMENT',
+                details: reason || 'Sin razón especificada',
+                targetId: loanId,
+                profileId: loan.profileId,
+                oldBalance,
+                newBalance,
+            },
+        });
+    });
+
+    revalidatePath('/');
+}
+
 export async function deleteLoan(id: number) {
     const loan = await prisma.loan.findUnique({ where: { id } });
     if (!loan) throw new Error('Préstamo no encontrado');

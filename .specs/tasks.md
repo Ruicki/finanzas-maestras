@@ -313,3 +313,39 @@
       todavía. Queda pendiente para una pasada futura si se retoma: cancelar
       sin borrar (conservando historial), pausar, y detectar cambios de
       monto entre cobros.
+
+## Fase 15: Corrector de saldo y tasa mensual/anual en préstamos
+
+> El usuario mostró capturas comparando la tarjeta de un préstamo en la app
+> con la app real de su banco (CMF): el saldo y la cuota no coincidían.
+> Investigado a fondo antes de tocar código.
+
+- [x] 15.1 **`currentBalance` se fija a `totalAmount` al crear un préstamo**
+      (`components/dashboard/tabs/DebtsTab.tsx`, rama LOAN de `handleSave`) y
+      **no existía ninguna forma de corregirlo después** — `payLoan` es la
+      única vía que lo modifica, pero es un pago real e inmediato (descuenta
+      cuenta de origen y registra un gasto si la hay), no sirve para "el saldo
+      no coincide con lo que dice el banco".
+      → Nueva función `adjustLoanBalance` en `app/actions/debts.ts`, mismo
+      patrón que `adjustAccountBalance` (`app/actions/budget/accounts.ts`):
+      transaccional, con `requireOwnership`, deja un registro en `AuditLog`
+      (`LOAN_BALANCE_ADJUSTMENT` con saldo anterior/nuevo y la razón escrita
+      por el usuario).
+      → Panel de corrección en `components/debts/DebtWizard.tsx`, visible solo
+      al editar un préstamo existente: campo de saldo real
+      (`SmartMoneyInput`) + razón obligatoria, deja claro que no descuenta
+      ninguna cuenta ni registra gasto.
+- [x] 15.2 **El campo de tasa solo aceptaba tasa anual (APR)**, pero los
+      bancos panameños (CMF) cotizan la tasa mensual — obligaba a hacer la
+      conversión a mano y era la causa más probable de tasas mal cargadas.
+      → Toggle Mensual/Anual en `DebtWizard.tsx` (sección Banco y Amigo),
+      normaliza siempre a anual antes de tocar `loanForm.interestRate` — cero
+      cambios en `lib/financial-engine.ts`, que sigue tratando la tasa
+      guardada como anual en todos sus cálculos. Texto de ayuda con la
+      equivalencia en vivo (ej. "≈ 0.79% mensual").
+      → Verificado en navegador real contra `/preview-temas`: el toggle
+      calcula bien la equivalencia, el panel de corrección se abre
+      pre-cargado con el saldo actual, y la validación de razón obligatoria
+      funciona.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (171/171) y
+      `npx next build` limpios.
