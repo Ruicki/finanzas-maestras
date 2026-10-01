@@ -158,40 +158,40 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
         await decrementLoanBalance(tx, loanId, amount);
         const updatedLoan = await tx.loan.findUniqueOrThrow({ where: { id: loanId } });
 
-        // 3. Registrar Gasto (SOLO SI HAY CUENTA, ya que Expense requiere accountId usualmente o queremos trazarlo)
-        // Para simplificar, si no hay cuenta, NO creamos gasto (es un pago externo/ajuste)
-        if (sourceAccountId) {
-            // Buscar o Crear Categoría "Deudas"
-            let debtCategory = await tx.category.findFirst({
-                where: { profileId: loan.profileId, name: "Deudas" }
-            });
+        // 3. Registrar el pago en la categoría "Deudas" — SIEMPRE, con o sin
+        // cuenta de origen. Antes solo se registraba si había cuenta, así que
+        // un pago "externo" (sin cuenta, ej. efectivo pagado aparte) no dejaba
+        // ningún rastro: no había forma de ver el historial de pagos de un
+        // préstamo ni analizarlo junto al resto de los gastos.
+        let debtCategory = await tx.category.findFirst({
+            where: { profileId: loan.profileId, name: "Deudas" }
+        });
 
-            if (!debtCategory) {
-                debtCategory = await tx.category.create({
-                    data: {
-                        name: "Deudas",
-                        icon: "Ban",
-                        color: "text-red-500",
-                        type: "FIXED",
-                        profileId: loan.profileId
-                    }
-                });
-            }
-
-            await tx.expense.create({
+        if (!debtCategory) {
+            debtCategory = await tx.category.create({
                 data: {
-                    name: `Pago Préstamo: ${loan.name}`,
-                    amount: amount,
-                    category: "Deudas",
-                    categoryId: debtCategory.id,
-                    isRecurring: false,
-                    isOneTime: true,
-                    paymentMethod: "TRANSFER",
-                    profileId: loan.profileId,
-                    accountId: sourceAccountId
+                    name: "Deudas",
+                    icon: "Ban",
+                    color: "text-red-500",
+                    type: "FIXED",
+                    profileId: loan.profileId
                 }
             });
         }
+
+        await tx.expense.create({
+            data: {
+                name: `Pago Préstamo: ${loan.name}`,
+                amount: amount,
+                category: "Deudas",
+                categoryId: debtCategory.id,
+                isRecurring: false,
+                isOneTime: true,
+                paymentMethod: sourceAccountId ? "TRANSFER" : "CASH",
+                profileId: loan.profileId,
+                accountId: sourceAccountId || null
+            }
+        });
 
         // 5. AUTO-DELETE: Si el saldo llega a 0 (o menos), eliminar el préstamo
         if (Number(updatedLoan.currentBalance) <= 0.01) {

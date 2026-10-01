@@ -407,3 +407,57 @@
 Fuera de alcance, decidido explícitamente con el usuario: no se construye una
 pestaña aparte para "gastos fijos" — una vez arreglada la visibilidad de
 suscripciones (16.1), "Suscripciones" ya cubre ese caso.
+
+## Fase 17: Suscripciones de cobro automático vs pago manual + historial de pagos de deuda
+
+> El usuario reportó, tras el merge de la Fase 16: Internet de casa (cobra el
+> día 6) aparecía como "Pagado" sin que él lo hubiera pagado, y pidió poder
+> marcar una suscripción como "no debitar sola, solo cuando yo doy Pagar".
+> También reportó que no existe ningún historial de pagos de deudas.
+
+- [x] 17.1 **Causa de "Internet dice Pagado sin serlo"**: el cron
+      `processRecurringExpenses` cobra automáticamente CUALQUIER gasto
+      recurrente con día de cobro, sin distinguir débito directo de pago
+      manual — si el usuario paga Internet aparte (no es débito automático
+      real), el cron igual lo cobraba solo y marcaba `lastPaidAt`, de ahí el
+      "Pagado" falso.
+      → El usuario propuso reutilizar `graceDays` como señal; se le ofreció
+      la alternativa de un campo explícito nuevo (sin reinterpretar un campo
+      existente, sin cambiar el comportamiento de ninguna suscripción vieja
+      por sorpresa) y la eligió.
+      → Migración `20261001000000_add_expense_auto_charge`: nueva columna
+      `Expense.autoCharge` (default `true`, conserva el comportamiento
+      previo de todo lo existente). Verificada en Postgres local en dos
+      escenarios (BD nueva, BD con el historial completo de migraciones ya
+      aplicado) antes de tocar la BD real — mismo protocolo que las
+      migraciones anteriores de esta sesión.
+      → `processRecurringExpenses` (`app/actions/budget/expenses.ts`) ahora
+      exige `autoCharge: true` en su `where` — una suscripción con
+      `autoCharge: false` nunca la toca el cron; el usuario la marca
+      "Pagado" a mano desde Suscripciones, como ya podía hacer.
+      → Toggle "Cobro automático" en `ExpenseWizard.tsx`, visible solo para
+      gastos recurrentes. Insignia "Pago manual" en `SubscriptionsPanel.tsx`
+      cuando está apagado.
+      → Verificado en navegador real contra `/preview-temas`: la insignia
+      aparece en la suscripción con `autoCharge: false`, y el wizard de
+      edición abre con el interruptor correctamente apagado.
+- [x] 17.2 **No existía historial de pagos de deuda** — `payLoan`
+      (`app/actions/debts.ts`) solo registraba un gasto en la categoría
+      "Deudas" si el pago tenía cuenta de origen; un pago sin cuenta (ej.
+      efectivo pagado aparte) no dejaba ningún rastro, ni en Gastos ni en
+      Análisis.
+      → `payLoan` ahora registra SIEMPRE el pago en "Deudas"
+      (`accountId: null` si no hay cuenta de origen) — mismo patrón ya
+      usado cuando sí hay cuenta, solo que incondicional. Sigue sin afectar
+      ningún total (la categoría "Deudas" ya se excluye en todos los
+      cálculos de gasto, vía `esPagoDeDeuda`), y el gasto sobrevive aunque
+      el préstamo se borre al llegar a saldo 0 (no hay relación en cascada
+      entre `Loan` y `Expense`).
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (192/192),
+      `npx prisma validate` y `npx next build` limpios.
+
+Pendiente de confirmar con el usuario tras este deploy: si el Fondo de
+Emergencia sigue sin verse progresivo, revisar si sus gastos fijos reales
+(ej. Internet) están en una categoría cuyo tipo no sea "Fijo" — `tipoDeGasto`
+(`lib/financial-rules.ts`) usa el tipo de la categoría cuando existe, por
+encima de la adivinanza por palabra clave.

@@ -49,6 +49,7 @@ export function buildMockProfile(): ProfileWithData {
         }),
         expense(9, 'Gimnasio', 35, 6, 10, {
             isRecurring: true, isOneTime: false, recurrenceType: 'MONTHLY', dueDate: 10, graceDays: 5, lastPaidAt: null,
+            autoCharge: false,
         }),
         expense(10, 'Alquiler', 650, 4, 28, { isProjected: true, confirmedAt: null }),
         expense(11, 'Seguro del auto', 240, 2, 15, {
