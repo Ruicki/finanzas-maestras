@@ -2,17 +2,18 @@
 "use client";
 
 import { useMemo } from 'react';
-import { AreaChart, Area, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { TrendingUpIcon, WalletIcon } from '@animateicons/react/lucide';
-import { TriangleAlertIcon } from '@animateicons/react/lucide';
-import { PieChart } from 'lucide-react';
+import { AreaChart, Area, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { TrendingUpIcon, WalletIcon, InfoIcon } from '@animateicons/react/lucide';
+import { ListIcon } from 'lucide-react';
 import { ProfileWithData } from '@/types';
+import { nombreCategoria } from '@/lib/expense-category';
+import { topGastosIndividuales, tendenciaDeGasto } from '@/lib/expense-insights';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 type Expense = ProfileWithData['expenses'][number];
 type Category = ProfileWithData['categories'][number];
 type AdditionalIncome = ProfileWithData['incomes'][number];
 type Salary = ProfileWithData['salaries'][number];
-import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 // Tipos auxiliares
 type InsightsTabProps = {
@@ -34,8 +35,9 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         netSavings,
         savingsRate,
         monthlyData,
-        budgetComparison,
-        topCategories
+        topCategories,
+        topGastos,
+        tendencia
     } = useMemo(() => {
         const currentMonth = selectedMonth ?? new Date().getMonth();
         const currentYear = selectedYear ?? new Date().getFullYear();
@@ -114,14 +116,21 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             .sort((a, b) => b.spent - a.spent)
             .slice(0, 3);
 
+        // E. Gastos individuales más altos y tendencia de 3 meses — lo que
+        // reemplaza al "Desglose de Presupuestos", que repetía categoría por
+        // categoría lo que ya muestra Presupuesto → Categorías.
+        const topGastos = topGastosIndividuales(realExpenses, 8);
+        const tendencia = tendenciaDeGasto(allExpenses, currentMonth, currentYear, 3);
+
         return {
             totalIncome,
             totalExpense,
             netSavings,
             savingsRate,
             monthlyData: cumulativeData,
-            budgetComparison,
-            topCategories
+            topCategories,
+            topGastos,
+            tendencia
         };
     }, [expenses, allExpenses, categories, incomes, salaries, selectedMonth, selectedYear]);
 
@@ -194,7 +203,12 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                     </div>
 
                     <div>
-                        <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider mb-2">Balance Neto</p>
+                        <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            Balance Neto
+                            <span title="Ingresos del mes menos gastos reales del mes (sin proyecciones ni pagos de deuda, que ya se reflejan en el saldo de la tarjeta o del préstamo).">
+                                <InfoIcon size={13} className="text-zinc-400 cursor-help" />
+                            </span>
+                        </p>
                         <h3 className={`text-4xl md:text-5xl font-black ${netSavings >= 0 ? 'text-zinc-900 dark:text-white' : 'text-red-500'}`}>
                             {netSavings >= 0 ? '+' : '-'}{currency}{Math.abs(netSavings).toLocaleString()}
                         </h3>
@@ -219,94 +233,81 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             </div>
 
 
-            {/* --- 2. TABLA DE PRESUPUESTO AVANZADA --- */}
-            <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-none overflow-hidden hover:shadow-2xl transition-shadow duration-500">
-                <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-50/50 dark:bg-zinc-900/50">
-                    <div>
+            {/* --- 2. GASTOS MÁS ALTOS + TENDENCIA DE 3 MESES --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* A. Gastos individuales más altos del mes */}
+                <div className="lg:col-span-2 bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-none overflow-hidden hover:shadow-2xl transition-shadow duration-500">
+                    <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
                         <h3 className="text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
                             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
-                                <PieChart className="lucide-animated" size={24} />
+                                <ListIcon className="lucide-animated" size={24} />
                             </div>
-                            Desglose de Presupuestos
+                            Gastos Más Altos del Mes
                         </h3>
-                        <p className="text-zinc-500 text-sm mt-1 ml-1">Análisis detallado de ejecución presupuestaria.</p>
+                        <p className="text-zinc-500 text-sm mt-1 ml-1">Tus movimientos individuales más grandes, uno por uno.</p>
+                    </div>
+
+                    <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                        {topGastos.map((gasto, idx) => (
+                            <div key={gasto.id} className="flex items-center gap-4 p-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors duration-200">
+                                <span className="text-sm font-black text-zinc-300 dark:text-zinc-700 w-5 text-center shrink-0">{idx + 1}</span>
+                                <div className={`text-xl w-10 h-10 flex items-center justify-center rounded-full shrink-0 shadow-sm ${gasto.categoryRel?.color || 'text-zinc-500'} ${gasto.categoryRel?.color?.includes('text-') ? gasto.categoryRel.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                                    <CategoryIcon iconName={gasto.categoryRel?.icon || 'HelpCircle'} size={18} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
+                                    <p className="text-xs text-zinc-400 truncate">
+                                        {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                    </p>
+                                </div>
+                                <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{currency}{gasto.amount.toLocaleString()}</p>
+                            </div>
+                        ))}
+
+                        {topGastos.length === 0 && (
+                            <div className="p-12 text-center text-zinc-400 flex flex-col items-center justify-center min-h-[200px]">
+                                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-full mb-4">
+                                    <ListIcon className="w-12 h-12 opacity-20 lucide-animated" />
+                                </div>
+                                <p className="text-lg font-bold text-zinc-600 dark:text-zinc-300">Sin gastos este mes</p>
+                                <p className="text-sm mt-1">Registra un gasto para verlo aquí.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[10px] uppercase tracking-widest text-zinc-400 bg-zinc-50/80 dark:bg-zinc-950/50 backdrop-blur-sm sticky top-0 z-10">
-                                <th className="p-6 font-bold text-zinc-500">Categoría</th>
-                                <th className="p-6 font-bold text-zinc-500 text-right">Gastado</th>
-                                <th className="p-6 font-bold text-zinc-500 text-right hidden md:table-cell">Límite Mensual</th>
-                                <th className="p-6 font-bold text-zinc-500 text-right">Disponible</th>
-                                <th className="p-6 font-bold text-zinc-500 w-1/3 min-w-[200px]">Ejecución</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                            {budgetComparison.map((cat) => (
-                                <tr key={cat.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors duration-200">
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`text-2xl w-10 h-10 flex items-center justify-center rounded-full group-hover:scale-110 shadow-sm transition-all duration-300 ${cat.color || 'text-zinc-500'} ${cat.color?.includes('text-') ? cat.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-                                                <CategoryIcon iconName={cat.icon} size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-zinc-900 dark:text-white text-base group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{cat.name}</p>
-                                                {cat.status === 'EXCEEDED' && (
-                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-red-500 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full mt-1 uppercase tracking-wider">
-                                                        <TriangleAlertIcon size={8} /> Excedido
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-6 text-right">
-                                        <p className="font-bold text-zinc-900 dark:text-zinc-200 tabular-nums text-lg">{currency}{cat.spent.toLocaleString()}</p>
-                                    </td>
-                                    <td className="p-6 text-right hidden md:table-cell">
-                                        <p className="font-medium text-zinc-400 tabular-nums text-sm">
-                                            {cat.effectiveLimit > 0 ? `${currency}${cat.effectiveLimit.toLocaleString()}` : 'Sin Límite'}
-                                        </p>
-                                    </td>
-                                    <td className="p-6 text-right">
-                                        <p className={`font-black tabular-nums text-lg ${cat.remaining < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            {cat.remaining < 0 ? '-' : '+'}{currency}{Math.abs(cat.remaining).toLocaleString()}
-                                        </p>
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800/80 rounded-full overflow-hidden relative shadow-inner">
-                                                {/* Superposición de patrón rayado para excedidos */}
-                                                {cat.percent > 100 && (
-                                                    <div className="absolute inset-0 z-10 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#000_5px,#000_10px)]" />
-                                                )}
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ease-out shadow-sm ${cat.status === 'EXCEEDED' ? 'bg-red-500' : cat.status === 'WARNING' ? 'bg-amber-400' : 'bg-linear-to-r from-emerald-400 to-emerald-500'}`}
-                                                    style={{ width: `${Math.min(cat.percent, 100)}%` }}
-                                                />
-                                            </div>
-                                            <span className={`text-xs font-bold w-12 text-right ${cat.status === 'EXCEEDED' ? 'text-red-500' : 'text-zinc-400'}`}>
-                                                {cat.percent.toFixed(0)}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                {/* B. Tendencia de 3 meses */}
+                <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm p-8 flex flex-col">
+                    <h3 className="text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
+                        <TrendingUpIcon size={18} className="text-indigo-500" />
+                        Tendencia de 3 Meses
+                    </h3>
+                    <p className="text-zinc-500 text-sm mb-6">Gasto real total, mes a mes.</p>
 
-                {budgetComparison.length === 0 && (
-                    <div className="p-12 text-center text-zinc-400 flex flex-col items-center justify-center min-h-[300px]">
-                        <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-full mb-4">
-                            <PieChart className="w-12 h-12 opacity-20 lucide-animated" />
-                        </div>
-                        <p className="text-lg font-bold text-zinc-600 dark:text-zinc-300">No hay datos suficientes</p>
-                        <p className="text-sm mt-1">Registra gastos para ver el análisis detallado.</p>
+                    <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={tendencia} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                                <XAxis dataKey="etiqueta" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#a1a1aa' }} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(99,102,241,0.08)' }}
+                                    formatter={(value?: number) => [`${currency}${(value ?? 0).toLocaleString()}`, 'Gastado']}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                />
+                                <Bar dataKey="total" radius={[8, 8, 0, 0]} fill="#6366f1" maxBarSize={48} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
-                )}
+
+                    <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+                        {tendencia.map(mes => (
+                            <div key={mes.clave} className="flex justify-between text-sm">
+                                <span className="font-bold text-zinc-500">{mes.etiqueta}</span>
+                                <span className="font-black text-zinc-900 dark:text-white tabular-nums">{currency}{mes.total.toLocaleString()}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* --- 3. RESUMEN DE GASTOS PRINCIPALES --- */}

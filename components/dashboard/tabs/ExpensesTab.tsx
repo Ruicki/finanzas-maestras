@@ -12,6 +12,7 @@ type Category = ProfileWithData['categories'][number];
 import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
+import { tipoDeGasto } from '@/lib/financial-rules';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
@@ -37,6 +38,9 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
     // Guarda el id, no el nombre: filtrar por texto dejaba fuera los gastos de
     // una categoría renombrada, que es justo lo que se está corrigiendo.
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
+    // Fijo/Variable/Lujo — independiente de la categoría: varias categorías
+    // pueden ser del mismo tipo (ej. Internet y Alquiler son FIXED).
+    const [filterType, setFilterType] = useState<string>('ALL');
     // Evita doble clic disparando dos veces confirmar/eliminar sobre el mismo gasto.
     const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
@@ -51,7 +55,8 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
             nombreCategoria(e).toLowerCase().includes(busqueda) ||
             (e.amount.toString().includes(searchQuery));
         const matchesCategory = !categoriaFiltrada || esDeCategoria(e, categoriaFiltrada);
-        return matchesSearch && matchesCategory;
+        const matchesType = filterType === 'ALL' || tipoDeGasto(e) === filterType;
+        return matchesSearch && matchesCategory && matchesType;
     });
 
     // Los gastos proyectados aún no descontaron saldo real: no cuentan en el total gastado.
@@ -205,6 +210,23 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                         {categories.map(cat => (
                             <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                         ))}
+                    </select>
+                </div>
+
+                {/* Filtro por tipo de gasto (Fijo/Variable/Lujo) — independiente
+                    de la categoría: varias categorías pueden ser del mismo tipo. */}
+                <div className="relative flex-1 md:flex-none">
+                    <FilterIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="w-full h-10 pl-9 pr-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border-none font-bold text-sm text-zinc-700 dark:text-zinc-200 outline-none cursor-pointer"
+                    >
+                        <option value="ALL">Todos los tipos</option>
+                        <option value="FIXED">Fijo</option>
+                        <option value="VARIABLE">Variable</option>
+                        <option value="LUXURY">Lujo</option>
+                        <option value="SAVING">Ahorro</option>
                     </select>
                 </div>
 
