@@ -147,6 +147,11 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
                                             <div className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-[10px] font-bold text-zinc-500">
                                                 Día {exp.dueDate || '1'}{exp.graceDays ? ` (+${exp.graceDays}d gracia)` : ''}
                                             </div>
+                                            {exp.autoCharge === false && (
+                                                <span className="text-[9px] font-bold text-sky-600 bg-sky-100 dark:bg-sky-500/20 px-2 py-0.5 rounded-full">
+                                                    Pago manual
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 

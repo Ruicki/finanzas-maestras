@@ -1,0 +1,13 @@
+-- Distingue un gasto recurrente de debito directo (el cron lo cobra solo)
+-- de uno de pago manual (el usuario lo paga aparte y solo lo marca "Pagado"
+-- desde Suscripciones). Antes el cron cobraba automaticamente CUALQUIER
+-- recurrente con dia de cobro, sin esa distincion -- reportado en vivo por
+-- el usuario con una suscripcion que el cron marco "Pagado" sola sin que el
+-- la hubiera pagado de verdad.
+--
+-- Default true conserva el comportamiento previo de cualquier recurrente ya
+-- existente (sigue cobrandose solo, como siempre).
+--
+-- IF NOT EXISTS por la misma razon que las migraciones anteriores: no se
+-- sabe con certeza en que bases quedo creada ya a mano.
+ALTER TABLE "Expense" ADD COLUMN IF NOT EXISTS "autoCharge" BOOLEAN NOT NULL DEFAULT true;

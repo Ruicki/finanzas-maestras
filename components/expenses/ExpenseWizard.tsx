@@ -55,6 +55,7 @@ export default function ExpenseWizard({
     const [isRecurring, setIsRecurring] = useState(false);
     const [recurrenceType, setRecurrenceType] = useState('MONTHLY');
     const [graceDays, setGraceDays] = useState('');
+    const [autoCharge, setAutoCharge] = useState(true);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isProjected, setIsProjected] = useState(false);
 
@@ -74,6 +75,7 @@ export default function ExpenseWizard({
             setIsRecurring(initialData.isRecurring || false);
             setRecurrenceType(initialData.recurrenceType || 'MONTHLY');
             setGraceDays(initialData.graceDays != null ? initialData.graceDays.toString() : '');
+            setAutoCharge(initialData.autoCharge ?? true);
             setIsProjected(initialData.isProjected || false);
 
             if (initialData.linkedCardId) {
@@ -147,6 +149,7 @@ export default function ExpenseWizard({
             isRecurring,
             isOneTime: !isRecurring,
             recurrenceType: isRecurring ? recurrenceType : 'MONTHLY',
+            autoCharge: isRecurring ? autoCharge : true,
             paymentMethod,
             accountId: paymentMethod === 'CASH' ? Number(accountId) : null,
             linkedCardId: paymentMethod === 'CREDIT' ? Number(cardId) : null,
@@ -399,6 +402,22 @@ export default function ExpenseWizard({
                                     {opt.label}
                                 </button>
                             ))}
+                        </div>
+
+                        <div className="flex items-center justify-between mt-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3">
+                            <div className="flex flex-col pr-3">
+                                <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Cobro automático</span>
+                                <span className="text-xs text-zinc-400">
+                                    {autoCharge ? 'Se descuenta solo el día de cobro (débito directo).' : 'No se descuenta: tú lo marcas pagado cuando lo pagues aparte.'}
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setAutoCharge(!autoCharge)}
+                                className={`w-14 h-8 rounded-full transition-colors relative shrink-0 ${autoCharge ? 'bg-purple-500' : 'bg-zinc-300 dark:bg-zinc-600'}`}
+                            >
+                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${autoCharge ? 'left-7' : 'left-1'}`} />
+                            </button>
                         </div>
 
                         <div className="mt-4">

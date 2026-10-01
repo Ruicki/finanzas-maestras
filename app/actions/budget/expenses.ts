@@ -56,6 +56,8 @@ export interface CreateExpenseInput {
     isRecurring?: boolean;
     isOneTime?: boolean;
     recurrenceType?: string;
+    /** Solo aplica si isRecurring: false = el cron no lo cobra solo, el usuario lo paga a mano. */
+    autoCharge?: boolean;
     paymentMethod?: string;
     linkedCardId?: number | null;
     accountId?: number | null;
@@ -104,6 +106,7 @@ export async function createExpense(data: CreateExpenseInput) {
                     isRecurring: data.isRecurring ?? true,
                     isOneTime: data.isOneTime ?? false,
                     recurrenceType: data.recurrenceType ?? 'MONTHLY',
+                    autoCharge: data.autoCharge ?? true,
                     paymentMethod: data.paymentMethod,
                     linkedCardId: data.linkedCardId,
                     accountId: data.accountId,
@@ -229,6 +232,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                     isRecurring: data.isRecurring,
                     isOneTime: data.isOneTime,
                     recurrenceType: data.recurrenceType,
+                    autoCharge: data.autoCharge,
                     paymentMethod: data.paymentMethod,
                     linkedCardId: newCardId,
                     accountId: newAccountId,
@@ -351,6 +355,7 @@ function isPaidThisCycle(lastPaidAt: Date | null, today: Date): boolean {
  *
  * Logic:
  * - Finds all expenses where isRecurring = true AND isOneTime = false
+ *   AND autoCharge = true (el usuario eligio debito directo, no pago manual)
  * - For each expense with a dueDate, checks if today is the due date
  *   (dueDate se recorta al ultimo dia del mes si el mes es mas corto, ej. 31 en febrero)
  * - Si el usuario ya lo marco "Pagado" este mes (lastPaidAt), NO se cobra de nuevo:
@@ -381,6 +386,7 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
                 isOneTime: false,
                 dueDate: { not: null },
                 isProjected: false,
+                autoCharge: true,
             },
             include: {
                 account: true,

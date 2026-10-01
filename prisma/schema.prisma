@@ -95,6 +95,12 @@ model Expense {
   isRecurring     Boolean   @default(true)
   isOneTime       Boolean   @default(false)
   recurrenceType  String?   @default("MONTHLY")
+  /// Solo aplica a un gasto recurrente: si es false, el cron
+  /// (processRecurringExpenses) lo ignora por completo, el usuario lo paga
+  /// aparte (ej. un servicio que no es debito directo) y solo se marca
+  /// "Pagado" a mano desde Suscripciones. Default true conserva el
+  /// comportamiento previo de cualquier recurrente ya existente.
+  autoCharge      Boolean   @default(true)
   paymentMethod   String?
   linkedCardId    Int?
   profileId       Int
