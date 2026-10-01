@@ -349,3 +349,61 @@
       funciona.
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (171/171) y
       `npx next build` limpios.
+
+## Fase 16: Suscripciones que desaparecían al cambiar de mes + limpieza de Análisis
+
+> El usuario reportó, tras el cambio de mes, que el Fondo de Emergencia ya no
+> se mantenía progresivo y que las suscripciones "no se mantienen... cuando
+> son uno de los pilares de gastos". Investigado a fondo: ambos síntomas son
+> el mismo bug. Se presentó el diagnóstico completo (6 puntos reportados) y
+> se acordó con el usuario, vía preguntas explícitas, qué construir para los
+> dos que requerían una decisión de diseño.
+
+- [x] 16.1 **Una suscripción mensual solo era visible en su mes de
+      creación** — `gastosVisiblesEnElMes` (`lib/dashboard-expenses.ts`)
+      filtraba la plantilla recurrente (`isRecurring: true`) por mes, igual
+      que un gasto normal. El cron `processRecurringExpenses` sí la sigue
+      cobrando cada mes (crea una copia real ese día), pero antes de ese día
+      no había ninguna fila que representara la suscripción: desaparecía de
+      "Suscripciones" y de cualquier cálculo de gasto fijo, aunque en la base
+      de datos siguiera activa y se fuera a cobrar igual.
+      → `components/dashboard/tabs/BudgetsTab.tsx`: la lista de
+      suscripciones ahora sale de `allExpenses` (todos los meses), no de
+      `expenses` (solo el mes visible) — mismo dato que ya recibía el
+      componente, sin tocar `gastosVisiblesEnElMes` ni arriesgar que la
+      pestaña Gastos empiece a mostrar transacciones duplicadas.
+- [x] 16.2 **El Fondo de Emergencia (y la regla 50/30/20) colapsaban como
+      consecuencia directa de 16.1** — `FinancialRules.tsx` calculaba el
+      "gasto fijo mensual" solo con lo ya registrado ese mes; con las
+      suscripciones invisibles hasta su día de cobro, el número caía a casi
+      $0 los primeros días de cada mes aunque la plata real no hubiera
+      cambiado en nada.
+      → Nuevo `lib/financial-rules.ts` (con pruebas en
+      `__tests__/financial-rules.test.ts`): `gastoFijoYVariableDelMes` suma
+      las suscripciones aún no cobradas este ciclo (`lastPaidAt` fuera del
+      mes de negocio actual) sin duplicar las que el cron ya cobró, y
+      prorratea las no mensuales (trimestral/semestral/anual) a su
+      equivalente mensual. `FinancialRules.tsx` ahora delega en esta función
+      en vez de recalcular inline.
+- [x] 16.3 **Filtro por tipo de gasto (Fijo/Variable/Lujo/Ahorro) en
+      Gastos** — pedido directo del usuario. Reutiliza `tipoDeGasto` de
+      `lib/financial-rules.ts`, independiente del filtro por categoría (una
+      categoría tiene un tipo, pero varias categorías pueden compartir tipo).
+- [x] 16.4 **"Desglose de Presupuestos" en Análisis repetía exactamente lo
+      que ya muestra Presupuesto → Categorías** (mismo spent/límite/restante
+      por categoría). Reemplazado, con confirmación explícita del usuario,
+      por algo que no existe en ningún otro lado: `lib/expense-insights.ts`
+      (con pruebas) aporta `topGastosIndividuales` (los gastos más altos uno
+      por uno, no agrupados por categoría) y `tendenciaDeGasto` (total real
+      de los últimos 3 meses). Las tarjetas "Top 3 categorías" se mantienen
+      sin cambios.
+      → Tooltip en "Balance Neto" explicando el cálculo (ingresos del mes
+      menos gastos reales del mes) — el usuario no sabía cómo se calculaba.
+      → Verificado en navegador real contra `/preview-temas`: el filtro por
+      tipo reduce correctamente de 11 a 4 movimientos al elegir "Fijo"; el
+      nuevo Análisis muestra los gastos más altos y la tendencia de 3 meses
+      sin errores de consola.
+
+Fuera de alcance, decidido explícitamente con el usuario: no se construye una
+pestaña aparte para "gastos fijos" — una vez arreglada la visibilidad de
+suscripciones (16.1), "Suscripciones" ya cubre ese caso.

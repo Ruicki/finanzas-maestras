@@ -1,29 +1,30 @@
 'use client';
 
 import React from 'react';
-import { nombreCategoria } from '@/lib/expense-category';
 import { formatMoney } from '@/lib/utils';
+import { gastoFijoYVariableDelMes, type GastoDeRegla } from '@/lib/financial-rules';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { ShieldCheckIcon, TrendingUpIcon, CalculatorIcon, ArrowRightIcon, DollarSignIcon } from '@animateicons/react/lucide';
 import { Target } from 'lucide-react';
 
-interface RuleExpense {
-    name?: string;
-    category?: string | null;
-    categoryId?: number | null;
-    amount: number;
-    categoryRel?: { name?: string | null; type?: string | null } | null;
-}
+type RuleExpense = GastoDeRegla;
 
 interface FinancialRulesProps {
     income: number;
     expenses: RuleExpense[];
+    /**
+     * TODAS las suscripciones/gastos recurrentes del perfil, sin filtrar por
+     * mes (ver BudgetsTab.tsx) — de aquí sale el gasto fijo de meses donde
+     * `expenses` (solo el mes visible) aún no tiene la copia real que genera
+     * el cron ese día de cobro.
+     */
+    recurringExpenses?: RuleExpense[];
     debtsPayment: number;
     totalSavings: number;
     totalCash: number;
 }
 
-export default function FinancialRules({ income, expenses, debtsPayment, totalSavings, totalCash }: FinancialRulesProps) {
+export default function FinancialRules({ income, expenses, recurringExpenses = [], debtsPayment, totalSavings, totalCash }: FinancialRulesProps) {
     if (income === 0) {
         return (
             <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
@@ -57,16 +58,9 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     }
 
     // --- RULE 1: 50/30/20 ---
-    const getType = (e: RuleExpense): string => {
-        if (e.categoryRel?.type) return e.categoryRel.type;
-        const name = `${nombreCategoria(e)} ${e.name || ''}`.toLowerCase();
-        if (['alquiler', 'arriendo', 'servicio', 'servicios', 'internet', 'teléfono', 'teléfono celular', 'seguro', 'educación', 'colegio', 'matrícula', 'hipoteca', 'préstamo', 'loan'].some(k => name.includes(k))) return 'FIXED';
-        if (['ahorro', 'inversión', 'inversion', 'fondo', 'meta'].some(k => name.includes(k))) return 'SAVING';
-        return 'VARIABLE';
-    };
-
-    const needs = expenses.filter(e => getType(e) === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
-    const wants = expenses.filter(e => ['VARIABLE', 'LUXURY'].includes(getType(e))).reduce((sum, e) => sum + Number(e.amount), 0);
+    // Gasto fijo y variable del mes, incluyendo suscripciones pendientes de
+    // cobrar este ciclo (ver lib/financial-rules.ts para el porqué).
+    const { needs, wants } = gastoFijoYVariableDelMes(expenses, recurringExpenses);
     const savings = Math.max(0, income - needs - wants);
 
     const needsPct = income > 0 ? (needs / income) * 100 : 0;
@@ -93,8 +87,11 @@ export default function FinancialRules({ income, expenses, debtsPayment, totalSa
     // Cuenta el efectivo disponible MÁS el ahorro acumulado en metas sin cuenta
     // dedicada (totalSavings) — antes este parámetro se recibía pero nunca se
     // usaba, así que ese ahorro no contaba para nada en la cobertura del fondo.
-    const monthlyFixedExpenses = expenses.filter(e => getType(e) === 'FIXED').reduce((sum, e) => sum + Number(e.amount), 0);
-    const monthlyBurn = monthlyFixedExpenses > 0 ? monthlyFixedExpenses : (needs + wants);
+    //
+    // `needs` ya es el gasto fijo mensual (ver arriba): suscripciones
+    // pendientes de cobrar incluidas, así que no colapsa a 0 los primeros
+    // días de cada mes antes de que el cron las cobre.
+    const monthlyBurn = needs > 0 ? needs : (needs + wants);
     const liquidFunds = totalCash + totalSavings;
     const monthsCovered = monthlyBurn > 0 ? (liquidFunds / monthlyBurn) : 0;
     const monthsMissing = Math.max(0, 6 - monthsCovered);

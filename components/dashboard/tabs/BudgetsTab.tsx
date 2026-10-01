@@ -44,7 +44,15 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
     const [editingSub, setEditingSub] = useState<Partial<Expense> | null>(null);
 
     // Suscripciones ordenadas por dia de cobro.
-    const subscriptions = expenses
+    //
+    // De `allExpenses` (todos los meses), no de `expenses` (solo el mes
+    // visible): una suscripción mensual es una plantilla (`isRecurring: true`)
+    // que el cron solo copia a un gasto real el día de cobro — la plantilla
+    // misma solo aparece en `expenses` en su mes de creación
+    // (`gastosVisiblesEnElMes`, lib/dashboard-expenses.ts). Filtrarla por el
+    // mes visible la hacía desaparecer de esta pestaña en todos los meses
+    // siguientes, aunque el cron la siguiera cobrando — justo lo reportado.
+    const subscriptions = allExpenses
         .filter(e => e.isRecurring)
         .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
 
@@ -94,6 +102,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                 <FinancialRules
                     income={totalIncome}
                     expenses={expenses}
+                    recurringExpenses={subscriptions}
                     debtsPayment={totalDebtPayments}
                     totalSavings={totalSavings}
                     totalCash={totalCash}
