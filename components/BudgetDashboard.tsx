@@ -463,6 +463,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                         {activeTab === 'expenses' && (
                             <ExpensesTab
                                 expenses={expensesList}
+                                allExpenses={activeProfile?.expenses?.filter((e) => !esPagoDeDeuda(e)) || []}
+                                totalIncome={totalMonthlyIncome}
                                 creditCards={activeProfile.creditCards || []}
                                 accounts={activeProfile.accounts || []}
                                 categories={activeProfile.categories || []}

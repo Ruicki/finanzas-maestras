@@ -16,11 +16,15 @@ import { tipoDeGasto } from '@/lib/financial-rules';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
 import CategoryManager from '@/components/shared/CategoryManager';
+import SubscriptionsPanel from '@/components/budgets/SubscriptionsPanel';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
-import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon, CheckIcon, ClockIcon } from '@animateicons/react/lucide';
+import { PencilIcon, SearchIcon, PlusIcon, Trash2Icon, CreditCardIcon as CardIcon, DollarSignIcon, WalletIcon, ArrowUpDownIcon, FilterIcon, CheckIcon, ClockIcon, RepeatIcon } from '@animateicons/react/lucide';
 
 interface ExpensesTabProps {
     expenses: ExpenseWithCategory[];
+    /** Todos los meses, sin filtrar — Suscripciones necesita ver más allá del mes visible. */
+    allExpenses?: ExpenseWithCategory[];
+    totalIncome?: number;
     creditCards: CreditCard[];
     accounts: Account[];
     categories: Category[];
@@ -29,7 +33,10 @@ interface ExpensesTabProps {
     onUpdate: () => void;
 }
 
-export default function ExpensesTab({ expenses, creditCards, accounts, categories, profileId, onUpdate }: ExpensesTabProps) {
+type SubTab = 'gastos' | 'suscripciones';
+
+export default function ExpensesTab({ expenses, allExpenses = [], totalIncome = 0, creditCards, accounts, categories, profileId, onUpdate }: ExpensesTabProps) {
+    const [subTab, setSubTab] = useState<SubTab>('gastos');
     const [showWizard, setShowWizard] = useState(false);
     const [showCategoryManager, setShowCategoryManager] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +65,15 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
         const matchesType = filterType === 'ALL' || tipoDeGasto(e) === filterType;
         return matchesSearch && matchesCategory && matchesType;
     });
+
+    // Suscripciones ordenadas por dia de cobro — de `allExpenses` (todos los
+    // meses), no de `expenses` (solo el mes visible): la plantilla recurrente
+    // solo aparece en `expenses` en su mes de creación (ver
+    // lib/dashboard-expenses.ts), así que filtrarla por el mes visible la hacía
+    // desaparecer de aquí en todos los meses siguientes.
+    const subscriptions = allExpenses
+        .filter(e => e.isRecurring)
+        .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
 
     // Los gastos proyectados aún no descontaron saldo real: no cuentan en el total gastado.
     const confirmedExpenses = expensesList.filter(e => !e.isProjected);
@@ -132,6 +148,39 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                 </div>
             </div>
 
+            {/* SUB-TABS */}
+            <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-700/50">
+                {([
+                    { id: 'gastos' as const, label: 'Gastos', icon: <WalletIcon size={16} /> },
+                    { id: 'suscripciones' as const, label: 'Suscripciones', icon: <RepeatIcon size={16} /> },
+                ]).map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setSubTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center ${
+                            subTab === tab.id
+                                ? 'bg-surface dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                                : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                        }`}
+                    >
+                        {tab.icon}
+                        <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                ))}
+            </div>
+
+            {subTab === 'suscripciones' && (
+                <SubscriptionsPanel
+                    suscripciones={subscriptions}
+                    totalIngresos={totalIncome}
+                    onNueva={() => { setExpenseToEdit(null); setShowWizard(true); }}
+                    onEditar={(exp) => { setExpenseToEdit(exp); setShowWizard(true); }}
+                    onUpdate={onUpdate}
+                />
+            )}
+
+            {subTab === 'gastos' && (
+            <>
             {/* --- TARJETA DE RESUMEN --- */}
             {/* ... (Keep existing summary cards) ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -372,6 +421,8 @@ export default function ExpensesTab({ expenses, creditCards, accounts, categorie
                         ));
                 })()}
             </div>
+            </>
+            )}
 
             {/* MODAL DE GESTOR DE CATEGORÍAS */}
             {
