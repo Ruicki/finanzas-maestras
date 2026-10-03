@@ -4,9 +4,8 @@ import React, { useState } from 'react';
 import BudgetCard from '@/components/budgets/BudgetCard';
 import EmptyState from '@/components/shared/EmptyState';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
-import SubscriptionsPanel from '@/components/budgets/SubscriptionsPanel';
 import { formatMoney } from '@/lib/utils';
-import { RepeatIcon, WalletIcon } from '@animateicons/react/lucide';
+import { WalletIcon } from '@animateicons/react/lucide';
 import { PieChart } from 'lucide-react';
 import { estadoDeCategorias, resumenDePresupuesto, sobranteDelMesAnterior } from '@/lib/budgets';
 import { ProfileWithData } from '@/types';
@@ -35,23 +34,22 @@ interface BudgetsTabProps {
     onUpdate?: () => void;
 }
 
-type SubTab = 'resumen' | 'categorias' | 'suscripciones';
+type SubTab = 'resumen' | 'categorias';
 
 
 export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [showWizard, setShowWizard] = useState(false);
-    const [editingSub, setEditingSub] = useState<Partial<Expense> | null>(null);
 
-    // Suscripciones ordenadas por dia de cobro.
+    // Suscripciones ordenadas por dia de cobro — solo para el cálculo del
+    // Fondo de Emergencia/regla 50/30/20 de FinancialRules (ver más abajo). La
+    // pestaña que las muestra y las gestiona vive en Gastos ahora.
     //
     // De `allExpenses` (todos los meses), no de `expenses` (solo el mes
     // visible): una suscripción mensual es una plantilla (`isRecurring: true`)
     // que el cron solo copia a un gasto real el día de cobro — la plantilla
     // misma solo aparece en `expenses` en su mes de creación
-    // (`gastosVisiblesEnElMes`, lib/dashboard-expenses.ts). Filtrarla por el
-    // mes visible la hacía desaparecer de esta pestaña en todos los meses
-    // siguientes, aunque el cron la siguiera cobrando — justo lo reportado.
+    // (`gastosVisiblesEnElMes`, lib/dashboard-expenses.ts).
     const subscriptions = allExpenses
         .filter(e => e.isRecurring)
         .sort((a, b) => (a.dueDate || 1) - (b.dueDate || 1));
@@ -65,7 +63,6 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
     const subTabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
         { id: 'resumen', label: 'Regla 50/30/20', icon: <WalletIcon size={16} /> },
         { id: 'categorias', label: 'Categorías', icon: <PieChart className="lucide-animated" size={16} /> },
-        { id: 'suscripciones', label: 'Suscripciones', icon: <RepeatIcon size={16} /> },
     ];
 
     return (
@@ -75,7 +72,7 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="font-title text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white tracking-tight">Tu Presupuesto</h2>
-                    <p className="text-zinc-500">Reglas financieras, control de gastos y suscripciones.</p>
+                    <p className="text-zinc-500">Reglas financieras y control de gastos por categoría.</p>
                 </div>
             </div>
 
@@ -167,28 +164,15 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                 </div>
             )}
 
-            {subTab === 'suscripciones' && (
-                <SubscriptionsPanel
-                    suscripciones={subscriptions}
-                    totalIngresos={totalIncome}
-                    onNueva={() => setShowWizard(true)}
-                    onEditar={setEditingSub}
-                    onUpdate={onUpdate}
-                />
-            )}
-
-
-            {(showWizard || editingSub) && profileId && (
+            {showWizard && profileId && (
                 <ExpenseWizard
                     profileId={profileId}
                     categories={categories}
                     creditCards={creditCards}
                     accounts={accounts}
-                    initialData={editingSub || { isRecurring: true }}
-                    isEditing={!!editingSub}
                     recentNames={[...new Set(expenses.map(e => e.name))]}
-                    onSuccess={() => { setShowWizard(false); setEditingSub(null); onUpdate?.(); }}
-                    onClose={() => { setShowWizard(false); setEditingSub(null); }}
+                    onSuccess={() => { setShowWizard(false); onUpdate?.(); }}
+                    onClose={() => setShowWizard(false)}
                 />
             )}
         </div>

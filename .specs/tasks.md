@@ -461,3 +461,33 @@ Emergencia sigue sin verse progresivo, revisar si sus gastos fijos reales
 (ej. Internet) están en una categoría cuyo tipo no sea "Fijo" — `tipoDeGasto`
 (`lib/financial-rules.ts`) usa el tipo de la categoría cuando existe, por
 encima de la adivinanza por palabra clave.
+
+## Fase 18: Mover "Suscripciones" de Presupuesto a Gastos
+
+> El usuario pidió, como función aislada (acordó explícitamente trabajar
+> así de aquí en adelante, una función a la vez): "pasa la pestaña de
+> suscripciones a gastos".
+
+- [x] 18.1 **"Suscripciones" ahora es una subpestaña de Gastos**, no de
+      Presupuesto — tiene más sentido ahí: una suscripción es, ante todo,
+      un gasto (`Expense` con `isRecurring: true`), y el informe previo ya
+      señaló lo estrecho del vínculo entre ambos.
+      → `components/dashboard/tabs/ExpensesTab.tsx`: nuevas subpestañas
+      "Gastos"/"Suscripciones" (mismo patrón de `BudgetsTab.tsx`),
+      reutilizando el mismo `ExpenseWizard` ya montado en el archivo para
+      crear/editar una suscripción — sin wizard nuevo.
+      → `components/dashboard/tabs/BudgetsTab.tsx`: se quita la subpestaña
+      y el render de `SubscriptionsPanel`, pero se **conserva** el cálculo
+      de `subscriptions` (`allExpenses.filter(isRecurring)`) — sigue
+      alimentando `recurringExpenses` en `<FinancialRules>` para el Fondo
+      de Emergencia/regla 50/30/20, que no tiene nada que ver con dónde
+      vive la pestaña.
+      → `components/BudgetDashboard.tsx`: `ExpensesTab` ahora recibe
+      `allExpenses` y `totalIncome`, que antes solo llegaban a `BudgetsTab`.
+      → Verificado en navegador real contra `/preview-temas`: Gastos
+      muestra "Gastos"/"Suscripciones" con las mismas 4 tarjetas, calendario
+      y acciones de antes; Presupuesto solo muestra "Regla 50/30/20" y
+      "Categorías", con "Gasto Fijo: $720.50" sin cambios (confirma que
+      `subscriptions` sigue llegando a `FinancialRules` igual que antes).
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (192/192) y
+      `npx next build` limpios.
