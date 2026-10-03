@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma';
+import { Account } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { reportError } from '@/lib/logger';
@@ -509,29 +510,140 @@ export async function processRecurringExpenses(): Promise<ProcessRecurringResult
 
 // ─── SUBSCRIPTION STATUS ─────────────────────────────────────────────────────
 
+/**
+ * Marca una suscripción como pagada — y lo hace de verdad: descuenta la
+ * cuenta/tarjeta vinculada y crea el gasto real, igual que hace
+ * processRecurringExpenses cuando cobra sola una de débito directo.
+ *
+ * Antes esto solo tocaba lastPaidAt: la tarjeta mostraba "Pagado" y un monto
+ * tachado como si hubiera salido dinero, pero no existía ningún gasto en
+ * ningún lado —ni en Gastos, ni en Análisis, ni en el saldo de la cuenta—.
+ * Es el camino que usa el pago manual (autoCharge: false): el usuario paga
+ * aparte y esto registra esa salida de dinero real.
+ *
+ * Si ya se marcó pagada este ciclo, no se vuelve a cobrar (mismo criterio de
+ * ciclo que usa el cron, isPaidThisCycle).
+ */
 export async function markSubscriptionPaid(expenseId: number): Promise<void> {
-    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
-    if (!expense) throw new Error('Gasto no encontrado');
-    if (!expense.isRecurring) throw new Error('Este gasto no es una suscripción');
-    await requireOwnership(expense.profileId);
+    const template = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!template) throw new Error('Gasto no encontrado');
+    if (!template.isRecurring) throw new Error('Este gasto no es una suscripción');
+    await requireOwnership(template.profileId);
 
-    await prisma.expense.update({
-        where: { id: expenseId },
-        data: { lastPaidAt: new Date() },
+    const today = businessToday();
+    if (isPaidThisCycle(template.lastPaidAt, today)) {
+        throw new Error('Esta suscripción ya está marcada como pagada este ciclo');
+    }
+
+    const amount = Number(template.amount);
+
+    let account: Account | null = null;
+    if (template.accountId) {
+        account = await prisma.account.findUnique({ where: { id: template.accountId } });
+        if (!account) throw new Error('Cuenta no encontrada');
+        if (account.lockDate && new Date(account.lockDate) > today) {
+            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+        }
+        if (Number(account.balance) < amount) {
+            throw new Error(`Fondos insuficientes en "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+        }
+    }
+
+    await prisma.$transaction(async (tx) => {
+        if (template.accountId && account) {
+            await decrementAccountBalance(tx, template.accountId, amount, account.name);
+        }
+        if (template.linkedCardId) {
+            await tx.creditCard.update({
+                where: { id: template.linkedCardId },
+                data: { balance: { increment: amount } },
+            });
+        }
+
+        await tx.expense.create({
+            data: {
+                name: template.name,
+                amount,
+                category: template.category,
+                categoryId: template.categoryId,
+                isRecurring: false,
+                isOneTime: true,
+                paymentMethod: template.paymentMethod,
+                linkedCardId: template.linkedCardId,
+                accountId: template.accountId,
+                profileId: template.profileId,
+                createdAt: today,
+            },
+        });
+
+        await tx.expense.update({
+            where: { id: expenseId },
+            data: { lastPaidAt: today },
+        });
     });
 
     revalidatePath('/');
 }
 
+/**
+ * Deshace un pago marcado a mano: revierte la cuenta/tarjeta y borra el gasto
+ * real que creó markSubscriptionPaid, no solo la fecha.
+ *
+ * El gasto a revertir se identifica por nombre + monto + mismo ciclo (mes de
+ * negocio) — mismo criterio, con la misma limitación conocida, que ya usa el
+ * cron (processRecurringExpenses) para no duplicar un cobro: si hay dos
+ * suscripciones con nombre y monto idénticos cobradas el mismo mes, podría
+ * elegir la que no es. No hay forma de distinguirlas sin una relación directa
+ * en el esquema.
+ */
 export async function markSubscriptionUnpaid(expenseId: number): Promise<void> {
-    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
-    if (!expense) throw new Error('Gasto no encontrado');
-    if (!expense.isRecurring) throw new Error('Este gasto no es una suscripción');
-    await requireOwnership(expense.profileId);
+    const template = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!template) throw new Error('Gasto no encontrado');
+    if (!template.isRecurring) throw new Error('Este gasto no es una suscripción');
+    await requireOwnership(template.profileId);
 
-    await prisma.expense.update({
-        where: { id: expenseId },
-        data: { lastPaidAt: null },
+    const today = businessToday();
+    if (!isPaidThisCycle(template.lastPaidAt, today)) {
+        await prisma.expense.update({ where: { id: expenseId }, data: { lastPaidAt: null } });
+        revalidatePath('/');
+        return;
+    }
+
+    const cicloActual = businessMonthKey(today);
+    const candidatas = await prisma.expense.findMany({
+        where: {
+            profileId: template.profileId,
+            name: template.name,
+            amount: template.amount,
+            isRecurring: false,
+            isOneTime: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+    });
+    const copiaReal = candidatas.find(e => businessMonthKey(e.createdAt) === cicloActual);
+
+    await prisma.$transaction(async (tx) => {
+        if (copiaReal) {
+            if (copiaReal.accountId) {
+                await tx.account.update({
+                    where: { id: copiaReal.accountId },
+                    data: { balance: { increment: copiaReal.amount } },
+                });
+            }
+            if (copiaReal.linkedCardId) {
+                await decrementCreditCardBalance(
+                    tx, copiaReal.linkedCardId, Number(copiaReal.amount),
+                    `No se puede revertir "${copiaReal.name}": el cargo a la tarjeta ya fue pagado, así que no queda saldo que revertir.`,
+                );
+            }
+            await tx.expense.delete({ where: { id: copiaReal.id } });
+        }
+
+        await tx.expense.update({
+            where: { id: expenseId },
+            data: { lastPaidAt: null },
+        });
     });
 
     revalidatePath('/');

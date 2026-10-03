@@ -176,10 +176,10 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
                                                 try {
                                                     if (pagadaEsteMes(exp)) {
                                                         await markSubscriptionUnpaid(exp.id);
-                                                        toast.success("Marcado como pendiente");
+                                                        toast.success("Pago revertido: se devolvió el dinero a tu cuenta/tarjeta");
                                                     } else {
                                                         await markSubscriptionPaid(exp.id);
-                                                        toast.success("Marcado como pagado");
+                                                        toast.success("Pago registrado: se descontó de tu cuenta/tarjeta");
                                                     }
                                                     onUpdate?.();
                                                 } catch (error) {

@@ -491,3 +491,46 @@ encima de la adivinanza por palabra clave.
       `subscriptions` sigue llegando a `FinancialRules` igual que antes).
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (192/192) y
       `npx next build` limpios.
+- [x] 18.2 **El botón de editar (lápiz) era invisible** —
+      `opacity-0 group-hover:opacity-100` sin que ninguna tarjeta ancestro
+      tuviera la clase `group`: nunca se volvía visible al pasar el mouse,
+      aunque seguía ahí y era clicable (un botón fantasma). Ahora siempre
+      visible, igual que "Cancelar".
+      → Pedido también: quitar el estado "Vencido" del badge — se ve
+      siempre como Pagado o Pendiente. `getSubscriptionStatus` no cambia
+      (su caso `OVERDUE` lo sigue usando `montoPendienteEsteMes`), solo se
+      deja de pintar distinto en esta tarjeta.
+
+## Fase 19: "Marcar pagado" no movía dinero de verdad
+
+> El usuario notó que al marcar una suscripción como pagada, la tarjeta
+> mostraba "Pagado" y un monto descontado, pero el dinero no se reflejaba
+> en ningún otro lado (Gastos, Análisis, Dinero Disponible).
+
+- [x] 19.1 **`markSubscriptionPaid`/`markSubscriptionUnpaid` solo tocaban
+      `lastPaidAt`** — ninguna cuenta se descontaba, ninguna tarjeta subía
+      de saldo, y no se creaba ningún gasto real. El badge "Pagado" con el
+      monto tachado era puramente cosmético: no existía en ningún otro
+      lado de la app porque nunca existió como transacción.
+      → `markSubscriptionPaid` (`app/actions/budget/expenses.ts`) ahora
+      hace lo mismo que `processRecurringExpenses` cuando cobra sola una de
+      débito directo: descuenta la cuenta/tarjeta vinculada (validando
+      fondos y cuenta bloqueada primero, igual que `payLoan`), crea el
+      gasto real (mismo criterio: `isPaidThisCycle` evita cobrar dos veces
+      el mismo ciclo).
+      → `markSubscriptionUnpaid` revierte: encuentra el gasto real que se
+      creó (por nombre + monto + mismo mes de negocio — mismo criterio, con
+      la misma limitación conocida, que ya usa el cron para no duplicar un
+      cobro), devuelve el dinero a la cuenta/tarjeta, y lo borra.
+      → Mensajes de confirmación actualizados ("Pago registrado: se
+      descontó..." / "Pago revertido: se devolvió...") y el texto del
+      toggle "Cobro automático" en `ExpenseWizard.tsx` aclarado para
+      reflejar que el pago manual sí descuenta, al marcarlo.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (192/192) y
+      `npx next build` limpios. **No verificado end-to-end contra una base
+      de datos real** — este entorno no tiene alcance de red a la base de
+      datos de producción/Neon (confirmado al diagnosticar el Fondo de
+      Emergencia, Fase 17); la lógica reutiliza patrones ya probados en
+      producción (`payLoan`, `processRecurringExpenses`,
+      `deleteExpense`/`updateExpense`), pero conviene que el usuario pruebe
+      marcar y desmarcar una suscripción real tras el deploy.
