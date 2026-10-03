@@ -408,7 +408,7 @@ export default function ExpenseWizard({
                             <div className="flex flex-col pr-3">
                                 <span className="font-bold text-sm text-zinc-800 dark:text-zinc-200">Cobro automático</span>
                                 <span className="text-xs text-zinc-400">
-                                    {autoCharge ? 'Se descuenta solo el día de cobro (débito directo).' : 'No se descuenta: tú lo marcas pagado cuando lo pagues aparte.'}
+                                    {autoCharge ? 'Se descuenta solo el día de cobro (débito directo).' : 'No se descuenta sola: se descuenta cuando tú marques "Pagado" en Suscripciones.'}
                                 </span>
                             </div>
                             <button
