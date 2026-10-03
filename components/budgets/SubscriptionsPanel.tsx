@@ -136,11 +136,12 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
                                         <div className="flex flex-col items-end gap-1">
                                             {(() => {
                                                 const status = getSubscriptionStatus(exp.dueDate || 1, exp.graceDays, exp.lastPaidAt);
+                                                // Solo dos estados visibles: Pagado o Pendiente. OVERDUE sigue
+                                                // existiendo en getSubscriptionStatus (lo sigue usando
+                                                // montoPendienteEsteMes para sumar lo que falta por cobrar),
+                                                // pero aquí no se distingue de Pendiente — pedido explícito.
                                                 if (status === 'PAID') {
                                                     return <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">Pagado</span>;
-                                                }
-                                                if (status === 'OVERDUE') {
-                                                    return <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-500/20 px-2 py-0.5 rounded-full">Vencido</span>;
                                                 }
                                                 return <span className="text-[9px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded-full">Pendiente</span>;
                                             })()}
@@ -194,7 +195,7 @@ export default function SubscriptionsPanel({ suscripciones, totalIngresos, onNue
                                         <div className="flex items-center gap-1">
                                             <button
                                                 onClick={() => onEditar(exp)}
-                                                className="p-1.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-1.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
                                                 title="Editar"
                                             >
                                                 <PencilIcon size={12} />
