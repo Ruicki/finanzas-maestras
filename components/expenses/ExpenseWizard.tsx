@@ -168,7 +168,12 @@ export default function ExpenseWizard({
             onSuccess();
         } catch (error) {
             console.error(error);
-            toast.error("Hubo un error al guardar el gasto");
+            // El mensaje real (fondos insuficientes, cuenta bloqueada,
+            // suscripción duplicada, etc.) se perdía detrás de un texto
+            // genérico — reportado en vivo tras un caso de suscripciones
+            // duplicadas donde el usuario necesitaba ver justo ese mensaje.
+            const mensaje = error instanceof Error ? error.message : "Hubo un error al guardar el gasto";
+            toast.error(mensaje);
         }
     };
 
