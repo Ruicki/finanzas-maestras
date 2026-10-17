@@ -81,15 +81,15 @@
 1. **[Prioridad 1 — HECHO, ver Fase 21 en `tasks.md`] Gastos Más Altos del Mes — hacerlos clickeables.** Hoy es una
    lista plana sin interacción. Permitir hacer click/seleccionar cada gasto para
    desglosar su detalle (de qué está compuesto), no solo mostrarlo como fila.
-2. **[Prioridad 2] Balance Neto — reemplazar por algo más explicativo.** La tarjeta
+2. **[Prioridad 2 — HECHO, ver Fase 22 en `tasks.md`] Balance Neto — reemplazar por algo más explicativo.** La tarjeta
    actual ("Balance Neto") es confusa, no se entiende bien qué representa.
    Reemplazar por una comparación más clara: fuente(s) de ingreso vs. los gastos más
    grandes, analizando si lo que entra alcanza para cubrir esos gastos grandes.
-3. **[Prioridad 3] Gastos Más Altos del Mes — corregir datos duplicados.** Aparecen
+3. **[Prioridad 3 — HECHO, resuelto por la Fase 20] Gastos Más Altos del Mes — corregir datos duplicados.** Aparecen
    gastos repetidos por el bug del sistema de suscripciones (ver detalle y causa
    raíz en el item 9 de Gastos) — no es un bug del cálculo de `topGastosIndividuales`
    en sí, sino de los datos que recibe.
-4. **[Prioridad 4] Tendencia de Gasto — cambiar ventana de 3 a 6 meses.**
+4. **[Prioridad 4 — HECHO, ver Fase 22 en `tasks.md`] Tendencia de Gasto — cambiar ventana de 3 a 6 meses.**
    `tendenciaDeGasto` en `lib/expense-insights.ts` recibe `cantidadMeses` como
    parámetro (default 3) — cambiar el valor usado en `InsightsTab.tsx` a 6.
 

@@ -38,9 +38,11 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
+        totalIncome,
+        salaryTotal,
+        incomeTotal,
         totalExpense,
-        netSavings,
-        savingsRate,
+        topGastosTotal,
         monthlyData,
         topCategories,
         topGastos,
@@ -58,8 +60,6 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         // "gastado" en ninguno de estos cálculos.
         const realExpenses = expenses.filter(e => !e.isProjected);
         const totalExpense = realExpenses.reduce((acc, e) => acc + e.amount, 0);
-        const netSavings = totalIncome - totalExpense;
-        const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
         // B. Datos de Gráfico (Acumulación Diaria)
         const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -126,17 +126,19 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             .sort((a, b) => b.spent - a.spent)
             .slice(0, 3);
 
-        // E. Gastos individuales más altos y tendencia de 3 meses — lo que
+        // E. Gastos individuales más altos y tendencia de 6 meses — lo que
         // reemplaza al "Desglose de Presupuestos", que repetía categoría por
         // categoría lo que ya muestra Presupuesto → Categorías.
         const topGastos = topGastosIndividuales(realExpenses, 8);
-        const tendencia = tendenciaDeGasto(allExpenses, currentMonth, currentYear, 3);
+        const topGastosTotal = topGastos.reduce((suma, g) => suma + Number(g.amount), 0);
+        const tendencia = tendenciaDeGasto(allExpenses, currentMonth, currentYear, 6);
 
         return {
             totalIncome,
+            salaryTotal,
+            incomeTotal,
             totalExpense,
-            netSavings,
-            savingsRate,
+            topGastosTotal,
             monthlyData: cumulativeData,
             topCategories,
             topGastos,
@@ -206,40 +208,69 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                     </div>
                 </div>
 
-                {/* B. Tarjeta de Resumen Mensual (Pequeña) */}
-                <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                        <WalletIcon className="w-32 h-32" />
-                    </div>
+                {/* B. Ingresos vs. Gastos Grandes — reemplaza al confuso "Balance
+                    Neto" (ingresos menos TODO lo gastado, sin decir de dónde sale
+                    ni contra qué se compara). Esto sí dice algo que no está en
+                    ningún otro lado: si lo que entra (desglosado por fuente)
+                    alcanza para cubrir los movimientos más grandes de la lista de
+                    abajo. */}
+                {(() => {
+                    const margen = totalIncome - topGastosTotal;
+                    const coberturaPct = totalIncome > 0 ? (topGastosTotal / totalIncome) * 100 : 0;
+                    return (
+                        <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5">
+                                <WalletIcon className="w-32 h-32" />
+                            </div>
 
-                    <div>
-                        <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            Balance Neto
-                            <span title="Ingresos del mes menos gastos reales del mes (sin proyecciones ni pagos de deuda, que ya se reflejan en el saldo de la tarjeta o del préstamo).">
-                                <InfoIcon size={13} className="text-zinc-400 cursor-help" />
-                            </span>
-                        </p>
-                        <h3 className={`text-4xl md:text-5xl font-black ${netSavings >= 0 ? 'text-zinc-900 dark:text-white' : 'text-red-500'}`}>
-                            {netSavings >= 0 ? '+' : '-'}{currency}{Math.abs(netSavings).toLocaleString()}
-                        </h3>
-                        <p className="text-zinc-400 mt-2 font-medium">
-                            {netSavings >= 0 ? "Estás ahorrando dinero este mes." : "Has gastado más de lo que ingresaste."}
-                        </p>
-                    </div>
+                            <div>
+                                {/* div y no p: el icono de @animateicons envuelve el svg en un
+                                    div, y un div dentro de un p es HTML inválido — rompe la hidratación. */}
+                                <div className="text-sm text-zinc-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                    Ingresos vs. Gastos Grandes
+                                    <span title="Compara todo lo que entró este mes (salario + otros ingresos) contra la suma de tus gastos más grandes (la lista de abajo) — no contra todo lo gastado.">
+                                        <InfoIcon size={13} className="text-zinc-400 cursor-help" />
+                                    </span>
+                                </div>
+                                <h3 className={`text-4xl md:text-5xl font-black ${margen >= 0 ? 'text-zinc-900 dark:text-white' : 'text-red-500'}`}>
+                                    {margen >= 0 ? '+' : '-'}{currency}{Math.abs(margen).toLocaleString()}
+                                </h3>
+                                <p className="text-zinc-400 mt-2 font-medium">
+                                    {totalIncome === 0
+                                        ? "Registra tus ingresos del mes para comparar."
+                                        : margen >= 0
+                                            ? "Tus ingresos cubren tus gastos más grandes, con esto de sobra."
+                                            : "Tus gastos más grandes superan lo que ingresó este mes."}
+                                </p>
+                            </div>
 
-                    <div className="mt-8">
-                        <div className="flex justify-between text-sm mb-2 font-bold text-zinc-500">
-                            <span>Tasa de Ahorro</span>
-                            <span>{savingsRate.toFixed(1)}%</span>
+                            <div className="mt-6 space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-zinc-500 font-medium">Salario</span>
+                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{currency}{salaryTotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-zinc-500 font-medium">Otros ingresos</span>
+                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{currency}{incomeTotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-zinc-500 font-medium">Tus {topGastos.length} gastos más grandes</span>
+                                    <span className="font-bold text-red-500 tabular-nums">-{currency}{topGastosTotal.toLocaleString()}</span>
+                                </div>
+
+                                <div className="h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-2">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-1000 ${coberturaPct <= 70 ? 'bg-emerald-500' : coberturaPct <= 100 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                        style={{ width: `${Math.max(0, Math.min(coberturaPct, 100))}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-zinc-400">
+                                    Tus gastos más grandes consumen el {Math.min(coberturaPct, 999).toFixed(0)}% de tus ingresos del mes.
+                                </p>
+                            </div>
                         </div>
-                        <div className="h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                                className={`h-full rounded-full transition-all duration-1000 ${savingsRate > 20 ? 'bg-emerald-500' : savingsRate > 0 ? 'bg-amber-500' : 'bg-red-500'}`}
-                                style={{ width: `${Math.max(0, Math.min(savingsRate, 100))}%` }}
-                            />
-                        </div>
-                    </div>
-                </div>
+                    );
+                })()}
             </div>
 
 
@@ -335,7 +366,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                 <div className="bg-surface dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm p-8 flex flex-col">
                     <h3 className="text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
                         <TrendingUpIcon size={18} className="text-indigo-500" />
-                        Tendencia de 3 Meses
+                        Tendencia de 6 Meses
                     </h3>
                     <p className="text-zinc-500 text-sm mb-6">Gasto real total, mes a mes.</p>
 
