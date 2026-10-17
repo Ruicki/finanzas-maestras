@@ -12,7 +12,7 @@
 
 ## Gastos
 
-9. **[Prioridad 9] Suscripciones — rediseño del modelo de cobro.** Hoy `createExpense`
+9. **[Prioridad 9 — HECHO, ver Fase 20 en `tasks.md`] Suscripciones — rediseño del modelo de cobro.** Hoy `createExpense`
    descuenta cuenta/tarjeta en el momento de crear CUALQUIER gasto, incluida una
    suscripción (plantilla `isRecurring:true`) — no distingue "crear la plantilla" de
    "cobrar un ciclo". Eso es la causa más probable de los datos repetidos en Análisis

@@ -534,3 +534,75 @@ encima de la adivinanza por palabra clave.
       producción (`payLoan`, `processRecurringExpenses`,
       `deleteExpense`/`updateExpense`), pero conviene que el usuario pruebe
       marcar y desmarcar una suscripción real tras el deploy.
+
+## Fase 20: Crear una suscripción ya movía dinero — causa raíz de los duplicados en Análisis
+
+> Primer item del nuevo `.specs/backlog.md` (dictado por el usuario, orden
+> de prioridad confirmado explícitamente: arreglar Suscripciones antes que
+> los síntomas en Análisis). Reporte del usuario: "Gastos Más Altos" del
+> mes mostraba datos repetidos por el sistema de suscripciones, y
+> "Disponible" en el Resumen Ejecutivo aparecía en $0 sin explicación.
+> Investigado a fondo en código (no solo transcrito) antes de tocar nada.
+
+- [x] 20.1 **Causa raíz: `createExpense` descontaba cuenta/tarjeta al crear
+      CUALQUIER gasto, sin mirar `isRecurring`.** Una plantilla de
+      suscripción (ej. "Claude", factura el día 13) movía dinero real en
+      el momento de registrarla —aunque el usuario la hubiera registrado
+      el día 10, antes de la fecha de facturación— y además quedaba
+      visible como "un gasto" en `gastosVisiblesEnElMes`
+      (`lib/dashboard-expenses.ts`) en su mes de creación. Cuando el cron
+      (`autoCharge`) o `markSubscriptionPaid` (pago manual) procesaban
+      después el cobro real del ciclo, se creaba una SEGUNDA fila por el
+      mismo concepto — de ahí los duplicados en "Gastos Más Altos del Mes"
+      y la Tendencia de Gasto, e indirectamente el gasto fijo mensual
+      inflado que podía forzar "Disponible" a $0 en el Resumen Ejecutivo.
+      → `createExpense`, `updateExpense` y `deleteExpense`
+      (`app/actions/budget/expenses.ts`) ahora distinguen explícitamente
+      "crear/editar/borrar la plantilla" (nunca mueve dinero ni valida
+      fondos) de "crear/editar/borrar un gasto real" (one-time, o la copia
+      que genera cada ciclo el cron/`markSubscriptionPaid`, que sigue
+      moviendo dinero igual que antes). La plantilla solo define el cobro;
+      el cobro real de cada ciclo es el único que mueve dinero y el único
+      que cuenta como "un gasto".
+      → `gastosVisiblesEnElMes` (`lib/dashboard-expenses.ts`) ya nunca
+      muestra una plantilla recurrente como gasto, sin importar el mes ni
+      la frecuencia (se quitó también el caso especial que hacía
+      reaparecer un anual recurrente cada año en su mes de cobro aunque
+      ese año no hubiera ningún cobro real).
+      → Mismo bug, encontrado por separado en otros dos lugares que leen
+      `allExpenses` directo (sin pasar por `gastosVisiblesEnElMes`) y
+      tampoco excluían las plantillas: `gastadoEn` (`lib/budgets.ts`, usado
+      por el arrastre de categorías entre meses) y `tendenciaDeGasto`
+      (`lib/expense-insights.ts`, la Tendencia de Gasto de Análisis — en
+      datos de ejemplo contaba $544.98 en vez de $243 reales, por sumar
+      cuatro plantillas de suscripción además de los gastos reales).
+      Ambos corregidos con el mismo criterio: excluir `isRecurring`.
+      → **Limitación conocida, inevitable sin poder migrar datos en la BD
+      real (sin alcance de red a producción, ver Fase 17/19):** cualquier
+      suscripción que ya exista hoy en la base de datos tomó dinero una vez
+      al crearse, bajo el bug viejo. Si se borra esa suscripción vieja
+      después de este fix, ya no se le devuelve ese monto a la cuenta (el
+      borrado ahora asume, correctamente para una plantilla nueva, que la
+      plantilla nunca tomó dinero). Si el usuario nota un saldo que no
+      cuadra al borrar una suscripción vieja, es ese caso puntual — no
+      afecta nada creado a partir de este fix.
+      → Verificado en navegador real contra `/preview-temas` (que tiene
+      Netflix, Spotify, Gimnasio y Seguro del auto como plantillas con
+      fecha dentro del mes visible, el escenario exacto del bug): antes del
+      fix, "Mis Gastos" y "Tendencia de Gasto" las contaban igual que un
+      gasto real; después del fix, "Mis Gastos" muestra solo los 7
+      movimientos reales ($243 total) y "Suscripciones" sigue mostrando
+      las 4 plantillas con su estado Pagado/Pendiente normal, sin ninguna
+      aparecer duplicada en Gastos ni en Análisis.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios.
+
+Fuera de alcance de este fix, decidido explícitamente para seguir el
+protocolo de un apartado a la vez: la semántica de `graceDays` y el
+estado Pagado/Pendiente/Vencido (`lib/subscription-status.ts`) — revisados
+durante la investigación, ya funcionan como pide el usuario (pendiente
+hasta la fecha de facturación + gracia, vencido después, pagado solo al
+marcarlo o al cobro automático real); no hacía falta tocarlos. El resto
+del rediseño de Suscripciones que pidió el usuario (distinguir
+"suscripción" de "monto recurrente variable" como dos naturalezas del
+mismo mecanismo) es conceptual, no requiere cambio de código adicional.

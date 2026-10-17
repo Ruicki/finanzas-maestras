@@ -70,19 +70,25 @@ export interface CreateExpenseInput {
 export async function createExpense(data: CreateExpenseInput) {
     await requireOwnership(data.profileId);
     const isProjected = data.isProjected ?? false;
+    // La plantilla de una suscripción/gasto recurrente es solo una definición
+    // ("esto se cobra el día X de cada ciclo"): no es ella misma un cobro, así
+    // que crearla no debe mover dinero ni validar fondos todavía — eso lo hace
+    // el cobro real de cada ciclo (el cron `processRecurringExpenses` o
+    // `markSubscriptionPaid`), igual que con una proyección.
+    const esPlantillaRecurrente = !isProjected && (data.isRecurring ?? true);
 
-    // Un gasto proyectado es solo un plan a futuro: no mueve dinero real,
-    // así que tampoco necesita validar fondos todavía (se valida al confirmarlo).
     if (!isProjected) {
         if (data.accountId) {
             const account = await prisma.account.findUnique({ where: { id: data.accountId } });
             if (!account) throw new Error('Cuenta no encontrada');
             if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
-            if (account.lockDate && new Date(account.lockDate) > new Date()) {
-                throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
-            }
-            if (Number(account.balance) < data.amount) {
-                throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+            if (!esPlantillaRecurrente) {
+                if (account.lockDate && new Date(account.lockDate) > new Date()) {
+                    throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+                }
+                if (Number(account.balance) < data.amount) {
+                    throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+                }
             }
         }
         if (data.linkedCardId) {
@@ -117,7 +123,7 @@ export async function createExpense(data: CreateExpenseInput) {
                 },
             });
 
-            if (!isProjected) {
+            if (!isProjected && !esPlantillaRecurrente) {
                 if (data.linkedCardId) {
                     await tx.creditCard.update({
                         where: { id: data.linkedCardId },
@@ -146,11 +152,26 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
     if (!oldExpense) throw new Error('Gasto no encontrado');
     await requireOwnership(oldExpense.profileId);
 
+    const newAmount = data.amount !== undefined ? data.amount : Number(oldExpense.amount);
+    const newAccountId = data.accountId !== undefined ? data.accountId : oldExpense.accountId;
+    const newCardId = data.linkedCardId !== undefined ? data.linkedCardId : oldExpense.linkedCardId;
+    const newIsRecurring = data.isRecurring !== undefined ? data.isRecurring : oldExpense.isRecurring;
+
+    // Un gasto todavía proyectado nunca movió dinero real, así que editarlo
+    // (monto, cuenta, etc.) tampoco debe mover ni validar fondos — eso pasa
+    // recién al confirmarlo con confirmExpense(). Una plantilla recurrente
+    // (suscripción) tampoco mueve dinero nunca por sí misma — ver
+    // createExpense — así que editarla (monto, cuenta, etc.) no revierte ni
+    // aplica ningún movimiento real; solo cambia la definición para el
+    // próximo cobro de ciclo.
+    const vieneDeMoverDinero = !oldExpense.isProjected && !oldExpense.isRecurring;
+    const vaAMoverDinero = !oldExpense.isProjected && !newIsRecurring;
+
     if (data.accountId !== undefined && data.accountId !== null) {
         const account = await prisma.account.findUnique({ where: { id: data.accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
         if (account.profileId !== oldExpense.profileId) throw new Error('La cuenta no pertenece a este perfil');
-        if (!oldExpense.isProjected && account.lockDate && new Date(account.lockDate) > new Date()) {
+        if (vaAMoverDinero && account.lockDate && new Date(account.lockDate) > new Date()) {
             throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
         }
     }
@@ -160,21 +181,15 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
         if (card.profileId !== oldExpense.profileId) throw new Error('La tarjeta no pertenece a este perfil');
     }
 
-    const newAmount = data.amount !== undefined ? data.amount : Number(oldExpense.amount);
-    const newAccountId = data.accountId !== undefined ? data.accountId : oldExpense.accountId;
-    const newCardId = data.linkedCardId !== undefined ? data.linkedCardId : oldExpense.linkedCardId;
-
-    // Un gasto todavía proyectado nunca movió dinero real, así que editarlo
-    // (monto, cuenta, etc.) tampoco debe mover ni validar fondos — eso pasa
-    // recién al confirmarlo con confirmExpense().
-    if (!oldExpense.isProjected && newAccountId) {
+    if (vaAMoverDinero && newAccountId) {
         const targetAccount = await prisma.account.findUnique({ where: { id: newAccountId } });
         if (!targetAccount) throw new Error('Cuenta no encontrada');
-        // Si es la misma cuenta que ya tenía, primero se revierte el monto viejo
-        // (igual que hace la transacción de abajo) antes de aplicar el nuevo.
+        // Si es la misma cuenta que ya tenía Y el estado viejo ya había
+        // tomado ese dinero, primero se revierte el monto viejo (igual que
+        // hace la transacción de abajo) antes de aplicar el nuevo.
         const projectedBalance =
             Number(targetAccount.balance) +
-            (oldExpense.accountId === newAccountId ? Number(oldExpense.amount) : 0) -
+            (vieneDeMoverDinero && oldExpense.accountId === newAccountId ? Number(oldExpense.amount) : 0) -
             newAmount;
         if (projectedBalance < 0) {
             throw new Error(`Fondos insuficientes en la cuenta "${targetAccount.name}" (disponible: $${Number(targetAccount.balance).toFixed(2)})`);
@@ -183,7 +198,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
 
     try {
         await prisma.$transaction(async (tx) => {
-            if (!oldExpense.isProjected) {
+            if (vieneDeMoverDinero) {
                 // Revertir impacto anterior
                 if (oldExpense.accountId) {
                     await tx.account.update({
@@ -201,7 +216,9 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
                         `No se puede editar "${oldExpense.name}": el cargo de $${Number(oldExpense.amount).toFixed(2)} a la tarjeta ya fue pagado, asi que no queda saldo que revertir.`,
                     );
                 }
+            }
 
+            if (vaAMoverDinero) {
                 if (newAccountId) {
                     await decrementAccountBalance(tx, newAccountId, newAmount);
                 }
@@ -258,7 +275,10 @@ export async function deleteExpense(id: number): Promise<void> {
             await requireOwnership(expense.profileId);
 
             // Si nunca se confirmó, nunca movió dinero real: no hay nada que revertir.
-            if (!expense.isProjected) {
+            // Tampoco si es una plantilla recurrente (suscripción): la plantilla en sí
+            // nunca mueve dinero — ver createExpense —, solo lo hace el cobro real de
+            // cada ciclo (ese sí queda como su propia fila, con isRecurring: false).
+            if (!expense.isProjected && !expense.isRecurring) {
                 if (expense.accountId) {
                     await tx.account.update({
                         where: { id: expense.accountId },

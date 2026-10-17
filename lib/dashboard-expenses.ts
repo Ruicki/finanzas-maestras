@@ -46,10 +46,18 @@ function estaEnElMes(fecha: Date | string, month0: number, year: number): boolea
  * eliminar. Para quien la creó, se sentía como que el gasto simplemente
  * desaparecía.
  *
- * Los anuales recurrentes solo aparecen en su mes de cobro (el de su
- * creación, cada año); el resto de los gastos reales, solo en su mes de
- * creación —el cron `processRecurringExpenses` es quien crea la copia real en
- * cada mes posterior de un recurrente mensual, no esta vista.
+ * **La plantilla de una suscripción/gasto recurrente (`isRecurring: true`)
+ * nunca aparece aquí, en ningún mes.** Es solo una definición ("esto se cobra
+ * tal día de cada ciclo"), no mueve dinero al crearse (ver `createExpense` en
+ * `app/actions/budget/expenses.ts`) y por eso tampoco es, por sí misma, un
+ * gasto real. Lo que sí es una transacción real es la copia que genera cada
+ * ciclo el cron `processRecurringExpenses` (débito automático) o
+ * `markSubscriptionPaid` (pago manual) — esas llegan con `isRecurring: false`
+ * y sí se ven, en su propio mes de creación. (Antes un anual recurrente se
+ * mostraba igual cada año en su mes de cobro aunque no hubiera ningún cobro
+ * real ese año, y cualquier recurrente se mostraba también en su mes de
+ * creación — ambos casos duplicaban con la copia real cuando esta sí
+ * llegaba a generarse.)
  */
 export function gastosVisiblesEnElMes<T extends GastoDelDashboard>(
     gastos: T[],
@@ -59,13 +67,7 @@ export function gastosVisiblesEnElMes<T extends GastoDelDashboard>(
     return gastos.filter((gasto) => {
         if (esPagoDeDeuda(gasto)) return false;
         if (gasto.isProjected) return true;
-        if (gasto.isRecurring && gasto.recurrenceType === 'ANNUAL') {
-            // Mismo criterio de timezone de negocio que estaEnElMes, pero
-            // comparando solo el mes (sin el año): un anual aparece cada año
-            // en su mes de cobro.
-            const mesDeCreacion = businessMonthKey(gasto.createdAt).slice(5, 7);
-            return mesDeCreacion === String(month0 + 1).padStart(2, '0');
-        }
+        if (gasto.isRecurring) return false;
         return estaEnElMes(gasto.createdAt, month0, year);
     });
 }

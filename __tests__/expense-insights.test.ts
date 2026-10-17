@@ -54,6 +54,17 @@ describe('tendenciaDeGasto', () => {
         expect(tendencia).toEqual([{ clave: '2026-04', etiqueta: 'Abr', total: 30 }]);
     });
 
+    it('excluye plantillas recurrentes del total — no mueven dinero al crearse', () => {
+        // Una suscripción (Netflix) no debe sumarse dos veces: ni como su
+        // propia plantilla ni como la copia real que genera su ciclo de cobro.
+        const gastos = [
+            { amount: 30, createdAt: enAbril(1) },
+            { amount: 14.99, createdAt: enAbril(1), isRecurring: true },
+        ];
+        const tendencia = tendenciaDeGasto(gastos, MES, AÑO, 1);
+        expect(tendencia).toEqual([{ clave: '2026-04', etiqueta: 'Abr', total: 30 }]);
+    });
+
     it('cruza el límite de año hacia atrás sin romperse', () => {
         // Enero (mes 0): los 2 meses anteriores son noviembre y diciembre del año pasado.
         const tendencia = tendenciaDeGasto([], 0, 2026, 3);

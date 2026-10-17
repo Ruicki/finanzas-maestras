@@ -37,13 +37,33 @@ describe('gastosVisiblesEnElMes', () => {
         expect(gastosVisiblesEnElMes([gasto], MES, AÑO)).toContain(gasto);
     });
 
-    it('un anual recurrente solo aparece en su mes de cobro', () => {
-        const seguro = {
+    it('una plantilla recurrente nunca se muestra como gasto, en ningún mes', () => {
+        // La plantilla (isRecurring: true) es solo una definición de cobro:
+        // no mueve dinero al crearse (ver createExpense), así que tampoco debe
+        // contarse como "un gasto" ni en su mes de creación ni en ningún otro —
+        // eso es trabajo exclusivo de la copia real que genera cada ciclo el
+        // cron o markSubscriptionPaid.
+        const plantillaAnual = {
             isProjected: false, isRecurring: true, recurrenceType: 'ANNUAL',
             createdAt: enAbril(1), amount: 240,
         };
-        expect(gastosVisiblesEnElMes([seguro], MES, AÑO)).toContain(seguro);
-        expect(gastosVisiblesEnElMes([seguro], MES + 1, AÑO)).not.toContain(seguro);
+        const plantillaMensual = {
+            isProjected: false, isRecurring: true, recurrenceType: 'MONTHLY',
+            createdAt: enAbril(1), amount: 15,
+        };
+        expect(gastosVisiblesEnElMes([plantillaAnual, plantillaMensual], MES, AÑO)).toEqual([]);
+        expect(gastosVisiblesEnElMes([plantillaAnual, plantillaMensual], MES + 1, AÑO)).toEqual([]);
+    });
+
+    it('la copia real de una suscripción (isRecurring: false) sí se muestra en su mes', () => {
+        // Lo que genera processRecurringExpenses o markSubscriptionPaid cada
+        // ciclo: misma forma que un gasto normal, solo que nace de una
+        // plantilla recurrente.
+        const copiaDelCiclo = {
+            isProjected: false, isRecurring: false, recurrenceType: null,
+            createdAt: enAbril(13), amount: 15,
+        };
+        expect(gastosVisiblesEnElMes([copiaDelCiclo], MES, AÑO)).toContain(copiaDelCiclo);
     });
 
     it('nunca muestra un pago de deuda, sea del mes que sea', () => {
