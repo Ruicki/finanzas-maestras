@@ -23,7 +23,6 @@ import GoalsTab from '@/components/dashboard/tabs/GoalsTab';
 import DebtsTab from '@/components/dashboard/tabs/DebtsTab';
 import BudgetsTab from '@/components/dashboard/tabs/BudgetsTab';
 import AccountsTab from '@/components/dashboard/tabs/AccountsTab';
-import InsightsTab from '@/components/dashboard/tabs/InsightsTab';
 import UserSettingsModal from '@/components/dashboard/modals/UserSettingsModal';
 import ProfileManagerModal from '@/components/dashboard/modals/ProfileManagerModal';
 import OnboardingIntro, { type OnboardingIntent } from '@/components/shared/OnboardingIntro';
@@ -43,10 +42,15 @@ interface BudgetDashboardProps {
 // Únicos valores válidos de ?tab= — cualquier otro (link viejo, typo, un tab
 // renombrado en el futuro) debe caer de vuelta a "accounts" en vez de dejar el
 // dashboard en blanco sin ningún tab marcado como activo.
-const VALID_TABS = ['accounts', 'incomes', 'expenses', 'goals', 'debts', 'budgets', 'insights'] as const;
+const VALID_TABS = ['accounts', 'incomes', 'expenses', 'goals', 'debts', 'budgets'] as const;
 type ValidTab = typeof VALID_TABS[number];
 
 function toValidTab(tab: string | null): ValidTab {
+    // "insights" era su propia pestaña (Análisis) antes de fusionarse con
+    // Presupuesto como una tercera sub-pestaña — un link o marcador viejo con
+    // ?tab=insights cae en "budgets" (ahí sigue, en la sub-pestaña Análisis)
+    // en vez de resetear al usuario a "accounts".
+    if (tab === 'insights') return 'budgets';
     return (VALID_TABS as readonly string[]).includes(tab ?? '') ? (tab as ValidTab) : 'accounts';
 }
 
@@ -419,15 +423,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 <CardIcon size={18} />
                                 <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Deudas</span>
                             </button>
-                            {/* Budgets */}
+                            {/* Budgets + Insights fusionados (pedido del usuario: se
+                                percibían como pestañas redundantes). Análisis vive
+                                ahora como una sub-pestaña dentro de este tab. */}
                             <button onClick={() => updateTab('budgets')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'budgets' ? 'bg-indigo-600 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
                                 <TrendingUpIcon size={18} />
-                                <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Presupuesto</span>
-                            </button>
-                            {/* Insights */}
-                            <button onClick={() => updateTab('insights')} className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-3 md:py-3 px-2 md:px-6 rounded-xl transition-all duration-300 md:flex-1 ${activeTab === 'insights' ? 'bg-indigo-600 dark:bg-white text-white dark:text-black shadow-lg scale-[1.02]' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-                                <Briefcase className="lucide-animated" size={18} />
-                                <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Análisis</span>
+                                <span className="text-[10px] md:text-sm font-bold uppercase md:normal-case tracking-wide">Panorama</span>
                             </button>
                         </div>
                     </div>
@@ -503,6 +504,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 allExpenses={activeProfile?.expenses?.filter((e) => !esPagoDeDeuda(e)) || []}
                                 creditCards={activeProfile.creditCards || []}
                                 accounts={activeProfile.accounts || []}
+                                incomes={additionalIncomes}
+                                salaries={allSalaries}
                                 profileId={activeProfile.id}
                                 totalIncome={totalMonthlyIncome}
                                 totalDebtPayments={totalDebtPayments}
@@ -511,20 +514,6 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 currentMonth={selectedMonth}
                                 currentYear={selectedYear}
                                 onUpdate={refreshData}
-                            />
-                        )}
-
-                        {activeTab === 'insights' && (
-                            <InsightsTab
-                                expenses={expensesList}
-                                allExpenses={activeProfile?.expenses?.filter((e) => !esPagoDeDeuda(e)) || []}
-                                categories={activeProfile.categories || []}
-                                incomes={additionalIncomes}
-                                salaries={allSalaries}
-                                accounts={activeProfile.accounts || []}
-                                creditCards={activeProfile.creditCards || []}
-                                selectedMonth={selectedMonth}
-                                selectedYear={selectedYear}
                             />
                         )}
                     </div>

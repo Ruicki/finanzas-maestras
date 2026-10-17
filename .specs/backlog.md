@@ -95,7 +95,12 @@
 
 ## General / transversal
 
-5. **[Prioridad 5] Fusionar Análisis y Presupuesto en un solo apartado.** Hoy son
+5. **[Prioridad 5 — HECHO, ver Fase 24 en `tasks.md`] Fusionar Análisis y Presupuesto en un solo apartado.** Hoy son
    dos pestañas separadas que se perciben redundantes. Unificarlas bajo un nombre
    nuevo que cubra ambos (a decidir — ninguno de los dos nombres actuales sirve
    para el conjunto).
+
+---
+
+**Backlog vacío — todos los items dictados por el usuario (1 a 9b) están hechos.**
+Ver `tasks.md` Fases 20 a 24 para el detalle de cada uno.
