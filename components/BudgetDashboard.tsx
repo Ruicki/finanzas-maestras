@@ -521,6 +521,8 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                                 categories={activeProfile.categories || []}
                                 incomes={additionalIncomes}
                                 salaries={allSalaries}
+                                accounts={activeProfile.accounts || []}
+                                creditCards={activeProfile.creditCards || []}
                                 selectedMonth={selectedMonth}
                                 selectedYear={selectedYear}
                             />

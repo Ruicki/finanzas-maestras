@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { TrendingUpIcon, WalletIcon, InfoIcon } from '@animateicons/react/lucide';
-import { ListIcon } from 'lucide-react';
+import { ListIcon, ChevronDown, ChevronUp, CreditCard as CardIcon } from 'lucide-react';
 import { ProfileWithData } from '@/types';
 import { nombreCategoria } from '@/lib/expense-category';
 import { topGastosIndividuales, tendenciaDeGasto } from '@/lib/expense-insights';
@@ -14,6 +14,8 @@ type Expense = ProfileWithData['expenses'][number];
 type Category = ProfileWithData['categories'][number];
 type AdditionalIncome = ProfileWithData['incomes'][number];
 type Salary = ProfileWithData['salaries'][number];
+type Account = ProfileWithData['accounts'][number];
+type CreditCard = ProfileWithData['creditCards'][number];
 
 // Tipos auxiliares
 type InsightsTabProps = {
@@ -22,12 +24,17 @@ type InsightsTabProps = {
     categories: Category[];
     incomes: AdditionalIncome[];
     salaries: Salary[];
+    accounts?: Account[];
+    creditCards?: CreditCard[];
     currency?: string;
     selectedMonth?: number;
     selectedYear?: number;
 };
 
-export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, currency = "$", selectedMonth, selectedYear }: InsightsTabProps) {
+export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, accounts = [], creditCards = [], currency = "$", selectedMonth, selectedYear }: InsightsTabProps) {
+    // Gasto más alto seleccionado, para ver su desglose completo (cuenta/
+    // tarjeta usada, método de pago, fecha completa) sin salir de Análisis.
+    const [gastoSeleccionadoId, setGastoSeleccionadoId] = useState<number | null>(null);
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
@@ -252,21 +259,65 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                     </div>
 
                     <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                        {topGastos.map((gasto, idx) => (
-                            <div key={gasto.id} className="flex items-center gap-4 p-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors duration-200">
-                                <span className="text-sm font-black text-zinc-300 dark:text-zinc-700 w-5 text-center shrink-0">{idx + 1}</span>
-                                <div className={`text-xl w-10 h-10 flex items-center justify-center rounded-full shrink-0 shadow-sm ${gasto.categoryRel?.color || 'text-zinc-500'} ${gasto.categoryRel?.color?.includes('text-') ? gasto.categoryRel.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-                                    <CategoryIcon iconName={gasto.categoryRel?.icon || 'HelpCircle'} size={18} />
+                        {topGastos.map((gasto, idx) => {
+                            const expandido = gastoSeleccionadoId === gasto.id;
+                            const cuentaOTarjeta = gasto.linkedCardId
+                                ? creditCards.find(c => c.id === gasto.linkedCardId)?.name || 'Tarjeta'
+                                : accounts.find(a => a.id === gasto.accountId)?.name || 'Efectivo/Otro';
+
+                            return (
+                                <div key={gasto.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGastoSeleccionadoId(expandido ? null : gasto.id)}
+                                        aria-expanded={expandido}
+                                        className={`w-full flex items-center gap-4 p-6 text-left transition-colors duration-200 ${expandido ? 'bg-zinc-50 dark:bg-zinc-800/30' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}
+                                    >
+                                        <span className="text-sm font-black text-zinc-300 dark:text-zinc-700 w-5 text-center shrink-0">{idx + 1}</span>
+                                        <div className={`text-xl w-10 h-10 flex items-center justify-center rounded-full shrink-0 shadow-sm ${gasto.categoryRel?.color || 'text-zinc-500'} ${gasto.categoryRel?.color?.includes('text-') ? gasto.categoryRel.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                                            <CategoryIcon iconName={gasto.categoryRel?.icon || 'HelpCircle'} size={18} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
+                                            <p className="text-xs text-zinc-400 truncate">
+                                                {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                            </p>
+                                        </div>
+                                        <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{currency}{gasto.amount.toLocaleString()}</p>
+                                        <span className="text-zinc-400 dark:text-zinc-500 shrink-0">
+                                            {expandido ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                        </span>
+                                    </button>
+
+                                    {expandido && (
+                                        <div className="mx-6 mb-6 p-5 bg-zinc-50 dark:bg-black/20 rounded-2xl border border-zinc-200 dark:border-white/10 text-sm space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="flex justify-between">
+                                                <span className="text-zinc-500">Categoría</span>
+                                                <span className="font-bold text-zinc-800 dark:text-zinc-200">{nombreCategoria(gasto)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-zinc-500">Fecha</span>
+                                                <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                                                    {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-zinc-500">{gasto.linkedCardId ? 'Tarjeta' : 'Cuenta'}</span>
+                                                <span className="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                                                    {gasto.linkedCardId ? <CardIcon size={13} /> : <WalletIcon size={13} />}
+                                                    {cuentaOTarjeta}
+                                                </span>
+                                            </div>
+                                            <div className="h-px bg-zinc-200 dark:bg-white/10" />
+                                            <div className="flex justify-between font-black text-zinc-900 dark:text-white">
+                                                <span>Monto</span>
+                                                <span>{currency}{gasto.amount.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
-                                    <p className="text-xs text-zinc-400 truncate">
-                                        {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                                    </p>
-                                </div>
-                                <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{currency}{gasto.amount.toLocaleString()}</p>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {topGastos.length === 0 && (
                             <div className="p-12 text-center text-zinc-400 flex flex-col items-center justify-center min-h-[200px]">
