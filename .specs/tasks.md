@@ -663,3 +663,59 @@ mismo mecanismo) es conceptual, no requiere cambio de código adicional.
       Meses" muestra May–Oct. Cero errores de consola.
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
       `npx next build` limpios.
+
+## Fase 23: Presupuesto — Fondo de Emergencia, selector de reglas, score y endeudamiento explicados
+
+> Items 6, 7, 8 y 9b del backlog — los cuatro viven en el mismo componente
+> (`FinancialRules.tsx`) y están acoplados entre sí, así que se atacan juntos
+> en vez de cuatro PRs separados sobre el mismo archivo. Usuario pidió no
+> parar hasta terminar todo el backlog restante.
+
+- [x] 23.1 **Item 9b, la causa raíz real de "Fondo de Emergencia sigue en 0
+      meses": el componente entero vivía detrás de `if (income === 0) return
+      <placeholder>`**, incluida la tarjeta de Fondo de Emergencia — que no
+      depende del ingreso del mes para nada, solo del gasto fijo
+      (`gastoFijoYVariableDelMes`) y del efectivo/ahorro líquido
+      (`totalCash`/`totalSavings`). Cualquier mes sin un `Salary` registrado
+      forzaba la tarjeta a mostrar "0.0 meses" fijo, sin importar cuánto
+      ahorro real hubiera.
+      → Se movió el cálculo de Fondo de Emergencia (y el gasto fijo/variable
+      del que depende) a ANTES del `if`, y se extrajo a su propio componente
+      (`FondoEmergenciaCard`, fuera del cuerpo de `FinancialRules` — nunca
+      un componente anidado, regla de `AGENTS.md`) para que se renderice
+      siempre, con o sin ingreso registrado. Cuando no hay ingreso, el resto
+      de la tarjeta (50/30/20, Score, Endeudamiento — esos sí necesitan
+      dividir entre el ingreso) sigue mostrando el aviso de "Sin ingresos
+      registrados", pero ya aclarando que el Fondo de Emergencia no necesita
+      ingreso y se calcula igual, justo debajo.
+- [x] 23.2 **Item 7: selector de regla financiera** — antes `FinancialRules.tsx`
+      solo conocía 50/30/20, sin alternativa. Se agregaron dos reglas más
+      (70/20/10, más margen para gasto fijo alto; 60/20/20, más ahorro),
+      las tres reparten el 100% en las mismas tres categorías que ya calcula
+      `tipoDeGasto` (Necesidades/Deseos/Ahorro) — solo cambia el objetivo
+      contra el que se compara, nunca cómo se clasifica o suma cada gasto
+      (`lib/financial-rules.ts` no se tocó). Selector de pastillas dentro de
+      la tarjeta de la regla; la elección se recuerda en `localStorage`
+      (preferencia de este navegador, no hacía falta migrar la base de
+      datos) — mismo patrón ya usado en `color-theme-provider.tsx`
+      (lectura en un efecto, con el mismo `eslint-disable` documentado para
+      `react-hooks/set-state-in-effect`: el valor solo se conoce en
+      cliente).
+- [x] 23.3 **Item 6: Score Financiero explicado** — antes solo había una
+      frase genérica abajo del número. Ahora se desglosan los 3 factores
+      que lo componen (Necesidades dentro del objetivo, Deseos dentro del
+      objetivo, Deudas en nivel saludable), cada uno con ✓/✗ según pase o
+      no, usando los mismos objetivos de la regla elegida.
+- [x] 23.4 **Item 8: Endeudamiento explicado** — tooltip + texto fijo que
+      aclaran de qué sale el %: pago mínimo de tarjetas (interés + seguro +
+      % mínimo sobre el saldo, mismo cálculo que ya usa
+      `BudgetDashboard.tsx`) más la cuota mensual de préstamos, entre el
+      ingreso del mes.
+      → Verificado en navegador real contra `/preview-temas`: Fondo de
+      Emergencia muestra 10.9 meses reales (antes habría sido 0.0 si el
+      mes no tuviera `Salary`); clic en "70/20/10" cambia el título, la
+      descripción, los objetivos junto a cada rebanada (70%/20%/10%) y
+      recalcula el score en vivo; tooltip de Endeudamiento muestra el
+      desglose del cálculo. Cero errores de consola.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios.

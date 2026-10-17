@@ -52,7 +52,7 @@
 
 ## Presupuesto
 
-6. **[Prioridad 6] Resumen Ejecutivo — reestructurar.** Mantener el desglose de
+6. **[Prioridad 6 — HECHO, ver Fase 23 en `tasks.md`] Resumen Ejecutivo — reestructurar.** Mantener el desglose de
    Ingresos / Gasto Fijo / Gasto Variable, pero: (a) corregir que "Disponible"
    aparezca en $0 — en `FinancialRules.tsx` es `income - needs - wants`, así que si
    sale 0 es porque `needs`/`wants` están inflados (ver la causa raíz del item 9:
@@ -60,15 +60,15 @@
    es 0 (ver item de Fondo de Emergencia); (b) el "Score Financiero" (0-100) no se
    explica de forma entendible para todos los usuarios — hoy solo hay una frase
    pequeña abajo, falta un desglose claro de qué factores lo suben o bajan.
-7. **[Prioridad 7] Regla 50/30/20 → selector de regla financiera.** Hoy
+7. **[Prioridad 7 — HECHO, ver Fase 23 en `tasks.md`] Regla 50/30/20 → selector de regla financiera.** Hoy
    `FinancialRules.tsx` solo calcula 50/30/20, sin alternativa. Agregar un selector
    para que el usuario elija qué regla financiera usar (50/30/20 y otras reglas
    conocidas a definir/investigar), en vez de una única regla fija para todos.
-8. **[Prioridad 8] Endeudamiento — explicar el cálculo.** La tarjeta de
+8. **[Prioridad 8 — HECHO, ver Fase 23 en `tasks.md`] Endeudamiento — explicar el cálculo.** La tarjeta de
    Endeudamiento solo muestra el % y "MÁX 36%", sin explicar de qué sale ese
    porcentaje (es `pagos de deuda mensuales / ingreso`) ni qué cuenta como "pago de
    deuda". Agregar una explicación visible en la UI.
-9. **[Prioridad 9b] Fondo de Emergencia — sigue sin reflejar bien la realidad.**
+9. **[Prioridad 9b — HECHO, ver Fase 23 en `tasks.md`] Fondo de Emergencia — sigue sin reflejar bien la realidad.**
    Aunque haya ahorro real, no queda claro de qué cuentas/saldos toma el dato para
    graficarse. Ligado a la investigación abierta de "sigue en 0 meses": el caso más
    probable es ingreso $0 del mes (ver el early-return de `FinancialRules.tsx` que
