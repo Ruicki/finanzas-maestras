@@ -606,3 +606,31 @@ marcarlo o al cobro automático real); no hacía falta tocarlos. El resto
 del rediseño de Suscripciones que pidió el usuario (distinguir
 "suscripción" de "monto recurrente variable" como dos naturalezas del
 mismo mecanismo) es conceptual, no requiere cambio de código adicional.
+
+## Fase 21: Gastos Más Altos del Mes — clickeables para ver el desglose
+
+> Item 1 del backlog (máxima prioridad dictada por el usuario): "las
+> categorías con los gastos más altos... se pueda hacer click o
+> seleccionar y se desglose para ver cuáles son". Cada fila de "Gastos
+> Más Altos del Mes" ya es un gasto individual (no una categoría
+> agrupada) — el desglose útil es ver su detalle completo, no una
+> composición de sub-gastos.
+
+- [x] 21.1 **Cada fila de "Gastos Más Altos del Mes" (`InsightsTab.tsx`)
+      ahora es clickeable** — abre un panel con Categoría, Fecha completa,
+      Cuenta/Tarjeta usada y Monto, con el mismo patrón visual de
+      expandir/colapsar (chevron, panel animado) que ya usa el historial
+      de ingresos (`SalaryHistory.tsx`), para mantener consistencia.
+      → `InsightsTab` recibe dos props nuevas, `accounts` y `creditCards`
+      (ya las tenía disponibles `BudgetDashboard.tsx`, solo faltaba
+      pasarlas), para resolver el nombre de la cuenta/tarjeta del gasto —
+      mismo criterio de resolución (`linkedCardId` vs `accountId`) que ya
+      usa `ExpensesTab.tsx`.
+      → Verificado en navegador real contra `/preview-temas`: clic en
+      "Super Xtra" despliega Categoría: Comida, Fecha: 2 de octubre de
+      2026, Cuenta: Banco General, Monto: $86.4; el chevron rota y el
+      resto de las filas se mantienen colapsadas. Sin errores de consola
+      nuevos (el warning de hidratación de "Balance Neto" es preexistente,
+      no relacionado con este cambio).
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios.

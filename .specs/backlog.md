@@ -78,7 +78,7 @@
 
 ## Análisis
 
-1. **[Prioridad 1] Gastos Más Altos del Mes — hacerlos clickeables.** Hoy es una
+1. **[Prioridad 1 — HECHO, ver Fase 21 en `tasks.md`] Gastos Más Altos del Mes — hacerlos clickeables.** Hoy es una
    lista plana sin interacción. Permitir hacer click/seleccionar cada gasto para
    desglosar su detalle (de qué está compuesto), no solo mostrarlo como fila.
 2. **[Prioridad 2] Balance Neto — reemplazar por algo más explicativo.** La tarjeta
