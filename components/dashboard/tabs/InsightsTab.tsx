@@ -89,7 +89,10 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             const prevMb = cat.budgets?.find((b) => b.year === prevY && b.month === prevM + 1);
             const prevLimit = prevMb ? Number(prevMb.limit) : Number(cat.monthlyLimit || 0);
             const prevSpent = allExpenses
-                .filter(e => e.categoryId === cat.id && !e.isProjected)
+                // Una plantilla recurrente (isRecurring) no mueve dinero al
+                // crearse — ver createExpense —, así que tampoco cuenta como
+                // gasto real del mes anterior; solo la copia real de su ciclo.
+                .filter(e => e.categoryId === cat.id && !e.isProjected && !e.isRecurring)
                 .filter(e => { const d = new Date(e.createdAt); return d.getMonth() === prevM && d.getFullYear() === prevY; })
                 .reduce((sum, e) => sum + Number(e.amount), 0);
             const rollover = cat.isRollover && prevLimit > 0 ? Math.max(0, prevLimit - prevSpent) : 0;

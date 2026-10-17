@@ -14,6 +14,9 @@ export interface GastoParaInsights {
     amount: number | string;
     createdAt: Date | string;
     isProjected?: boolean | null;
+    /** La plantilla de una suscripción/gasto recurrente no mueve dinero al
+     *  crearse (ver createExpense) — no es, por sí misma, un gasto real. */
+    isRecurring?: boolean | null;
     categoryRel?: { name?: string | null; icon?: string | null; color?: string | null } | null;
 }
 
@@ -36,10 +39,14 @@ export interface MesDeGasto {
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 /**
- * Total gastado (real, sin proyecciones) en cada uno de los últimos
- * `cantidadMeses` meses, terminando en `month0`/`year` (mes en curso
- * incluido). Recibe TODOS los gastos del perfil, sin filtrar por mes — la
- * tendencia necesita ver más allá del mes seleccionado.
+ * Total gastado (real, sin proyecciones ni plantillas recurrentes) en cada
+ * uno de los últimos `cantidadMeses` meses, terminando en `month0`/`year`
+ * (mes en curso incluido). Recibe TODOS los gastos del perfil, sin filtrar
+ * por mes — la tendencia necesita ver más allá del mes seleccionado.
+ *
+ * Una plantilla de suscripción (`isRecurring: true`) no mueve dinero al
+ * crearse (ver `createExpense`), así que tampoco cuenta aquí como gasto real
+ * — solo la copia que genera cada ciclo el cron o `markSubscriptionPaid`.
  */
 export function tendenciaDeGasto(
     todosLosGastos: GastoParaInsights[],
@@ -47,7 +54,7 @@ export function tendenciaDeGasto(
     year: number,
     cantidadMeses: number = 3,
 ): MesDeGasto[] {
-    const reales = todosLosGastos.filter(g => !g.isProjected);
+    const reales = todosLosGastos.filter(g => !g.isProjected && !g.isRecurring);
 
     const meses: MesDeGasto[] = [];
     for (let i = cantidadMeses - 1; i >= 0; i--) {

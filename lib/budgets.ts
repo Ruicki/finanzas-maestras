@@ -25,6 +25,9 @@ export interface CategoriaPresupuestable {
 export interface GastoDelPeriodo {
     categoryId?: number | null;
     isProjected?: boolean | null;
+    /** La plantilla de una suscripción/gasto recurrente nunca es un gasto real por
+     *  sí misma (no mueve dinero al crearse) — ver createExpense. */
+    isRecurring?: boolean | null;
     amount: number | string;
     createdAt: Date | string;
 }
@@ -59,7 +62,9 @@ function gastadoEn(
         .filter((g) => {
             // Los proyectados son un plan, no dinero que haya salido: contarlos
             // haría creer que el presupuesto está más gastado de lo que está.
-            if (g.categoryId !== categoriaId || g.isProjected) return false;
+            // Una plantilla recurrente tampoco: no mueve dinero al crearse,
+            // solo lo hace la copia real que genera cada ciclo.
+            if (g.categoryId !== categoriaId || g.isProjected || g.isRecurring) return false;
             const fecha = new Date(g.createdAt);
             return fecha.getMonth() === month0 && fecha.getFullYear() === year;
         })
