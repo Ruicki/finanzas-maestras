@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import BudgetCard from '@/components/budgets/BudgetCard';
 import EmptyState from '@/components/shared/EmptyState';
 import FinancialRules from '@/components/dashboard/widgets/FinancialRules';
+import InsightsTab from '@/components/dashboard/tabs/InsightsTab';
 import { formatMoney } from '@/lib/utils';
 import { WalletIcon } from '@animateicons/react/lucide';
-import { PieChart } from 'lucide-react';
+import { PieChart, LineChart } from 'lucide-react';
 import { estadoDeCategorias, resumenDePresupuesto, sobranteDelMesAnterior } from '@/lib/budgets';
 import { ProfileWithData } from '@/types';
 
@@ -16,6 +17,8 @@ type Category = ProfileWithData['categories'][number];
 type Expense = ProfileWithData['expenses'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
 type Account = ProfileWithData['accounts'][number];
+type AdditionalIncome = ProfileWithData['incomes'][number];
+type Salary = ProfileWithData['salaries'][number];
 
 interface BudgetsTabProps {
     categories: Category[];
@@ -23,6 +26,8 @@ interface BudgetsTabProps {
     allExpenses?: Expense[];
     creditCards?: CreditCard[];
     accounts?: Account[];
+    incomes?: AdditionalIncome[];
+    salaries?: Salary[];
     profileId?: number;
     currency?: string;
     totalIncome: number;
@@ -34,10 +39,13 @@ interface BudgetsTabProps {
     onUpdate?: () => void;
 }
 
-type SubTab = 'resumen' | 'categorias';
+// Fusiona lo que antes eran dos pestañas separadas (Presupuesto y Análisis,
+// percibidas como redundantes — pedido explícito del usuario) en una sola,
+// como tercera sub-pestaña junto a las que ya existían.
+type SubTab = 'resumen' | 'categorias' | 'analisis';
 
 
-export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
+export default function BudgetsTab({ categories, expenses, allExpenses = [], creditCards = [], accounts = [], incomes = [], salaries = [], profileId, totalIncome, totalDebtPayments, totalSavings, totalCash, currentMonth, currentYear, onUpdate }: BudgetsTabProps) {
     const [subTab, setSubTab] = useState<SubTab>('resumen');
     const [showWizard, setShowWizard] = useState(false);
 
@@ -61,8 +69,9 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
     const resumen = resumenDePresupuesto(estados);
 
     const subTabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
-        { id: 'resumen', label: 'Regla 50/30/20', icon: <WalletIcon size={16} /> },
+        { id: 'resumen', label: 'Regla de Presupuesto', icon: <WalletIcon size={16} /> },
         { id: 'categorias', label: 'Categorías', icon: <PieChart className="lucide-animated" size={16} /> },
+        { id: 'analisis', label: 'Análisis', icon: <LineChart size={16} /> },
     ];
 
     return (
@@ -71,8 +80,8 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="font-title text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white tracking-tight">Tu Presupuesto</h2>
-                    <p className="text-zinc-500">Reglas financieras y control de gastos por categoría.</p>
+                    <h2 className="font-title text-2xl md:text-3xl font-semibold text-zinc-900 dark:text-white tracking-tight">Tu Panorama Financiero</h2>
+                    <p className="text-zinc-500">Reglas de presupuesto, categorías y análisis de tus gastos, todo en un solo lugar.</p>
                 </div>
             </div>
 
@@ -162,6 +171,19 @@ export default function BudgetsTab({ categories, expenses, allExpenses = [], cre
                         ))}
                     </div>
                 </div>
+            )}
+            {subTab === 'analisis' && (
+                <InsightsTab
+                    expenses={expenses}
+                    allExpenses={allExpenses}
+                    categories={categories}
+                    incomes={incomes}
+                    salaries={salaries}
+                    accounts={accounts}
+                    creditCards={creditCards}
+                    selectedMonth={currentMonth}
+                    selectedYear={currentYear}
+                />
             )}
 
             {showWizard && profileId && (

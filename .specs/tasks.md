@@ -719,3 +719,36 @@ mismo mecanismo) es conceptual, no requiere cambio de código adicional.
       desglose del cálculo. Cero errores de consola.
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
       `npx next build` limpios.
+
+## Fase 24: Fusionar Análisis y Presupuesto en "Panorama"
+
+> Item 5 del backlog, el último — con esto queda completo todo el lote que
+> el usuario pidió terminar sin parar. Hoy Análisis y Presupuesto eran dos
+> pestañas de nivel superior separadas, percibidas como redundantes.
+
+- [x] 24.1 **`InsightsTab` (Análisis) se movió dentro de `BudgetsTab` como una
+      tercera sub-pestaña**, junto a "Regla de Presupuesto" y "Categorías"
+      que ya existían ahí (mismo patrón que ya se usó para mover
+      Suscripciones a Gastos en la Fase 18). `BudgetsTab` gana las props
+      `incomes`/`salaries` que `InsightsTab` necesita.
+      → Pestaña de nivel superior renombrada de "Presupuesto" a "Panorama"
+      (nombre nuevo pedido explícitamente, distinto de los dos nombres
+      viejos); encabezado interno a "Tu Panorama Financiero". La pestaña
+      "Análisis" de nivel superior se elimina de `BudgetDashboard.tsx`
+      (nav, `VALID_TABS`, bloque de contenido) — su import de `InsightsTab`
+      en ese archivo queda sin uso y se retira.
+      → Compatibilidad hacia atrás: `?tab=insights` (un marcador o link
+      viejo) ya no cae a "accounts" como cualquier valor inválido — se
+      mapea explícitamente a "budgets" (donde ahora vive, en la sub-pestaña
+      Análisis), en vez de resetear al usuario a la primera pestaña.
+      → Verificado en navegador real contra `/preview-temas`: el nav de
+      nivel superior queda en 6 pestañas (antes 7), "Panorama" muestra sus
+      3 sub-pestañas, y la sub-pestaña Análisis renderiza exactamente el
+      mismo contenido que antes (Evolución de Gasto, Ingresos vs. Gastos
+      Grandes, Gastos Más Altos, Tendencia de 6 Meses, Top categorías) sin
+      errores de consola.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios.
+
+Con esto queda completo todo el backlog dictado por el usuario (items 1 a
+9b, `.specs/backlog.md`).
