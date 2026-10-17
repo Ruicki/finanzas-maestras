@@ -634,3 +634,32 @@ mismo mecanismo) es conceptual, no requiere cambio de código adicional.
       no relacionado con este cambio).
       → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
       `npx next build` limpios.
+
+## Fase 22: Análisis — Balance Neto confuso, duplicados, tendencia a 6 meses
+
+> Items 2, 3 y 4 del backlog (siguiente lote dictado por el usuario; pidió no
+> parar hasta terminar todo el backlog restante, dando el recuento al final).
+
+- [x] 22.1 **Item 3: duplicados en "Gastos Más Altos del Mes" — ya resuelto por
+      la Fase 20** (causa raíz: `createExpense` movía dinero al crear una
+      plantilla de suscripción). Marcado como hecho en `backlog.md`, sin
+      cambio de código adicional necesario.
+- [x] 22.2 **Item 2: "Balance Neto" reemplazado por "Ingresos vs. Gastos
+      Grandes"** (`InsightsTab.tsx`). El cálculo viejo (ingresos menos TODO
+      lo gastado) no decía de dónde salía el ingreso ni contra qué se
+      comparaba — confuso, como reportó el usuario. La tarjeta nueva
+      desglosa Salario + Otros ingresos, los compara contra la suma de los
+      gastos más grandes (la misma lista que ya se ve debajo, no todo el
+      gasto del mes) y muestra qué porcentaje del ingreso consumen, con una
+      barra de cobertura. De paso, se corrigió un warning de hidratación
+      preexistente (un `<div>` de `@animateicons` dentro de un `<p>`) que
+      vivía en esta misma tarjeta.
+- [x] 22.3 **Item 4: "Tendencia de 3 Meses" → "Tendencia de 6 Meses"** —
+      cambio de un parámetro (`tendenciaDeGasto(..., 6)`), la función ya
+      aceptaba `cantidadMeses` configurable.
+      → Verificado en navegador real contra `/preview-temas`: "Ingresos vs.
+      Gastos Grandes" muestra +$1,907 (Salario $1,600 + Otros $550, menos
+      $243 de los 6 gastos más grandes, 11% de cobertura); "Tendencia de 6
+      Meses" muestra May–Oct. Cero errores de consola.
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios.
