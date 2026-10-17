@@ -752,3 +752,55 @@ mismo mecanismo) es conceptual, no requiere cambio de código adicional.
 
 Con esto queda completo todo el backlog dictado por el usuario (items 1 a
 9b, `.specs/backlog.md`).
+
+## Fase 25: Incidente real — suscripciones duplicadas y dinero perdido en producción
+
+> El usuario reportó, en producción, dos plantillas "Intenet de Casa"
+> independientes (mismo monto, mismo día de cobro, una "Pagado" otra
+> "Pendiente") y dinero que no cuadraba. Investigado a fondo: auditoría de
+> cada lugar del código que crea un gasto (5 sitios en total) antes de tocar
+> nada, siguiendo el método que el propio usuario pidió.
+
+- [x] 25.1 **Causa raíz encontrada por auditoría de código, no de datos** (sin
+      acceso de red a la BD de producción): ninguna acción individual crea
+      dos filas — se revisaron los 5 `tx.expense.create(` del repositorio.
+      El hueco real es que **dos plantillas recurrentes con el mismo nombre
+      nunca se comparan entre sí**: si una tiene cobro automático y la otra
+      es manual, las dos se pueden cobrar de verdad por separado sin que
+      nada lo detecte — ese es el riesgo de doble cobro que describió el
+      usuario, aunque el mecanismo exacto no era "una acción crea dos
+      filas" sino "nada avisa cuando ya existe una con el mismo nombre".
+      → Nueva función `verificarSuscripcionDuplicada` en
+      `app/actions/budget/expenses.ts`: antes de crear una plantilla
+      (`createExpense`) o de convertir/renombrar un gasto a recurrente
+      (`updateExpense`), busca otra plantilla del mismo perfil con el mismo
+      nombre (normalizado, sin importar mayúsculas/espacios) y bloquea con
+      un mensaje claro en vez de dejar que se dupliquen.
+- [x] 25.2 **`ExpenseWizard.tsx` escondía el mensaje real de cualquier
+      error del servidor** (fondos insuficientes, cuenta bloqueada, y ahora
+      este aviso de duplicado) detrás de un toast genérico fijo — se
+      corrigió para mostrar `error.message`, mismo patrón ya usado en
+      `CategoryManager`, `CreditCardWizard`, `PaymentModal`, `GoalCard`,
+      `IncomeWizard` y `SubscriptionsPanel`.
+      → **Verificado de extremo a extremo contra una base de datos
+      Postgres real** (local, Postgres 16, levantada en este entorno — no
+      es la de producción, pero es una base de verdad, no datos de
+      ejemplo): se registró un perfil nuevo por el flujo real de registro,
+      se fondeó una cuenta, se creó "Internet de Casa" como gasto normal
+      pagado (-$40.64), se convirtió a recurrente por el mismo camino de
+      edición que señaló el usuario como sospechoso — el dinero se revirtió
+      exactamente a $200.00 (el monto original, confirmando que la Fase 20
+      funciona bien) — y al intentar crear una SEGUNDA suscripción con el
+      mismo nombre, el servidor la bloqueó con el mensaje exacto, sin mover
+      dinero y sin crear una segunda fila (confirmado visualmente: una sola
+      tarjeta "Internet de Casa" en Suscripciones).
+      → `npx tsc --noEmit`, `npm run lint`, `npm test` (194/194) y
+      `npx next build` limpios, además de la prueba end-to-end real arriba.
+
+**Lo que este fix NO hace:** no corrige retroactivamente los datos ya
+duplicados en la cuenta del usuario (sigue pendiente, requiere que el
+usuario audite su cuenta real con `Exportar` y decida caso por caso qué
+cancelar) ni explica aún por qué una suscripción aparecía "Pagado" sin un
+gasto real en el historial — esa investigación sigue abierta, probablemente
+ligada a `lastPaidAt` quedado de antes de la Fase 19 (cuando "Marcar
+pagado" todavía era cosmético).

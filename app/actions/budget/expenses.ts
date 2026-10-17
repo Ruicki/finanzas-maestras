@@ -43,6 +43,42 @@ async function resolverNombreCategoria(
     return categoria.name;
 }
 
+/**
+ * Evita crear/convertir una suscripción que ya existe con otro nombre
+ * casi idéntico (mismo texto, espacios o mayúsculas aparte).
+ *
+ * Reportado en vivo por el usuario: terminó con dos plantillas "Intenet de
+ * Casa" independientes (mismo monto, mismo día de cobro) — una con cobro
+ * automático y marcada "Pagado", la otra manual y "Pendiente". Nada las
+ * relacionaba entre sí: el cron y "Marcar pagado" cobran cada plantilla por
+ * su cuenta, así que las dos pueden cobrarse de verdad por separado sin que
+ * nada lo detecte — ahí está el riesgo real de doble cobro, no en que una
+ * sola acción cree dos filas (se auditó el código entero: no lo hace).
+ *
+ * `excluirId` es el propio gasto al editarlo (no debe chocar consigo mismo).
+ */
+async function verificarSuscripcionDuplicada(
+    tx: ClientePrisma,
+    profileId: number,
+    nombre: string,
+    excluirId?: number,
+): Promise<void> {
+    const nombreNormalizado = nombre.trim().toLowerCase();
+    if (!nombreNormalizado) return;
+
+    const existentes = await tx.expense.findMany({
+        where: { profileId, isRecurring: true, id: excluirId ? { not: excluirId } : undefined },
+        select: { id: true, name: true },
+    });
+    const duplicada = existentes.find((e) => e.name.trim().toLowerCase() === nombreNormalizado);
+    if (duplicada) {
+        throw new Error(
+            `Ya tenés una suscripción llamada "${duplicada.name}". Editá esa en vez de crear otra — ` +
+            `si de verdad son dos servicios distintos, usá un nombre que las diferencie (ej. "Internet — Casa" vs "Internet — Oficina").`,
+        );
+    }
+}
+
 export interface CreateExpenseInput {
     name: string;
     amount: number;
@@ -100,6 +136,10 @@ export async function createExpense(data: CreateExpenseInput) {
 
     try {
         const expense = await prisma.$transaction(async (tx) => {
+            if (esPlantillaRecurrente) {
+                await verificarSuscripcionDuplicada(tx, data.profileId, data.name);
+            }
+
             const created = await tx.expense.create({
                 data: {
                     name: data.name,
@@ -196,8 +236,18 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
         }
     }
 
+    const nuevoNombre = data.name ?? oldExpense.name;
+
     try {
         await prisma.$transaction(async (tx) => {
+            // Mismo chequeo que createExpense, aquí porque una edición puede
+            // convertir un gasto normal en recurrente, o renombrar una
+            // plantilla ya recurrente, y terminar chocando con otra que ya
+            // existe — el caso real reportado por el usuario.
+            if (newIsRecurring) {
+                await verificarSuscripcionDuplicada(tx, oldExpense.profileId, nuevoNombre, id);
+            }
+
             if (vieneDeMoverDinero) {
                 // Revertir impacto anterior
                 if (oldExpense.accountId) {
