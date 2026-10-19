@@ -66,14 +66,26 @@ describe('gastosVisiblesEnElMes', () => {
         expect(gastosVisiblesEnElMes([copiaDelCiclo], MES, AÑO)).toContain(copiaDelCiclo);
     });
 
-    it('nunca muestra un pago de deuda, sea del mes que sea', () => {
+    it('nunca muestra un pago de deuda real (isDebtSettlement), sea del mes que sea', () => {
         // esPagoDeDeuda se comprueba antes que isProjected: ya se refleja en el
         // saldo de la tarjeta o del préstamo, contarlo aquí también duplicaría.
         const pago = {
             isProjected: true, createdAt: enAbril(5), amount: 300,
-            categoryId: 1, category: 'Pagos Tarjeta',
+            categoryId: 1, category: 'Pagos Tarjeta', isDebtSettlement: true,
         };
         expect(gastosVisiblesEnElMes([pago], MES, AÑO)).not.toContain(pago);
+    });
+
+    it('SÍ muestra un gasto personal aunque su categoría se llame igual que la de pagos de deuda', () => {
+        // El bug real que esto corrige: un usuario con su propia categoría
+        // "Pagos Tarjeta"/"Deudas" para gastos personales no debe perder ese
+        // gasto de Gastos — solo isDebtSettlement (que pone únicamente
+        // payLoan/pagar-tarjeta) decide, nunca el nombre de la categoría.
+        const gastoPersonal = {
+            isProjected: false, createdAt: enAbril(17), amount: 28,
+            categoryId: 1, category: 'Deudas',
+        };
+        expect(gastosVisiblesEnElMes([gastoPersonal], MES, AÑO)).toContain(gastoPersonal);
     });
 });
 

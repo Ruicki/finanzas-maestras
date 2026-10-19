@@ -187,6 +187,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
                 categoryId: debtCategory.id,
                 isRecurring: false,
                 isOneTime: true,
+                isDebtSettlement: true,
                 paymentMethod: sourceAccountId ? "TRANSFER" : "CASH",
                 profileId: loan.profileId,
                 accountId: sourceAccountId || null

@@ -150,6 +150,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
                     accountId,
                     isOneTime: true,
                     isRecurring: false,
+                    isDebtSettlement: true,
                     paymentMethod: 'TRANSFER',
                 },
             });

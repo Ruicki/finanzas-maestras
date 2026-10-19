@@ -20,6 +20,7 @@ export interface GastoConCategoria {
     category?: string | null;
     categoryId?: number | null;
     categoryRel?: { name?: string | null } | null;
+    isDebtSettlement?: boolean | null;
 }
 
 export const SIN_CATEGORIA = 'Sin categoría';
@@ -43,19 +44,21 @@ export function esDeCategoria(
 }
 
 /**
- * Categorías que crea la app sola al pagar una tarjeta o un préstamo.
+ * ¿Es un pago de deuda o de tarjeta que generó la propia app (payLoan /
+ * pagar tarjeta), y que por eso no debe contar como gasto del mes?
  *
  * Esos gastos ya se reflejan en el saldo de la tarjeta o del préstamo, así que
  * contarlos otra vez como gasto del mes duplicaría el dinero.
  *
- * Se identifican por nombre, que es frágil: si alguien renombra su categoría
- * "Deudas", estos movimientos vuelven a contar. Distinguirlas de verdad pide una
- * marca en `Category`, y eso es una migración (ver B7 en `.specs/tasks.md`).
- * Mientras tanto, al menos la regla vive en un sitio y no repartida en cuatro.
+ * Antes se identificaban por el NOMBRE de la categoría ("Deudas"/"Pagos
+ * Tarjeta"), find-or-create por texto exacto en payLoan/pagar-tarjeta. Si el
+ * usuario ya tenía su propia categoría con ese mismo nombre para gastos
+ * personales (ej. "le debo a un amigo"), la app la reutilizaba sin avisar —
+ * y esos gastos personales desaparecían de Gastos y del total del mes como
+ * si fueran el pago automático de una deuda. `isDebtSettlement` lo pone
+ * únicamente el código que genera el pago real; el nombre de la categoría ya
+ * no decide nada aquí.
  */
-export const CATEGORIAS_AUTOMATICAS = ['Deudas', 'Pagos Tarjeta'];
-
-/** ¿Es un pago de deuda o de tarjeta, que no debe contar como gasto del mes? */
 export function esPagoDeDeuda(gasto: GastoConCategoria): boolean {
-    return CATEGORIAS_AUTOMATICAS.includes(nombreCategoria(gasto));
+    return gasto.isDebtSettlement === true;
 }

@@ -59,23 +59,23 @@ describe('esDeCategoria', () => {
 });
 
 describe('esPagoDeDeuda', () => {
-    it('reconoce los movimientos que crea la app sola', () => {
+    it('reconoce los movimientos que crea la app sola, por la marca, no por el nombre de categoría', () => {
         // Contarlos como gasto del mes duplicaria el dinero: ya estan en el
         // saldo de la tarjeta o del prestamo.
-        expect(esPagoDeDeuda({ categoryId: 7, categoryRel: { name: 'Deudas' } })).toBe(true);
-        expect(esPagoDeDeuda({ categoryId: 8, categoryRel: { name: 'Pagos Tarjeta' } })).toBe(true);
-    });
-
-    it('los reconoce también por la relación cuando el texto quedó viejo', () => {
-        expect(esPagoDeDeuda({
-            categoryId: 7,
-            category: 'Otros',
-            categoryRel: { name: 'Pagos Tarjeta' },
-        })).toBe(true);
+        expect(esPagoDeDeuda({ categoryId: 7, categoryRel: { name: 'Deudas' }, isDebtSettlement: true })).toBe(true);
+        expect(esPagoDeDeuda({ categoryId: 8, categoryRel: { name: 'Pagos Tarjeta' }, isDebtSettlement: true })).toBe(true);
     });
 
     it('deja pasar un gasto normal', () => {
         expect(esPagoDeDeuda({ categoryId: 1, categoryRel: { name: 'Alimentación' } })).toBe(false);
         expect(esPagoDeDeuda({})).toBe(false);
+    });
+
+    it('NO lo marca solo por el nombre de la categoría', () => {
+        // El bug real: un usuario con su propia categoría "Deudas" para gastos
+        // personales (ej. pagarle a un amigo) no debe perder ese gasto de
+        // Gastos y del total del mes — isDebtSettlement, no el nombre, decide.
+        expect(esPagoDeDeuda({ categoryId: 7, categoryRel: { name: 'Deudas' } })).toBe(false);
+        expect(esPagoDeDeuda({ category: 'Pagos Tarjeta' })).toBe(false);
     });
 });

@@ -103,6 +103,14 @@ model Expense {
   autoCharge      Boolean   @default(true)
   paymentMethod   String?
   linkedCardId    Int?
+  /// true solo en el gasto que genera payLoan/pagar-tarjeta al registrar un
+  /// pago real de deuda; nunca lo pone el usuario. Reemplaza identificar
+  /// estos gastos por el NOMBRE de su categoria ("Deudas"/"Pagos Tarjeta"):
+  /// si el usuario ya tenia su propia categoria con ese mismo nombre para
+  /// gastos personales, la app la reutilizaba sin avisar y esos gastos
+  /// personales desaparecian de Gastos y del total del mes como si fueran
+  /// el pago automatico de una deuda. Ver esPagoDeDeuda en expense-category.ts.
+  isDebtSettlement Boolean  @default(false)
   profileId       Int
   accountId       Int?
   createdAt       DateTime  @default(now())
