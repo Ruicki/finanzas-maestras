@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
-import { XIcon, HistoryIcon, WalletIcon } from '@animateicons/react/lucide';
+import React, { useState } from 'react';
+import { XIcon, HistoryIcon, WalletIcon, Trash2Icon } from '@animateicons/react/lucide';
 import { formatMoney } from '@/lib/utils';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 
 export interface PagoDeDeudaRow {
     id: number;
@@ -18,6 +19,12 @@ interface DebtHistoryModalProps {
     pagos: PagoDeDeudaRow[];
     cargando: boolean;
     onClose: () => void;
+    /**
+     * Si se pasa, cada pago muestra un botón para corregirlo: lo borra y
+     * devuelve el monto al saldo de la deuda y a la cuenta de origen. Antes
+     * un pago registrado por error no se podía corregir de ninguna forma.
+     */
+    onEliminarPago?: (pagoId: number) => Promise<void>;
 }
 
 /**
@@ -27,8 +34,25 @@ interface DebtHistoryModalProps {
  * comprobar si ya había pagado una cuota antes de volver a pagarla, y llegó
  * a pagar la misma deuda dos veces por eso mismo.
  */
-export default function DebtHistoryModal({ nombre, pagos, cargando, onClose }: DebtHistoryModalProps) {
+export default function DebtHistoryModal({ nombre, pagos, cargando, onClose, onEliminarPago }: DebtHistoryModalProps) {
     const total = pagos.reduce((suma, p) => suma + p.amount, 0);
+    const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+
+    function handleEliminar(pagoId: number) {
+        if (!onEliminarPago || eliminandoId !== null) return;
+        confirmDelete(
+            async () => {
+                setEliminandoId(pagoId);
+                try {
+                    await onEliminarPago(pagoId);
+                } finally {
+                    setEliminandoId(null);
+                }
+            },
+            '¿Corregir este pago?',
+            'Se borra y el monto vuelve al saldo de la deuda y a la cuenta de origen.',
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -73,9 +97,21 @@ export default function DebtHistoryModal({ nombre, pagos, cargando, onClose }: D
                                             </p>
                                         </div>
                                     </div>
-                                    <span className="font-black text-sm text-emerald-600 dark:text-emerald-400 shrink-0 ml-2">
-                                        {formatMoney(pago.amount)}
-                                    </span>
+                                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                                        <span className="font-black text-sm text-emerald-600 dark:text-emerald-400">
+                                            {formatMoney(pago.amount)}
+                                        </span>
+                                        {onEliminarPago && (
+                                            <button
+                                                onClick={() => handleEliminar(pago.id)}
+                                                disabled={eliminandoId !== null}
+                                                className="p-1.5 text-zinc-400 hover:text-red-500 rounded-lg transition-colors disabled:opacity-50"
+                                                title="Corregir (eliminar este pago)"
+                                            >
+                                                <Trash2Icon size={14} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>

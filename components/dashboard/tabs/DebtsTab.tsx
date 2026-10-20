@@ -10,8 +10,8 @@ import { CreditCardIcon as CardIcon } from '@animateicons/react/lucide';
 import { Building } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import { toast } from 'sonner';
-import { createLoan, deleteLoan, payLoan, updateLoan, getLoanPayments, CreateLoanInput, PagoDePrestamo } from '@/app/actions/debts';
-import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails, getCreditCardPayments, PagoDeTarjeta } from '@/app/actions/budget';
+import { createLoan, deleteLoan, payLoan, updateLoan, getLoanPayments, deleteLoanPayment, CreateLoanInput, PagoDePrestamo } from '@/app/actions/debts';
+import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails, getCreditCardPayments, deleteCreditCardPayment, PagoDeTarjeta } from '@/app/actions/budget';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
@@ -61,7 +61,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     // Modal de Historial de pagos — antes no existía ninguna vista de esto,
     // y el usuario llegó a pagar la misma deuda dos veces por no poder
     // comprobar si ya la había pagado.
-    const [historyModal, setHistoryModal] = useState<{ nombre: string } | null>(null);
+    const [historyModal, setHistoryModal] = useState<{ nombre: string; tipo: 'LOAN' | 'CARD'; id: number } | null>(null);
     const [historyPagos, setHistoryPagos] = useState<(PagoDePrestamo | PagoDeTarjeta)[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -318,7 +318,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     }
 
     async function openLoanHistory(loan: Loan) {
-        setHistoryModal({ nombre: loan.name });
+        setHistoryModal({ nombre: loan.name, tipo: 'LOAN', id: loan.id });
         setLoadingHistory(true);
         try {
             setHistoryPagos(await getLoanPayments(loan.id));
@@ -331,7 +331,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     }
 
     async function openCardHistory(card: CreditCard) {
-        setHistoryModal({ nombre: card.name });
+        setHistoryModal({ nombre: card.name, tipo: 'CARD', id: card.id });
         setLoadingHistory(true);
         try {
             setHistoryPagos(await getCreditCardPayments(card.id));
@@ -340,6 +340,27 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
             setHistoryPagos([]);
         } finally {
             setLoadingHistory(false);
+        }
+    }
+
+    // Corregir (borrar) un pago ya registrado: devuelve el monto al saldo de
+    // la deuda y a la cuenta de origen. Se refresca tanto el modal (vuelve a
+    // pedir la lista) como el resto del dashboard (onUpdate, el saldo de la
+    // tarjeta/préstamo cambió).
+    async function handleEliminarPago(pagoId: number) {
+        if (!historyModal) return;
+        try {
+            if (historyModal.tipo === 'LOAN') {
+                await deleteLoanPayment(pagoId);
+                setHistoryPagos(await getLoanPayments(historyModal.id));
+            } else {
+                await deleteCreditCardPayment(pagoId);
+                setHistoryPagos(await getCreditCardPayments(historyModal.id));
+            }
+            onUpdate();
+            toast.success('Pago corregido');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo corregir el pago');
         }
     }
 
@@ -505,6 +526,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                     pagos={historyPagos}
                     cargando={loadingHistory}
                     onClose={() => { setHistoryModal(null); setHistoryPagos([]); }}
+                    onEliminarPago={handleEliminarPago}
                 />
             )}
 

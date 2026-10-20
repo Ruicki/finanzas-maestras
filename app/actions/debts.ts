@@ -325,3 +325,58 @@ export async function getLoanPayments(loanId: number): Promise<PagoDePrestamo[]>
         accountName: p.account?.name ?? null,
     }));
 }
+
+/**
+ * Deshace un pago de préstamo ya registrado: devuelve el monto al saldo del
+ * préstamo, devuelve el dinero a la cuenta de origen (si lo hubo) y borra el
+ * gasto. Para cuando el usuario se equivocó de monto o de préstamo — antes no
+ * había ninguna forma de corregir esto desde la app.
+ *
+ * Si el préstamo ya no existe (payLoan lo borra solo al llegar el saldo a
+ * $0), no se puede reconstruir su historial de cuotas de forma confiable:
+ * se rechaza en vez de adivinar.
+ */
+export async function deleteLoanPayment(expenseId: number): Promise<void> {
+    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!expense) throw new Error('Pago no encontrado');
+    if (!expense.isDebtSettlement || !expense.loanId) {
+        throw new Error('Este gasto no es un pago de préstamo registrado por la app');
+    }
+    await requireOwnership(expense.profileId);
+
+    const loan = await prisma.loan.findUnique({ where: { id: expense.loanId } });
+    if (!loan) {
+        throw new Error('No se puede deshacer: este préstamo ya no existe (se marcó como pagado por completo y se eliminó). Si fue un error, creá el préstamo de nuevo con el saldo correcto.');
+    }
+
+    const amount = toNum(expense.amount);
+
+    await prisma.$transaction(async (tx) => {
+        const updatedLoan = await tx.loan.update({
+            where: { id: loan.id },
+            data: { currentBalance: { increment: amount } },
+        });
+
+        if (expense.accountId) {
+            await tx.account.update({
+                where: { id: expense.accountId },
+                data: { balance: { increment: amount } },
+            });
+        }
+
+        await tx.auditLog.create({
+            data: {
+                action: 'LOAN_PAYMENT_DELETED',
+                details: `Pago de $${amount.toFixed(2)} a "${loan.name}" eliminado y revertido`,
+                targetId: loan.id,
+                profileId: loan.profileId,
+                oldBalance: loan.currentBalance,
+                newBalance: updatedLoan.currentBalance,
+            },
+        });
+
+        await tx.expense.delete({ where: { id: expenseId } });
+    });
+
+    revalidatePath('/');
+}

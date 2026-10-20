@@ -198,3 +198,51 @@ export async function getCreditCardPayments(cardId: number): Promise<PagoDeTarje
         accountName: p.account?.name ?? null,
     }));
 }
+
+/**
+ * Deshace un pago de tarjeta ya registrado: devuelve el monto al saldo de la
+ * tarjeta, devuelve el dinero a la cuenta de origen y borra el gasto. Mismo
+ * motivo que deleteLoanPayment en debts.ts.
+ */
+export async function deleteCreditCardPayment(expenseId: number): Promise<void> {
+    const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
+    if (!expense) throw new Error('Pago no encontrado');
+    if (!expense.isDebtSettlement || !expense.creditCardSettledId) {
+        throw new Error('Este gasto no es un pago de tarjeta registrado por la app');
+    }
+    await requireOwnership(expense.profileId);
+
+    const card = await prisma.creditCard.findUnique({ where: { id: expense.creditCardSettledId } });
+    if (!card) throw new Error('No se puede deshacer: esta tarjeta ya no existe.');
+
+    const amount = toNum(expense.amount);
+
+    await prisma.$transaction(async (tx) => {
+        const updatedCard = await tx.creditCard.update({
+            where: { id: card.id },
+            data: { balance: { increment: amount } },
+        });
+
+        if (expense.accountId) {
+            await tx.account.update({
+                where: { id: expense.accountId },
+                data: { balance: { increment: amount } },
+            });
+        }
+
+        await tx.auditLog.create({
+            data: {
+                action: 'CARD_PAYMENT_DELETED',
+                details: `Pago de $${amount.toFixed(2)} a "${card.name}" eliminado y revertido`,
+                targetId: card.id,
+                profileId: card.profileId,
+                oldBalance: card.balance,
+                newBalance: updatedCard.balance,
+            },
+        });
+
+        await tx.expense.delete({ where: { id: expenseId } });
+    });
+
+    revalidatePath('/');
+}
