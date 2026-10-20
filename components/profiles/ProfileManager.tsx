@@ -7,6 +7,7 @@ import { Trash2Icon, UserPlusIcon, KeyRoundIcon, EyeIcon, LockIcon, UsersIcon, D
 import { TriangleAlertIcon, ShieldXIcon, LoaderIcon } from '@animateicons/react/lucide';
 import { getAuditLogs } from '@/app/actions/audit';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 type ProfileRow = Profile & { role: string; email?: string | null };
 type GlobalStats = Awaited<ReturnType<typeof getGlobalStats>>;
@@ -385,7 +386,7 @@ export default function ProfileManager({ profiles: initialProfiles, currentProfi
                                                         {log.details || '-'}
                                                     </td>
                                                     <td className="p-3 text-right text-zinc-400 font-mono">
-                                                        {new Date(log.createdAt).toLocaleDateString()} {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {formatEnTimezonaDeNegocio(log.createdAt, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </td>
                                                 </tr>
                                             ))

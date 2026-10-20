@@ -53,6 +53,27 @@ export function businessMonthKey(date: Date | string | null | undefined): string
     return formatDateOnly(date).slice(0, 7);
 }
 
+/**
+ * Formatea una fecha/hora para mostrar en pantalla, en la timezone de
+ * negocio — nunca en la del servidor (Vercel, UTC) ni en la del navegador.
+ *
+ * Para cualquier `toLocaleDateString`/`toLocaleString` que muestre un
+ * `createdAt`, `date` u otro timestamp guardado: sin esto, la misma fecha
+ * puede mostrar un día distinto según dónde se renderice (SSR vs. cliente,
+ * o un dispositivo en otra timezone) — justo el bug que reportó el usuario
+ * (un gasto aparecía en un día en Cuentas y en otro, o directamente
+ * desaparecía, en Gastos).
+ */
+export function formatEnTimezonaDeNegocio(
+    date: Date | string | null | undefined,
+    options: Intl.DateTimeFormatOptions,
+): string {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat('es-ES', { ...options, timeZone: BUSINESS_TIMEZONE }).format(d);
+}
+
 /** Días que tiene un mes (0-11) de un año dado. */
 export function daysInMonth(year: number, month: number): number {
     return new Date(year, month + 1, 0).getDate();

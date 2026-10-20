@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import AccountWizard from '@/components/accounts/AccountWizard';
 import TransferModal from '@/components/accounts/TransferModal';
 import AccountHistoryModal from '@/components/accounts/AccountHistoryModal';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 interface AccountsTabProps {
     accounts: Account[];
@@ -200,7 +201,7 @@ export default function AccountsTab({ accounts, profileId, onUpdate, autoOpenWiz
                     {acc.lockDate && new Date(acc.lockDate) > new Date() && (
                         <p className="text-xs mt-2 opacity-70 flex items-center gap-1.5">
                             <LockIcon size={12} />
-                            Bloqueado hasta {new Date(acc.lockDate).toLocaleDateString('es-ES')}
+                            Bloqueado hasta {formatEnTimezonaDeNegocio(acc.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                     )}
                 </div>

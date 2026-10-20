@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { toNum, toNumOrNull } from './budget/serializers';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementLoanBalance } from '@/lib/ledger';
-import { businessToday, businessMonthKey } from '@/lib/dates';
+import { businessToday, businessMonthKey, formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 export type CreateLoanInput = {
     name: string;
@@ -142,7 +142,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
         if (!account) throw new Error("Cuenta no encontrada");
         if (account.profileId !== loan.profileId) throw new Error("La cuenta no pertenece a este perfil");
         if (account.lockDate && new Date(account.lockDate) > new Date()) {
-            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
         if (Number(account.balance) < amount) throw new Error("Fondos insuficientes en la cuenta de origen");
     }

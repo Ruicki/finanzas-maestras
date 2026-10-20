@@ -7,7 +7,7 @@ import { toNum } from './serializers';
 import { reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
-import { businessToday, businessMonthKey } from '@/lib/dates';
+import { businessToday, businessMonthKey, formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
 
@@ -120,7 +120,7 @@ export async function createExpense(data: CreateExpenseInput) {
             if (account.profileId !== data.profileId) throw new Error('La cuenta no pertenece a este perfil');
             if (!esPlantillaRecurrente) {
                 if (account.lockDate && new Date(account.lockDate) > new Date()) {
-                    throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+                    throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
                 }
                 if (Number(account.balance) < data.amount) {
                     throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
@@ -212,7 +212,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
         if (!account) throw new Error('Cuenta no encontrada');
         if (account.profileId !== oldExpense.profileId) throw new Error('La cuenta no pertenece a este perfil');
         if (vaAMoverDinero && account.lockDate && new Date(account.lockDate) > new Date()) {
-            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
     }
     if (data.linkedCardId !== undefined && data.linkedCardId !== null) {
@@ -374,7 +374,7 @@ export async function confirmExpense(id: number) {
         const account = await prisma.account.findUnique({ where: { id: expense.accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
         if (account.lockDate && new Date(account.lockDate) > new Date()) {
-            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
     }
 
@@ -612,7 +612,7 @@ export async function markSubscriptionPaid(expenseId: number): Promise<void> {
         account = await prisma.account.findUnique({ where: { id: template.accountId } });
         if (!account) throw new Error('Cuenta no encontrada');
         if (account.lockDate && new Date(account.lockDate) > today) {
-            throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+            throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
         if (Number(account.balance) < amount) {
             throw new Error(`Fondos insuficientes en "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);

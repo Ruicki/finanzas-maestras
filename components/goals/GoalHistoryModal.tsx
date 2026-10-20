@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { XIcon, HistoryIcon } from '@animateicons/react/lucide';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 export interface GoalTransactionRow {
     id: number;
@@ -50,7 +51,7 @@ export default function GoalHistoryModal({ nombreMeta, movimientos, cargando, on
                                                 {tx.type === 'DEPOSIT' ? 'Depósito' : 'Retiro'}
                                             </p>
                                             <p className="text-[10px] text-zinc-400">
-                                                {new Date(tx.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {formatEnTimezonaDeNegocio(tx.createdAt, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         </div>
                                     </div>

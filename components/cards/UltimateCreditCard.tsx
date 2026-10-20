@@ -2,6 +2,7 @@
 
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, Trash2Icon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
 import React from 'react';
 import { ProfileWithData } from '@/types';
@@ -65,12 +66,12 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
         const Icon = cutoffInfo.status === 'passed' ? CheckCheckIcon : TriangleAlertIcon;
 
         const message = cutoffInfo.status === 'passed'
-            ? `Corte completado (${cutoffInfo.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })})`
+            ? `Corte completado (${formatEnTimezonaDeNegocio(cutoffInfo.date, { day: 'numeric', month: 'short' })})`
             : cutoffInfo.days === 0
             ? '¡Corte es hoy!'
             : cutoffInfo.days === 1
             ? 'Corte mañana'
-            : `Corte en ${cutoffInfo.days} días (${cutoffInfo.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })})`;
+            : `Corte en ${cutoffInfo.days} días (${formatEnTimezonaDeNegocio(cutoffInfo.date, { day: 'numeric', month: 'short' })})`;
 
         const submessage = cutoffInfo.status !== 'passed'
             ? 'Paga antes del corte para evitar intereses'

@@ -6,6 +6,7 @@ import { toNum } from './serializers';
 import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance } from '@/lib/ledger';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── ACCOUNTS ──────────────────────────────────────────────────────────────
 
@@ -282,7 +283,7 @@ export async function createTransfer(
 
     if (sourceAccount.lockDate && new Date(sourceAccount.lockDate) > new Date()) {
         throw new Error(
-            `Cuenta bloqueada hasta ${sourceAccount.lockDate.toLocaleDateString()}`,
+            `Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(sourceAccount.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`,
         );
     }
 

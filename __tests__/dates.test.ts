@@ -1,4 +1,4 @@
-import { parseDateOnly, formatDateOnly, businessMonthKey, clampDayToMonth, addMonthsClamped } from '../lib/dates';
+import { parseDateOnly, formatDateOnly, businessMonthKey, clampDayToMonth, addMonthsClamped, formatEnTimezonaDeNegocio } from '../lib/dates';
 
 describe('parseDateOnly / formatDateOnly (round trip de <input type="date">)', () => {
     it('un string YYYY-MM-DD siempre vuelve al mismo dia, sin importar la timezone de quien lo lea', () => {
@@ -36,6 +36,29 @@ describe('businessMonthKey', () => {
         // 31 ene 11pm Panama = 1 feb 04:00 UTC. Debe seguir siendo enero.
         const lateJan = new Date('2026-02-01T04:00:00.000Z');
         expect(businessMonthKey(lateJan)).toBe('2026-01');
+    });
+});
+
+describe('formatEnTimezonaDeNegocio', () => {
+    it('muestra el dia de Panama, no el de UTC, cerca de medianoche', () => {
+        // 19 oct 11:30pm Panama (UTC-5) = 20 oct 04:30 UTC. Un
+        // toLocaleDateString() crudo en un servidor que corre en UTC (Vercel)
+        // mostraria "20" — el mismo bug que hizo que un gasto apareciera en un
+        // dia en Cuentas y pareciera faltar en Gastos.
+        const lateNightInPanama = new Date('2026-10-20T04:30:00.000Z');
+        expect(formatEnTimezonaDeNegocio(lateNightInPanama, { day: 'numeric', month: 'short' }))
+            .toBe('19 oct');
+    });
+
+    it('conserva hora y minuto en la timezone de negocio', () => {
+        const d = new Date('2026-10-17T12:03:00.000Z'); // 07:03am en Panama
+        expect(formatEnTimezonaDeNegocio(d, { hour: '2-digit', minute: '2-digit', hour12: false }))
+            .toBe('07:03');
+    });
+
+    it('da string vacio sin fecha, en vez de reventar', () => {
+        expect(formatEnTimezonaDeNegocio(null, { day: 'numeric' })).toBe('');
+        expect(formatEnTimezonaDeNegocio(undefined, { day: 'numeric' })).toBe('');
     });
 });
 

@@ -10,6 +10,7 @@ import { ProfileWithData } from "@/types";
 
 import { confirmDelete } from "@/components/shared/DeleteConfirmation";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
+import { formatEnTimezonaDeNegocio } from "@/lib/dates";
 
 type Salary = ProfileWithData['salaries'][number];
 type AdditionalIncome = ProfileWithData['incomes'][number];
@@ -101,7 +102,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                             {isSalary ? (item.company || 'Salario Base') : item.name}
                                         </p>
                                         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 font-medium mt-1">
-                                            <span>{new Date(isSalary ? (item.paymentDate || item.createdAt) : (item.date || item.createdAt)).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                            <span>{formatEnTimezonaDeNegocio(isSalary ? (item.paymentDate || item.createdAt) : (item.date || item.createdAt), { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                                             <span className="hidden md:inline">•</span>
                                             <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-xs whitespace-nowrap">
                                                 {isSalary ? (item.company || 'Personal') : (item.frequency || 'Pago Único')}

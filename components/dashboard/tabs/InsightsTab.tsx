@@ -8,6 +8,7 @@ import { ListIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProfileWithData } from '@/types';
 import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
 import { formatMoney } from '@/lib/utils';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 import { topGastosIndividuales, tendenciaDeGasto } from '@/lib/expense-insights';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
@@ -313,7 +314,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
                                         <p className="text-xs text-zinc-400 truncate">
-                                            {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · {cuentaOTarjeta}
+                                            {nombreCategoria(gasto)} · {formatEnTimezonaDeNegocio(gasto.createdAt, { day: 'numeric', month: 'short' })} · {cuentaOTarjeta}
                                         </p>
                                     </div>
                                     <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{formatMoney(gasto.amount)}</p>
@@ -406,7 +407,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                             <div className="min-w-0">
                                                 <p className="font-medium text-zinc-700 dark:text-zinc-200 truncate">{g.name}</p>
                                                 <p className="text-[11px] text-zinc-400">
-                                                    {new Date(g.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                    {formatEnTimezonaDeNegocio(g.createdAt, { day: 'numeric', month: 'short' })}
                                                 </p>
                                             </div>
                                             <span className="font-bold text-zinc-900 dark:text-white tabular-nums shrink-0">{formatMoney(g.amount)}</span>

@@ -12,6 +12,7 @@ type Category = ProfileWithData['categories'][number];
 import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 import { tipoDeGasto } from '@/lib/financial-rules';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -306,7 +307,7 @@ export default function ExpensesTab({ expenses, allExpenses = [], totalIncome = 
                     });
 
                     const grouped = sorted.reduce<Record<string, ExpenseWithCategory[]>>((groups, exp) => {
-                        const date = new Date(exp.createdAt).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+                        const date = formatEnTimezonaDeNegocio(exp.createdAt, { weekday: 'long', day: 'numeric', month: 'long' });
                         if (!groups[date]) groups[date] = [];
                         groups[date].push(exp);
                         return groups;

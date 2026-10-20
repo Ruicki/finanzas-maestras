@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { ProfileWithData } from '@/types';
-import { parseDateOnly, formatDateOnly } from '@/lib/dates';
+import { parseDateOnly, formatDateOnly, formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 type Account = ProfileWithData['accounts'][number];
 
@@ -125,9 +125,7 @@ export default function AccountHistoryModal({
     }
 
     const formatDate = (date: Date | string) =>
-        new Date(date).toLocaleDateString('es-ES', {
-            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-        });
+        formatEnTimezonaDeNegocio(date, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
     const txTypeLabel: Record<string, string> = {
         INCOME: 'Ingreso', EXPENSE: 'Gasto', SALARY: 'Salario',

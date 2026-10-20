@@ -6,6 +6,7 @@ import { serializeCreditCard } from './serializers';
 import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── CREDIT CARDS ──────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
     if (!account) throw new Error('Cuenta no encontrada');
     await requireOwnership(account.profileId);
     if (account.lockDate && new Date(account.lockDate) > new Date()) {
-        throw new Error(`Cuenta bloqueada hasta ${account.lockDate.toLocaleDateString()}`);
+        throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
     }
     if (Number(account.balance) < amount) throw new Error('Fondos insuficientes');
 

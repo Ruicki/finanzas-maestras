@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalendarIcon, PlusIcon, PauseIcon, PlayIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { getCategoryInfo, getStage } from './categories';
+import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 type Goal = ProfileWithData['goals'][number];
 type Account = ProfileWithData['accounts'][number];
@@ -185,7 +186,7 @@ export default function GoalCard({ goal, accounts, isExpanded, onToggleExpand, o
 
             {percentage < 100 && goal.deadline && (
                 <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 mb-4">
-                    <span>Fecha límite: {new Date(goal.deadline).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span>Fecha límite: {formatEnTimezonaDeNegocio(goal.deadline, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     {(() => {
                         const remaining = goal.targetAmount - goal.currentAmount;
                         const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
