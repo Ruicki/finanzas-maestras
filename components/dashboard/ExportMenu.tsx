@@ -36,9 +36,9 @@ export default function ExportMenu({ profile }: ExportMenuProps) {
             const datos = await getExportData(profile.id);
             const fecha = new Date().toISOString().split('T')[0];
             if (tipo === 'movimientos') {
-                downloadCSV(generateTransactionsCSV(datos), `finanzas-movimientos-${fecha}.csv`);
+                await downloadCSV(generateTransactionsCSV(datos), `finanzas-movimientos-${fecha}.csv`);
             } else {
-                downloadCSV(generateSnapshotCSV(datos), `finanzas-situacion-${fecha}.csv`);
+                await downloadCSV(generateSnapshotCSV(datos), `finanzas-situacion-${fecha}.csv`);
             }
             toast.success('Archivo CSV generado');
         } catch (error) {

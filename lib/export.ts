@@ -1,9 +1,32 @@
 import type { DatosExportables } from "@/app/actions/export";
 
-export const downloadCSV = (content: string, fileName: string) => {
+export const downloadCSV = async (content: string, fileName: string): Promise<void> => {
     // El BOM hace que Excel abra el archivo en UTF-8; sin el, los acentos y la
     // ñ salen rotos, que es justo lo que pasa con nombres como "Nómina".
     const blob = new Blob(["﻿" + content], { type: 'text/csv;charset=utf-8;' });
+
+    // En el celular, un <a download> muchas veces no descarga nada: lo abre
+    // como texto plano sin saltos de línea reales, ilegible, en vez de
+    // ofrecer guardarlo. Donde el navegador soporta compartir archivos
+    // (Web Share, mayoría de navegadores móviles), se ofrece el selector
+    // nativo de apps (Archivos, Drive, Sheets, WhatsApp...) para abrirlo o
+    // guardarlo bien. En escritorio esta API normalmente no soporta
+    // archivos, así que cae solo al <a download> de siempre.
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function') {
+        const file = new File([blob], fileName, { type: 'text/csv' });
+        if (navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file] });
+                return;
+            } catch (err) {
+                // El usuario cerró el selector de apps sin elegir ninguna: no es
+                // un error, no hay nada más que hacer.
+                if (err instanceof Error && err.name === 'AbortError') return;
+                // Cualquier otro fallo del share sheet: seguir con la descarga de siempre.
+            }
+        }
+    }
+
     const link = document.createElement("a");
     if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
