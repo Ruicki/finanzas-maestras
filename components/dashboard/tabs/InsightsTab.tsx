@@ -4,9 +4,10 @@
 import { useMemo, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { TrendingUpIcon, WalletIcon, InfoIcon } from '@animateicons/react/lucide';
-import { ListIcon, ChevronDown, ChevronUp, CreditCard as CardIcon } from 'lucide-react';
+import { ListIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProfileWithData } from '@/types';
-import { nombreCategoria } from '@/lib/expense-category';
+import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
+import { formatMoney } from '@/lib/utils';
 import { topGastosIndividuales, tendenciaDeGasto } from '@/lib/expense-insights';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
@@ -26,15 +27,17 @@ type InsightsTabProps = {
     salaries: Salary[];
     accounts?: Account[];
     creditCards?: CreditCard[];
-    currency?: string;
     selectedMonth?: number;
     selectedYear?: number;
 };
 
-export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, accounts = [], creditCards = [], currency = "$", selectedMonth, selectedYear }: InsightsTabProps) {
-    // Gasto más alto seleccionado, para ver su desglose completo (cuenta/
-    // tarjeta usada, método de pago, fecha completa) sin salir de Análisis.
-    const [gastoSeleccionadoId, setGastoSeleccionadoId] = useState<number | null>(null);
+export default function InsightsTab({ expenses, allExpenses = [], categories, incomes, salaries, accounts = [], creditCards = [], selectedMonth, selectedYear }: InsightsTabProps) {
+    // Categoría top seleccionada, para ver qué gastos individuales la
+    // componen sin salir de Análisis. El desglose vive aquí (en las
+    // categorías con más gasto) y no en la lista de gastos individuales de
+    // abajo — ahí cada fila ya muestra todo lo que tiene, no hay nada más
+    // que desglosar.
+    const [categoriaExpandidaId, setCategoriaExpandidaId] = useState<number | null>(null);
 
     // --- 1. PROCESAMIENTO DE DATOS ---
     const {
@@ -46,7 +49,8 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
         monthlyData,
         topCategories,
         topGastos,
-        tendencia
+        tendencia,
+        realExpenses,
     } = useMemo(() => {
         const currentMonth = selectedMonth ?? new Date().getMonth();
         const currentYear = selectedYear ?? new Date().getFullYear();
@@ -142,7 +146,8 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
             monthlyData: cumulativeData,
             topCategories,
             topGastos,
-            tendencia
+            tendencia,
+            realExpenses,
         };
     }, [expenses, allExpenses, categories, incomes, salaries, selectedMonth, selectedYear]);
 
@@ -163,7 +168,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                             Evolución de Gasto Mensual
                         </div>
                         <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                            {currency}{totalExpense.toLocaleString()}
+                            {formatMoney(totalExpense)}
                             <span className="text-sm font-medium text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded-lg">Acumulado</span>
                         </h3>
                     </div>
@@ -186,8 +191,8 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                             return (
                                                 <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl shadow-xl">
                                                     <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-1 font-bold uppercase">Día {data.day}</p>
-                                                    <p className="text-indigo-500 dark:text-indigo-400 text-xl font-black">{currency}{data.cumulative.toLocaleString()}</p>
-                                                    <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-1">Gasto del día: +{currency}{data.expense.toLocaleString()}</p>
+                                                    <p className="text-indigo-500 dark:text-indigo-400 text-xl font-black">{formatMoney(data.cumulative)}</p>
+                                                    <p className="text-zinc-400 dark:text-zinc-500 text-xs mt-1">Gasto del día: +{formatMoney(data.expense)}</p>
                                                 </div>
                                             );
                                         }
@@ -233,7 +238,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                     </span>
                                 </div>
                                 <h3 className={`text-4xl md:text-5xl font-black ${margen >= 0 ? 'text-zinc-900 dark:text-white' : 'text-red-500'}`}>
-                                    {margen >= 0 ? '+' : '-'}{currency}{Math.abs(margen).toLocaleString()}
+                                    {margen >= 0 ? '+' : '-'}{formatMoney(Math.abs(margen))}
                                 </h3>
                                 <p className="text-zinc-400 mt-2 font-medium">
                                     {totalIncome === 0
@@ -247,15 +252,15 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                             <div className="mt-6 space-y-3">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-500 font-medium">Salario</span>
-                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{currency}{salaryTotal.toLocaleString()}</span>
+                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{formatMoney(salaryTotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-500 font-medium">Otros ingresos</span>
-                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{currency}{incomeTotal.toLocaleString()}</span>
+                                    <span className="font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">{formatMoney(incomeTotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-500 font-medium">Tus {topGastos.length} gastos más grandes</span>
-                                    <span className="font-bold text-red-500 tabular-nums">-{currency}{topGastosTotal.toLocaleString()}</span>
+                                    <span className="font-bold text-red-500 tabular-nums">-{formatMoney(topGastosTotal)}</span>
                                 </div>
 
                                 <div className="h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-2">
@@ -291,61 +296,27 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
 
                     <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                         {topGastos.map((gasto, idx) => {
-                            const expandido = gastoSeleccionadoId === gasto.id;
                             const cuentaOTarjeta = gasto.linkedCardId
                                 ? creditCards.find(c => c.id === gasto.linkedCardId)?.name || 'Tarjeta'
                                 : accounts.find(a => a.id === gasto.accountId)?.name || 'Efectivo/Otro';
 
+                            // Cada fila ya es un gasto individual: no hay nada más que
+                            // "desglosar" dentro de uno, así que no es clickeable — el
+                            // desglose real (qué gastos componen un total) vive en las
+                            // tarjetas de Top Categoría, más abajo.
                             return (
-                                <div key={gasto.id}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setGastoSeleccionadoId(expandido ? null : gasto.id)}
-                                        aria-expanded={expandido}
-                                        className={`w-full flex items-center gap-4 p-6 text-left transition-colors duration-200 ${expandido ? 'bg-zinc-50 dark:bg-zinc-800/30' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/30'}`}
-                                    >
-                                        <span className="text-sm font-black text-zinc-300 dark:text-zinc-700 w-5 text-center shrink-0">{idx + 1}</span>
-                                        <div className={`text-xl w-10 h-10 flex items-center justify-center rounded-full shrink-0 shadow-sm ${gasto.categoryRel?.color || 'text-zinc-500'} ${gasto.categoryRel?.color?.includes('text-') ? gasto.categoryRel.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
-                                            <CategoryIcon iconName={gasto.categoryRel?.icon || 'HelpCircle'} size={18} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
-                                            <p className="text-xs text-zinc-400 truncate">
-                                                {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                                            </p>
-                                        </div>
-                                        <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{currency}{gasto.amount.toLocaleString()}</p>
-                                        <span className="text-zinc-400 dark:text-zinc-500 shrink-0">
-                                            {expandido ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                        </span>
-                                    </button>
-
-                                    {expandido && (
-                                        <div className="mx-6 mb-6 p-5 bg-zinc-50 dark:bg-black/20 rounded-2xl border border-zinc-200 dark:border-white/10 text-sm space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <div className="flex justify-between">
-                                                <span className="text-zinc-500">Categoría</span>
-                                                <span className="font-bold text-zinc-800 dark:text-zinc-200">{nombreCategoria(gasto)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-zinc-500">Fecha</span>
-                                                <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                                                    {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-zinc-500">{gasto.linkedCardId ? 'Tarjeta' : 'Cuenta'}</span>
-                                                <span className="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                                                    {gasto.linkedCardId ? <CardIcon size={13} /> : <WalletIcon size={13} />}
-                                                    {cuentaOTarjeta}
-                                                </span>
-                                            </div>
-                                            <div className="h-px bg-zinc-200 dark:bg-white/10" />
-                                            <div className="flex justify-between font-black text-zinc-900 dark:text-white">
-                                                <span>Monto</span>
-                                                <span>{currency}{gasto.amount.toLocaleString()}</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                <div key={gasto.id} className="w-full flex items-center gap-4 p-6">
+                                    <span className="text-sm font-black text-zinc-300 dark:text-zinc-700 w-5 text-center shrink-0">{idx + 1}</span>
+                                    <div className={`text-xl w-10 h-10 flex items-center justify-center rounded-full shrink-0 shadow-sm ${gasto.categoryRel?.color || 'text-zinc-500'} ${gasto.categoryRel?.color?.includes('text-') ? gasto.categoryRel.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                                        <CategoryIcon iconName={gasto.categoryRel?.icon || 'HelpCircle'} size={18} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-zinc-900 dark:text-white truncate">{gasto.name}</p>
+                                        <p className="text-xs text-zinc-400 truncate">
+                                            {nombreCategoria(gasto)} · {new Date(gasto.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · {cuentaOTarjeta}
+                                        </p>
+                                    </div>
+                                    <p className="font-black text-zinc-900 dark:text-white tabular-nums shrink-0">{formatMoney(gasto.amount)}</p>
                                 </div>
                             );
                         })}
@@ -376,7 +347,7 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                                 <XAxis dataKey="etiqueta" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#a1a1aa' }} />
                                 <Tooltip
                                     cursor={{ fill: 'rgba(99,102,241,0.08)' }}
-                                    formatter={(value?: number) => [`${currency}${(value ?? 0).toLocaleString()}`, 'Gastado']}
+                                    formatter={(value?: number) => [formatMoney(value ?? 0), 'Gastado']}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                 />
                                 <Bar dataKey="total" radius={[8, 8, 0, 0]} fill="#6366f1" maxBarSize={48} />
@@ -388,27 +359,64 @@ export default function InsightsTab({ expenses, allExpenses = [], categories, in
                         {tendencia.map(mes => (
                             <div key={mes.clave} className="flex justify-between text-sm">
                                 <span className="font-bold text-zinc-500">{mes.etiqueta}</span>
-                                <span className="font-black text-zinc-900 dark:text-white tabular-nums">{currency}{mes.total.toLocaleString()}</span>
+                                <span className="font-black text-zinc-900 dark:text-white tabular-nums">{formatMoney(mes.total)}</span>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* --- 3. RESUMEN DE GASTOS PRINCIPALES --- */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {topCategories.map((cat, idx) => (
-                    <div key={cat.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-3xl flex items-center gap-4">
-                        <div className={`text-3xl p-3 rounded-2xl shadow-sm ${cat.color || 'text-zinc-500'} ${cat.color?.includes('text-') ? cat.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-surface dark:bg-zinc-800'}`}>
-                            <CategoryIcon iconName={cat.icon} size={32} />
+            {/* --- 3. TOP CATEGORÍAS --- el desglose real: qué gastos componen
+                cada una de las categorías con más gasto este mes. */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                {topCategories.map((cat, idx) => {
+                    const expandida = categoriaExpandidaId === cat.id;
+                    const gastosDeLaCategoria = realExpenses
+                        .filter((e) => esDeCategoria(e, cat))
+                        .sort((a, b) => Number(b.amount) - Number(a.amount));
+
+                    return (
+                        <div key={cat.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => setCategoriaExpandidaId(expandida ? null : cat.id)}
+                                aria-expanded={expandida}
+                                className="w-full flex items-center gap-4 p-6 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
+                            >
+                                <div className={`text-3xl p-3 rounded-2xl shadow-sm shrink-0 ${cat.color || 'text-zinc-500'} ${cat.color?.includes('text-') ? cat.color.replace('text-', 'bg-').replace('500', '100') + ' dark:bg-opacity-10' : 'bg-surface dark:bg-zinc-800'}`}>
+                                    <CategoryIcon iconName={cat.icon} size={32} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Top {idx + 1} Categoría</p>
+                                    <h4 className="font-bold text-zinc-900 dark:text-white truncate">{cat.name}</h4>
+                                    <p className="text-indigo-500 font-bold">{formatMoney(cat.spent)}</p>
+                                </div>
+                                <span className="text-zinc-400 dark:text-zinc-500 shrink-0">
+                                    {expandida ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </span>
+                            </button>
+
+                            {expandida && (
+                                <div className="px-6 pb-6 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 mb-3" />
+                                    {gastosDeLaCategoria.length === 0 ? (
+                                        <p className="text-xs text-zinc-400">Sin gastos individuales este mes en esta categoría.</p>
+                                    ) : gastosDeLaCategoria.map((g) => (
+                                        <div key={g.id} className="flex justify-between items-center gap-3 text-sm">
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-zinc-700 dark:text-zinc-200 truncate">{g.name}</p>
+                                                <p className="text-[11px] text-zinc-400">
+                                                    {new Date(g.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                </p>
+                                            </div>
+                                            <span className="font-bold text-zinc-900 dark:text-white tabular-nums shrink-0">{formatMoney(g.amount)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div>
-                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Top {idx + 1} Gasto</p>
-                            <h4 className="font-bold text-zinc-900 dark:text-white truncate lg:max-w-[120px]">{cat.name}</h4>
-                            <p className="text-indigo-500 font-bold">{currency}{cat.spent.toLocaleString()}</p>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
         </div>
