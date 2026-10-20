@@ -804,3 +804,88 @@ cancelar) ni explica aún por qué una suscripción aparecía "Pagado" sin un
 gasto real en el historial — esa investigación sigue abierta, probablemente
 ligada a `lastPaidAt` quedado de antes de la Fase 19 (cuando "Marcar
 pagado" todavía era cosmético).
+
+## Fase 26: Metodología Scrum + auditoría de Panorama/Gastos/Deudas + sesión nocturna sin supervisión
+
+> El usuario pidió adoptar Scrum (él como Product Owner, Claude como dev
+> senior) con un tablero visual (Artifact tipo Dashboard, compatible con
+> ArtifactData, actualizado por chat) para ir priorizando hallazgos de uso y
+> conceptos pantalla por pantalla, empezando por Panorama. Luego, con permiso
+> explícito, pidió seguir trabajando sin pausas implementando todo lo posible.
+> Tablero: `https://claude.ai/artifact/TQZriukfUb4qf8jyivWzXM`.
+
+- [x] 26.1 **Auditoría de Panorama** (Regla de Presupuesto, Categorías,
+      Análisis) — 7 hallazgos verificados en código, todos corregidos:
+      - "Ahorro"/"Disponible" y "Gasto Fijo-Variable"/"Necesidades-Deseos"
+        eran la misma cifra con nombres distintos en la misma pantalla
+        (`FinancialRules.tsx`) — unificados, más una línea de "acumulado
+        hasta hoy" para separar flujo del mes vs. lo ya ahorrado.
+      - Fondo de Emergencia: `monthlyBurn = needs>0 ? needs : needs+wants`
+        colapsaba a casi $0 con un gasto fijo mínimo — ahora siempre
+        `needs+wants` (conservador, sin discontinuidad).
+      - Score Financiero no incluía el Ahorro — ahora es un cuarto factor
+        (25/25/25/25).
+      - Análisis usaba `{currency}{valor.toLocaleString()}` (decimales
+        inconsistentes) en vez de `formatMoney()` — unificado en ~13 sitios.
+      - El desglose clickeable vivía en gastos individuales (sin nada que
+        desglosar) en vez de en las tarjetas "Top N Gasto" (que en realidad
+        son categorías, renombradas "Top N Categoría" y ahora clickeables
+        con la lista real de gastos que las componen).
+- [x] 26.2 **GAS-07: fechas sin timezone de negocio.** 16 sitios usaban
+      `new Date(x).toLocaleDateString(...)` sin `timeZone`, pudiendo mostrar
+      un día distinto al real de Panamá según dónde renderizara (SSR en
+      Vercel corre en UTC) — la causa más probable de que un gasto pareciera
+      "faltar" en Gastos mientras sí aparecía en Cuentas. Nuevo
+      `formatEnTimezonaDeNegocio` en `lib/dates.ts`, aplicado en Gastos,
+      Análisis, historial de cuentas/metas, tarjetas, salario, y en los
+      mensajes "Cuenta bloqueada hasta..." de 5 Server Actions.
+- [x] 26.3 **GAS-05: exportar CSV en móvil.** `downloadCSV` ahora usa Web
+      Share (archivos) cuando el navegador lo soporta — selector nativo de
+      apps en vez de abrir el CSV como texto plano ilegible.
+- [x] 26.4 **Incidente real: pago de deuda duplicado por falta de
+      historial.** El usuario, auditando Cuentas, encontró un gasto
+      ("Cindy", categoría "Deudas") que no aparecía en Gastos aunque sí en
+      el historial de la cuenta. Causa raíz: `payLoan`/pagar-tarjeta
+      reutilizaban por NOMBRE EXACTO cualquier categoría "Deudas"/"Pagos
+      Tarjeta" que el usuario ya tuviera para gastos personales, y
+      `gastosVisiblesEnElMes` excluía todo lo de esa categoría del mes. El
+      usuario llegó a pagar la misma deuda dos veces por esto.
+      → Nuevo campo `isDebtSettlement` en `Expense` (migración
+      `20261019000000_add_expense_is_debt_settlement`, con backfill por
+      patrón de nombre), que solo marcan payLoan/pagar-tarjeta; `esPagoDeDeuda`
+      ya no compara nombres de categoría.
+      → **GAS-08**: no existía ningún historial de pagos de préstamo/tarjeta
+      (a diferencia de Cuentas o Metas). Nuevo `loanId`/`creditCardSettledId`
+      en `Expense` (migración `20261020000000_add_expense_debt_links`),
+      `getLoanPayments`/`getCreditCardPayments`, y `DebtHistoryModal.tsx` con
+      botón "Historial" en las tarjetas de préstamo y de crédito.
+      → **GAS-09**: un pago mal registrado no se podía corregir.
+      `deleteLoanPayment`/`deleteCreditCardPayment` revierten el monto al
+      saldo de la deuda y a la cuenta de origen, dejan `AuditLog` y borran el
+      gasto, todo en una transacción; rechazan la corrección con un mensaje
+      explícito si el préstamo ya se auto-eliminó por llegar a $0. Verificado
+      con un script real contra la base de datos de prueba (pagar $200 de un
+      préstamo de $1000 y corregirlo deja todo exactamente en su saldo
+      original).
+- [x] 26.5 **Auditoría ligera de Cuentas/Ingresos/Metas.** Se encontraron y
+      quedaron documentados en el tablero (no corregidos aún, por volumen):
+      `GEN-01` (~40 sitios en 10 archivos usan `${valor.toFixed(2)}` en vez
+      de `formatMoney()`, perdiendo el separador de miles en montos ≥
+      $1,000 — Metas, Cuentas, Salario, Tarjetas), `GEN-02` (el ícono de
+      "Nuevo Ingreso" es un `<div onClick>`, no accesible por teclado). Se
+      verificó y se descartó como bug la fórmula de "Ausencias" del
+      desglose de salario (`GEN-03`, coincide algebraicamente con
+      `calculateSalary` en `lib/financial-engine.ts`).
+      → Cuentas, Ingresos y Metas: pasada ligera, no una auditoría tan
+      exhaustiva como Panorama — queda como trabajo futuro si el usuario
+      quiere profundizar ahí con el mismo nivel de detalle.
+
+**Verificación de toda la Fase 26:** `npx tsc --noEmit`, `npm run lint` y
+`npm test` (198/198) limpios después de cada commit; las dos migraciones de
+Prisma se probaron de verdad contra una base Postgres local (no solo
+`prisma validate`), incluida la reversión transaccional de 26.4 con un
+script que paga y corrige un préstamo real. `npx next build` se intentó y
+falló por una limitación del sandbox sin red hacia Google Fonts
+(`next/font/google` en `app/layout.tsx`, nada que ver con ningún archivo
+tocado en esta fase) — no se pudo correr una build de producción completa
+ni Playwright esta vez.
