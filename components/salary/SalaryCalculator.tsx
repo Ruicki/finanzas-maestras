@@ -9,6 +9,7 @@ type Account = ProfileWithData['accounts'][number];
 import { useRouter } from 'next/navigation';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { formatDateOnly } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 
 interface FormData {
     grossVal: number;
@@ -301,14 +302,14 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {/* Salario Bruto */}
                             <div className="flex justify-between text-zinc-900 dark:text-zinc-100 font-semibold">
                                 <span>Salario Bruto</span>
-                                <span>${result.gross.toFixed(2)}</span>
+                                <span>{formatMoney(result.gross)}</span>
                             </div>
 
                             {/* Ausencias (solo si > 0) */}
                             {result.absentDays > 0 && (
                                 <div className="flex justify-between text-red-500 dark:text-red-400 pl-4">
                                     <span>- Ausencias ({result.absentDays} día{result.absentDays > 1 ? 's' : ''})</span>
-                                    <span>-${(result.gross - result.grossAfterAbsence).toFixed(2)}</span>
+                                    <span>-{formatMoney(result.gross - result.grossAfterAbsence)}</span>
                                 </div>
                             )}
 
@@ -316,7 +317,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {result.absentDays > 0 && (
                                 <div className="flex justify-between text-zinc-700 dark:text-zinc-300 border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-2 font-semibold">
                                     <span>= Base para cálculo</span>
-                                    <span>${result.grossAfterAbsence.toFixed(2)}</span>
+                                    <span>{formatMoney(result.grossAfterAbsence)}</span>
                                 </div>
                             )}
 
@@ -325,13 +326,13 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {/* Seguro Social */}
                             <div className="flex justify-between text-red-600 dark:text-red-400">
                                 <span>Seguro Social (9.75%)</span>
-                                <span>-${result.socialSec.toFixed(2)}</span>
+                                <span>-{formatMoney(result.socialSec)}</span>
                             </div>
 
                             {/* Seguro Educativo */}
                             <div className="flex justify-between text-red-600 dark:text-red-400">
                                 <span>Seguro Educativo (1.25%)</span>
-                                <span>-${result.eduIns.toFixed(2)}</span>
+                                <span>-{formatMoney(result.eduIns)}</span>
                             </div>
 
                             {/* ISR - solo aparece si aplica */}
@@ -345,17 +346,17 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                             ISR ({(result.isrRateUsed * 100).toFixed(0)}%)
                                             <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
                                         </span>
-                                        <span>-${result.incomeTax.toFixed(2)}</span>
+                                        <span>-{formatMoney(result.incomeTax)}</span>
                                     </button>
                                     {tooltip === 'isr' && (
                                         <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
                                             <div className="flex justify-between">
                                                 <span>Salario mensual</span>
-                                                <span>${result.grossAfterAbsence.toFixed(2)}</span>
+                                                <span>{formatMoney(result.grossAfterAbsence)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>× 13 (con décimo)</span>
-                                                <span>${(result.grossAfterAbsence * 13).toFixed(2)}</span>
+                                                <span>{formatMoney(result.grossAfterAbsence * 13)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>- Exención</span>
@@ -363,15 +364,15 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                             </div>
                                             <div className="flex justify-between font-semibold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1">
                                                 <span>= Base imponible</span>
-                                                <span>${result.annualISRBase.toFixed(2)}</span>
+                                                <span>{formatMoney(result.annualISRBase)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>× Tasa {(result.isrRateUsed * 100).toFixed(0)}%</span>
-                                                <span>${result.annualISRTax.toFixed(2)}/año</span>
+                                                <span>{formatMoney(result.annualISRTax)}/año</span>
                                             </div>
                                             <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-red-600 dark:text-red-400">
                                                 <span>= ISR mensual</span>
-                                                <span>${result.incomeTax.toFixed(2)}</span>
+                                                <span>{formatMoney(result.incomeTax)}</span>
                                             </div>
                                         </div>
                                     )}
@@ -384,7 +385,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {result.bonus > 0 && (
                                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                                     <span>+ Bonos</span>
-                                    <span>+${result.bonus.toFixed(2)}</span>
+                                    <span>+{formatMoney(result.bonus)}</span>
                                 </div>
                             )}
 
@@ -399,21 +400,21 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                             + Décimo Tercer Mes 🎁
                                             <span className="text-xs text-zinc-400 dark:text-zinc-500">ⓘ</span>
                                         </span>
-                                        <span>+${result.decimo.toFixed(2)}</span>
+                                        <span>+{formatMoney(result.decimo)}</span>
                                     </button>
                                     {tooltip === 'decimo' && (
                                         <div className="mt-2 p-3 bg-zinc-200 dark:bg-zinc-800 rounded-xl text-xs space-y-1.5 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
                                             <div className="flex justify-between">
                                                 <span>Salario mensual ÷ 3</span>
-                                                <span>${result.decimoGross.toFixed(2)}</span>
+                                                <span>{formatMoney(result.decimoGross)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span>- Seguro Social (7.25%)</span>
-                                                <span>-${(result.decimoGross * 0.0725).toFixed(2)}</span>
+                                                <span>-{formatMoney(result.decimoGross * 0.0725)}</span>
                                             </div>
                                             <div className="flex justify-between font-bold border-t border-dashed border-zinc-300 dark:border-zinc-600 pt-1 text-yellow-600 dark:text-yellow-400">
                                                 <span>= Décimo neto</span>
-                                                <span>${result.decimo.toFixed(2)}</span>
+                                                <span>{formatMoney(result.decimo)}</span>
                                             </div>
                                         </div>
                                     )}
@@ -425,7 +426,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {/* Total Deducciones */}
                             <div className="flex justify-between text-red-800 dark:text-red-300 font-bold">
                                 <span>TOTAL DEDUCCIONES</span>
-                                <span>-${(result.socialSec + result.eduIns + result.incomeTax).toFixed(2)}</span>
+                                <span>-{formatMoney(result.socialSec + result.eduIns + result.incomeTax)}</span>
                             </div>
 
                             <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
@@ -433,7 +434,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                             {/* Neto */}
                             <div className="flex justify-between text-lg font-black text-emerald-700 dark:text-emerald-400">
                                 <span>= NETO RECIBIDO</span>
-                                <span>${result.net.toFixed(2)}</span>
+                                <span>{formatMoney(result.net)}</span>
                             </div>
                         </div>
 
@@ -443,7 +444,7 @@ export default function SalaryCalculator({ onSave, profileId, accounts, isEmbedd
                                 Disponible en Mano
                             </p>
                             <p className="text-4xl md:text-6xl font-black text-orange-600 dark:text-orange-400 tracking-tighter">
-                                ${result.net.toFixed(2)}
+                                {formatMoney(result.net)}
                             </p>
 
                             {result.isDecimoIncluded && (

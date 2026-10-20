@@ -13,6 +13,7 @@ import { useScrollLock } from '@/hooks/useScrollLock';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { ProfileWithData } from '@/types';
 import { parseDateOnly, formatDateOnly, formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 
 type Account = ProfileWithData['accounts'][number];
 
@@ -327,7 +328,7 @@ export default function AccountHistoryModal({
                                                         ? 'text-emerald-600 dark:text-emerald-400'
                                                         : 'text-red-500 dark:text-red-400'
                                                 }`}>
-                                                    {isIncome(tx.type) ? '+' : '-'}${tx.amount.toFixed(2)}
+                                                    {isIncome(tx.type) ? '+' : '-'}{formatMoney(tx.amount)}
                                                 </span>
                                             </div>
                                         ))}

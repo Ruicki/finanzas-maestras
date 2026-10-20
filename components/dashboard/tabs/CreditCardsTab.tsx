@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ProfileWithData } from '@/types';
+import { formatMoney } from '@/lib/utils';
 import { deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
@@ -77,14 +78,14 @@ export default function CreditCardsTab({ creditCards, accounts, profileId, profi
                         <TrendingDownIcon size={14} className="text-red-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Deuda Total</span>
                     </div>
-                    <p className="text-xl font-black text-red-500">${totalDebt.toFixed(2)}</p>
+                    <p className="text-xl font-black text-red-500">{formatMoney(totalDebt)}</p>
                 </div>
                 <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                         <CreditCardIcon size={14} className="text-blue-500" />
                         <span className="text-[10px] font-bold text-zinc-400 uppercase">Disponible</span>
                     </div>
-                    <p className="text-xl font-black text-blue-500">${totalAvailable.toFixed(2)}</p>
+                    <p className="text-xl font-black text-blue-500">{formatMoney(totalAvailable)}</p>
                 </div>
                 <div className="bg-surface dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">

@@ -3,6 +3,7 @@
 import React from 'react';
 import { XIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 
 export interface GoalTransactionRow {
     id: number;
@@ -56,7 +57,7 @@ export default function GoalHistoryModal({ nombreMeta, movimientos, cargando, on
                                         </div>
                                     </div>
                                     <span className={`font-black text-sm ${tx.type === 'DEPOSIT' ? 'text-emerald-500' : 'text-red-500'}`}>
-                                        {tx.type === 'DEPOSIT' ? '+' : '-'}${tx.amount.toFixed(2)}
+                                        {tx.type === 'DEPOSIT' ? '+' : '-'}{formatMoney(tx.amount)}
                                     </span>
                                 </div>
                             ))}

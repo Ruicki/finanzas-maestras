@@ -12,6 +12,7 @@ import { SettingsIcon, LogOutIcon, EyeIcon, EyeOffIcon, WalletIcon, TrendingUpIc
 import { Briefcase, Landmark, Target } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
+import { formatMoney } from '@/lib/utils';
 import { esPagoDeDeuda } from '@/lib/expense-category';
 import { gastosVisiblesEnElMes, totalGastadoDelMes } from '@/lib/dashboard-expenses';
 import { businessMonthKey } from '@/lib/dates';
@@ -345,12 +346,12 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Dinero disponible</p>
                             <p className={`font-accent text-3xl md:text-4xl tabular-nums relative z-10 blur-sensitive ${balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-500'}`}>
-                                ${balance.toFixed(2)}
+                                {formatMoney(balance)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
-                                {bankBalance > 0 && <span className="text-indigo-600 dark:text-indigo-400">Banco ${bankBalance.toFixed(0)}</span>}
-                                {cashBalance > 0 && <span className="text-emerald-600 dark:text-emerald-400">Efectivo ${cashBalance.toFixed(0)}</span>}
-                                {walletBalance > 0 && <span className="text-zinc-600 dark:text-zinc-400">Billetera ${walletBalance.toFixed(0)}</span>}
+                                {bankBalance > 0 && <span className="text-indigo-600 dark:text-indigo-400">Banco {formatMoney(bankBalance)}</span>}
+                                {cashBalance > 0 && <span className="text-emerald-600 dark:text-emerald-400">Efectivo {formatMoney(cashBalance)}</span>}
+                                {walletBalance > 0 && <span className="text-zinc-600 dark:text-zinc-400">Billetera {formatMoney(walletBalance)}</span>}
                             </div>
                         </div>
 
@@ -361,14 +362,14 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Patrimonio Neto</p>
                             <p className={`font-accent text-3xl md:text-4xl tabular-nums relative z-10 blur-sensitive ${netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
-                                ${netWorth.toFixed(2)}
+                                {formatMoney(netWorth)}
                             </p>
                             <div className="mt-2 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
-                                <span className="text-emerald-600 dark:text-emerald-400">Ingresos ${totalMonthlyIncome.toFixed(0)}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400">Ingresos {formatMoney(totalMonthlyIncome)}</span>
                                 <span className="text-zinc-300 dark:text-zinc-600">vs</span>
-                                <span className="text-red-400">Gastos ${totalExpenses.toFixed(0)}</span>
+                                <span className="text-red-400">Gastos {formatMoney(totalExpenses)}</span>
                                 <span className="text-zinc-300 dark:text-zinc-600">vs</span>
-                                <span className="text-amber-400">Deudas ${totalCreditDebt.toFixed(0)}</span>
+                                <span className="text-amber-400">Deudas {formatMoney(totalCreditDebt)}</span>
                             </div>
                         </div>
 
@@ -379,7 +380,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Ingresos (Mes)</p>
                             <p className="font-accent text-3xl md:text-4xl tabular-nums text-emerald-600 dark:text-emerald-400 relative z-10 blur-sensitive">
-                                +${totalMonthlyIncome.toFixed(2)}
+                                +{formatMoney(totalMonthlyIncome)}
                             </p>
                         </div>
 
@@ -390,7 +391,7 @@ export default function BudgetDashboard({ initialProfile, isImpersonating = fals
                             </div>
                             <p className="text-zinc-500 font-bold mb-1 uppercase text-xs tracking-wider">Deuda Total</p>
                             <p className="font-accent text-3xl md:text-4xl tabular-nums text-red-500 relative z-10 blur-sensitive">
-                                -${totalCreditDebt.toFixed(2)}
+                                -{formatMoney(totalCreditDebt)}
                             </p>
                         </div>
                     </div>

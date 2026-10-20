@@ -3,6 +3,7 @@
 import React from 'react';
 import { XIcon, CalculatorIcon } from '@animateicons/react/lucide';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
+import { formatMoney } from '@/lib/utils';
 import { GOAL_CATEGORIES } from './categories';
 
 /** Lo que el formulario de una meta mantiene en pantalla. */
@@ -112,9 +113,9 @@ export default function GoalFormModal({ editando, form, setForm, cuentas, recome
                                 <span className="font-bold text-xs">Calculadora</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2 text-center">
-                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Mensual</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recomendado.monthly.toFixed(2)}</p></div>
-                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Quincenal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recomendado.biweekly.toFixed(2)}</p></div>
-                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Semanal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">${recomendado.weekly.toFixed(2)}</p></div>
+                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Mensual</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">{formatMoney(recomendado.monthly)}</p></div>
+                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Quincenal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">{formatMoney(recomendado.biweekly)}</p></div>
+                                <div className="bg-surface dark:bg-zinc-900 p-2 rounded-xl"><p className="text-[9px] uppercase font-bold text-zinc-400">Semanal</p><p className="font-black text-indigo-600 dark:text-indigo-400 text-sm">{formatMoney(recomendado.weekly)}</p></div>
                             </div>
                         </div>
                     )}

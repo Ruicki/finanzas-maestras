@@ -11,6 +11,7 @@ import { ProfileWithData } from "@/types";
 import { confirmDelete } from "@/components/shared/DeleteConfirmation";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { formatEnTimezonaDeNegocio } from "@/lib/dates";
+import { formatMoney } from "@/lib/utils";
 
 type Salary = ProfileWithData['salaries'][number];
 type AdditionalIncome = ProfileWithData['incomes'][number];
@@ -113,7 +114,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
 
                                 <div className="flex items-center justify-end w-full md:w-auto gap-4 pl-16 md:pl-0">
                                     <span className={`block text-xl font-black blur-sensitive ${isSalary ? 'text-emerald-500 dark:text-emerald-400' : 'text-cyan-500 dark:text-cyan-400'}`}>
-                                        ${isSalary ? Number(item.netVal).toFixed(2) : Number(item.amount).toFixed(2)}
+                                        {isSalary ? formatMoney(Number(item.netVal)) : formatMoney(Number(item.amount))}
                                     </span>
 
                                     {isSalary && (
@@ -149,14 +150,14 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                     {/* Bruto */}
                                     <div className="flex justify-between text-zinc-900 dark:text-zinc-100 font-semibold">
                                         <span>Salario Bruto</span>
-                                        <span>${Number(item.grossVal).toFixed(2)}</span>
+                                        <span>{formatMoney(Number(item.grossVal))}</span>
                                     </div>
 
                                     {/* Ausencias */}
                                     {item.absentDays > 0 && (
                                         <div className="flex justify-between text-red-500 dark:text-red-400 pl-4">
                                             <span>- Ausencias ({item.absentDays} día{item.absentDays > 1 ? 's' : ''})</span>
-                                            <span>-${(Number(item.grossVal) - (Number(item.netVal) - Number(item.bonus) + Number(item.taxes))).toFixed(2)}</span>
+                                            <span>-{formatMoney(Number(item.grossVal) - (Number(item.netVal) - Number(item.bonus) + Number(item.taxes)))}</span>
                                         </div>
                                     )}
 
@@ -165,19 +166,19 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                     {/* Seguro Social */}
                                     <div className="flex justify-between text-red-600 dark:text-red-400">
                                         <span>Seguro Social (9.75%)</span>
-                                        <span>-${Number(item.socialSec).toFixed(2)}</span>
+                                        <span>-{formatMoney(Number(item.socialSec))}</span>
                                     </div>
 
                                     {/* Seguro Educativo */}
                                     <div className="flex justify-between text-red-600 dark:text-red-400">
                                         <span>Seguro Educativo (1.25%)</span>
-                                        <span>-${Number(item.eduIns).toFixed(2)}</span>
+                                        <span>-{formatMoney(Number(item.eduIns))}</span>
                                     </div>
 
                                     {/* ISR */}
                                     <div className="flex justify-between text-red-700 dark:text-red-300 font-bold">
                                         <span>ISR</span>
-                                        <span>-${Number(item.incomeTax).toFixed(2)}</span>
+                                        <span>-{formatMoney(Number(item.incomeTax))}</span>
                                     </div>
 
                                     <div className="h-px bg-zinc-200 dark:bg-white/10 my-2"></div>
@@ -185,14 +186,14 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                     {/* Total Deducciones */}
                                     <div className="flex justify-between text-red-800 dark:text-red-300 font-bold">
                                         <span>TOTAL DEDUCCIONES</span>
-                                        <span>-${Number(item.taxes).toFixed(2)}</span>
+                                        <span>-{formatMoney(Number(item.taxes))}</span>
                                     </div>
 
                                     {/* Bonos */}
                                     {Number(item.bonus) > 0 && (
                                         <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                                             <span>+ Bonos</span>
-                                            <span>+${Number(item.bonus).toFixed(2)}</span>
+                                            <span>+{formatMoney(Number(item.bonus))}</span>
                                         </div>
                                     )}
 
@@ -201,7 +202,7 @@ export default function IncomeHistory({ salaries, incomes, onDataChange, onEdit 
                                     {/* Neto */}
                                     <div className="flex justify-between text-lg font-black text-emerald-700 dark:text-emerald-400">
                                         <span>= NETO RECIBIDO</span>
-                                        <span>${Number(item.netVal).toFixed(2)}</span>
+                                        <span>{formatMoney(Number(item.netVal))}</span>
                                     </div>
                                 </div>
                             )}

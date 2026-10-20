@@ -9,6 +9,7 @@ import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { PencilIcon, Trash2Icon, XIcon, PiggyBankIcon, CalendarIcon, PlusIcon, PauseIcon, PlayIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { getCategoryInfo, getStage } from './categories';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 
 type Goal = ProfileWithData['goals'][number];
 type Account = ProfileWithData['accounts'][number];
@@ -147,8 +148,8 @@ export default function GoalCard({ goal, accounts, isExpanded, onToggleExpand, o
                 </div>
                 <div>
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Ahorrado</p>
-                    <span className="text-2xl font-black text-zinc-900 dark:text-white">${goal.currentAmount.toFixed(2)}</span>
-                    <span className="text-sm text-zinc-400 ml-1">/ ${goal.targetAmount.toFixed(0)}</span>
+                    <span className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(goal.currentAmount)}</span>
+                    <span className="text-sm text-zinc-400 ml-1">/ {formatMoney(goal.targetAmount)}</span>
                 </div>
             </div>
 
@@ -191,7 +192,7 @@ export default function GoalCard({ goal, accounts, isExpanded, onToggleExpand, o
                         const remaining = goal.targetAmount - goal.currentAmount;
                         const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                         if (daysLeft > 0 && remaining > 0) {
-                            return <span className="text-zinc-500">${(remaining / daysLeft).toFixed(2)}/día</span>;
+                            return <span className="text-zinc-500">{formatMoney(remaining / daysLeft)}/día</span>;
                         }
                         return <span className="text-red-500">Tiempo agotado</span>;
                     })()}
@@ -237,7 +238,7 @@ export default function GoalCard({ goal, accounts, isExpanded, onToggleExpand, o
                         <div className="grid grid-cols-2 gap-2">
                             <button disabled={submitting} onClick={handleQuota} className="py-4 rounded-2xl bg-indigo-600 dark:bg-white text-white dark:text-black font-bold text-sm transition-all flex flex-col items-center gap-1 shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none">
                                 <span className="flex items-center gap-1.5"><CalendarIcon size={14} /> Pagar Cuota</span>
-                                <span className="text-xs opacity-80">${Number(goal.contributionAmount).toFixed(2)}</span>
+                                <span className="text-xs opacity-80">{formatMoney(goal.contributionAmount)}</span>
                             </button>
                             <button onClick={() => { onToggleExpand(goal.id); setAmount(''); if (goal.sourceAccountId) setAccountId(goal.sourceAccountId.toString()); }} className="py-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 font-bold text-sm transition-all flex flex-col items-center gap-1 border border-dashed border-zinc-200 dark:border-zinc-700">
                                 <span className="flex items-center gap-1.5"><PlusIcon size={14} /> Abonar Extra</span>

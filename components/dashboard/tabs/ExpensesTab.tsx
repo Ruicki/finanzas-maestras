@@ -13,6 +13,7 @@ import { deleteExpense, confirmExpense } from '@/app/actions/budget';
 import { toast } from 'sonner';
 import { nombreCategoria, esDeCategoria } from '@/lib/expense-category';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 import { tipoDeGasto } from '@/lib/financial-rules';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import ExpenseWizard from '@/components/expenses/ExpenseWizard';
@@ -198,7 +199,7 @@ export default function ExpensesTab({ expenses, allExpenses = [], totalIncome = 
                         </div>
                         <div>
                             <h3 className="font-accent text-6xl md:text-8xl tracking-tight text-zinc-900 dark:text-white drop-shadow-none dark:drop-shadow-lg dark:shadow-black">
-                                ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {formatMoney(totalExpenses)}
                             </h3>
                         </div>
                     </div>
@@ -223,7 +224,7 @@ export default function ExpensesTab({ expenses, allExpenses = [], totalIncome = 
                         <p className="text-xs text-amber-600/80 dark:text-amber-400/70">No descuentan tu saldo hasta que los confirmes.</p>
                     </div>
                     <p className="font-black text-lg text-amber-700 dark:text-amber-400 shrink-0">
-                        ${totalProjected.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatMoney(totalProjected)}
                     </p>
                 </div>
             )}
@@ -369,7 +370,7 @@ export default function ExpensesTab({ expenses, allExpenses = [], totalIncome = 
                                                         </div>
                                                     </div>
                                                     <div className="text-right shrink-0">
-                                                        <p className={`font-black ${exp.isProjected ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>-${exp.amount.toFixed(2)}</p>
+                                                        <p className={`font-black ${exp.isProjected ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>-{formatMoney(exp.amount)}</p>
                                                         <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs font-medium text-zinc-400 mt-1">
                                                             {exp.linkedCardId ? <CardIcon size={10} /> : <WalletIcon size={10} />}
                                                             <span className="truncate max-w-[80px]">

@@ -11,6 +11,7 @@ import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { SmartMoneyInput } from '@/components/shared/SmartMoneyInput';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { parseDateOnly, formatDateOnly } from '@/lib/dates';
+import { formatMoney } from '@/lib/utils';
 
 type Account = ProfileWithData['accounts'][number];
 type CreditCard = ProfileWithData['creditCards'][number];
@@ -333,7 +334,7 @@ export default function ExpenseWizard({
                                 >
                                     <option value="" disabled>Seleccionar Tarjeta...</option>
                                     {creditCards.map(card => (
-                                        <option key={card.id} value={card.id}>{card.name} (Disp: ${(card.limit - card.balance - (card.balance * ((card.insuranceRate || 0.25) / 100))).toFixed(2)})</option>
+                                        <option key={card.id} value={card.id}>{card.name} (Disp: {formatMoney(card.limit - card.balance - (card.balance * ((card.insuranceRate || 0.25) / 100)))})</option>
                                     ))}
                                 </select>
                             </div>

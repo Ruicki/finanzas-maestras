@@ -35,12 +35,14 @@ export default function IncomesTab({ incomes, salaries, accounts, profileId, onU
                     <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 flex flex-col items-center">
-                        <div
+                        <button
+                            type="button"
                             onClick={() => { setIncomeToEdit(null); setShowIncomeWizard(true); }}
+                            aria-label="Registrar nuevo ingreso"
                             className="w-20 h-20 bg-zinc-100 dark:bg-white/10 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm cursor-pointer hover:scale-110 transition-transform"
                         >
                             <PlusIcon className="w-8 h-8 text-emerald-700 dark:text-white" />
-                        </div>
+                        </button>
                         <h3 className="text-3xl font-black mb-2 tracking-tight">Nuevo Ingreso</h3>
                         <p className="text-zinc-500 dark:text-white/70 max-w-sm mx-auto text-lg leading-relaxed">
                             Registra salarios, bonos o dinero extra para mantener tus cuentas claras.

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { PiggyBankIcon } from '@animateicons/react/lucide';
+import { formatMoney } from '@/lib/utils';
 
 interface CuentaDestino {
     id: number;
@@ -37,7 +38,7 @@ export default function GoalReclaimModal({ meta, cuentas, cuentaId, onCuentaId, 
                 <p className="text-zinc-500 mb-6 font-medium">Eliminar meta <strong>{meta.name}</strong> con fondos acumulados.</p>
                 <div className="bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-3xl mb-6">
                     <p className="text-xs font-bold text-zinc-400 uppercase mb-2">Monto a Recuperar</p>
-                    <p className="text-4xl font-black text-emerald-500">${meta.currentAmount.toFixed(2)}</p>
+                    <p className="text-4xl font-black text-emerald-500">{formatMoney(meta.currentAmount)}</p>
                 </div>
                 <div className="mb-8 text-left">
                     <label className="text-xs font-bold text-zinc-500 uppercase ml-2 mb-2 block">¿A dónde?</label>
