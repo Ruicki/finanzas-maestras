@@ -2,7 +2,7 @@
 
 import { formatMoney } from '@/lib/utils';
 import { montoDeAbonoRapido } from '@/lib/debts';
-import { ArrowUpRightIcon, UserIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon } from '@animateicons/react/lucide';
+import { ArrowUpRightIcon, UserIcon, TrendingDownIcon, PiggyBankIcon, PencilIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { ProfileWithData } from '@/types';
 
@@ -14,9 +14,10 @@ interface FriendLoanCardProps {
     onDelete: (id: number) => void;
     onQuickPay: (loan: Loan, amount: number) => void;
     onEdit?: (loan: Loan) => void;
+    onHistory?: (loan: Loan) => void;
 }
 
-export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEdit }: FriendLoanCardProps) {
+export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEdit, onHistory }: FriendLoanCardProps) {
     // Financials
     const currentBalance = Number(loan.currentBalance);
     const totalAmount = Number(loan.totalAmount);
@@ -120,6 +121,15 @@ export default function FriendLoanCard({ loan, onPay, onDelete, onQuickPay, onEd
                             title="Editar"
                         >
                             <PencilIcon size={20} />
+                        </button>
+                    )}
+                    {onHistory && (
+                        <button
+                            onClick={() => onHistory(loan)}
+                            className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-500 rounded-xl transition-colors"
+                            title="Ver historial de pagos"
+                        >
+                            <HistoryIcon size={20} />
                         </button>
                     )}
                     <button

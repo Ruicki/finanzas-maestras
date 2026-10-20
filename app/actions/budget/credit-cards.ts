@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { serializeCreditCard } from './serializers';
+import { serializeCreditCard, toNum } from './serializers';
 import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
 import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
@@ -152,6 +152,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
                     isOneTime: true,
                     isRecurring: false,
                     isDebtSettlement: true,
+                    creditCardSettledId: cardId,
                     paymentMethod: 'TRANSFER',
                 },
             });
@@ -163,4 +164,37 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
         reportError(error, { accion: 'pagar tarjeta de credito', targetId: cardId });
         throw error;
     }
+}
+
+// ─── HISTORIAL DE PAGOS ─────────────────────────────────────────────────────
+
+export interface PagoDeTarjeta {
+    id: number;
+    amount: number;
+    createdAt: Date;
+    accountName: string | null;
+}
+
+/**
+ * Los pagos reales de una tarjeta, más recientes primero. Mismo motivo que
+ * getLoanPayments en debts.ts: sin esto no había forma de comprobar si un
+ * pago ya se había registrado antes de volver a pagarlo.
+ */
+export async function getCreditCardPayments(cardId: number): Promise<PagoDeTarjeta[]> {
+    const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
+    if (!card) throw new Error('Tarjeta no encontrada');
+    await requireOwnership(card.profileId);
+
+    const pagos = await prisma.expense.findMany({
+        where: { creditCardSettledId: cardId, isDebtSettlement: true },
+        orderBy: { createdAt: 'desc' },
+        include: { account: { select: { name: true } } },
+    });
+
+    return pagos.map((p) => ({
+        id: p.id,
+        amount: toNum(p.amount),
+        createdAt: p.createdAt,
+        accountName: p.account?.name ?? null,
+    }));
 }

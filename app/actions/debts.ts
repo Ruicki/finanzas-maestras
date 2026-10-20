@@ -188,6 +188,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
                 isRecurring: false,
                 isOneTime: true,
                 isDebtSettlement: true,
+                loanId: loan.id,
                 paymentMethod: sourceAccountId ? "TRANSFER" : "CASH",
                 profileId: loan.profileId,
                 accountId: sourceAccountId || null
@@ -288,4 +289,39 @@ export async function processLoanInterest(): Promise<ProcessLoanInterestResult> 
     }
 
     return result;
+}
+
+// ─── HISTORIAL DE PAGOS ─────────────────────────────────────────────────────
+
+export interface PagoDePrestamo {
+    id: number;
+    amount: number;
+    createdAt: Date;
+    accountName: string | null;
+}
+
+/**
+ * Los pagos reales de un préstamo, más recientes primero.
+ *
+ * Antes no existía ninguna vista de esto: el usuario no tenía forma de
+ * comprobar si ya había pagado una cuota antes de volver a pagarla, y llegó
+ * a pagar la misma deuda dos veces por esto mismo.
+ */
+export async function getLoanPayments(loanId: number): Promise<PagoDePrestamo[]> {
+    const loan = await prisma.loan.findUnique({ where: { id: loanId } });
+    if (!loan) throw new Error('Préstamo no encontrado');
+    await requireOwnership(loan.profileId);
+
+    const pagos = await prisma.expense.findMany({
+        where: { loanId, isDebtSettlement: true },
+        orderBy: { createdAt: 'desc' },
+        include: { account: { select: { name: true } } },
+    });
+
+    return pagos.map((p) => ({
+        id: p.id,
+        amount: toNum(p.amount),
+        createdAt: p.createdAt,
+        accountName: p.account?.name ?? null,
+    }));
 }

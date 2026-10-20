@@ -111,6 +111,11 @@ model Expense {
   /// personales desaparecian de Gastos y del total del mes como si fueran
   /// el pago automatico de una deuda. Ver esPagoDeDeuda en expense-category.ts.
   isDebtSettlement Boolean  @default(false)
+  /// Solo en el gasto que genera payLoan: a que prestamo pertenece este pago,
+  /// para poder listar su historial sin adivinar por el nombre del gasto.
+  loanId          Int?
+  /// Solo en el gasto que genera el pago de tarjeta: a que tarjeta pertenece.
+  creditCardSettledId Int?
   profileId       Int
   accountId       Int?
   createdAt       DateTime  @default(now())
@@ -125,6 +130,8 @@ model Expense {
   @@index([accountId])
   @@index([categoryId])
   @@index([createdAt])
+  @@index([loanId])
+  @@index([creditCardSettledId])
 }
 
 model Category {

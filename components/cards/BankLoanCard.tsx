@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { calculateNextPaymentSplit, calculatePayoffImpact } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
-import { ZapIcon, TrendingDownIcon, CalendarIcon, PencilIcon } from '@animateicons/react/lucide';
+import { ZapIcon, TrendingDownIcon, CalendarIcon, PencilIcon, HistoryIcon } from '@animateicons/react/lucide';
 import { MessageCircleMoreIcon } from '@animateicons/react/lucide';
 import { Landmark } from 'lucide-react';
 import { ProfileWithData } from '@/types';
@@ -15,9 +15,10 @@ interface BankLoanCardProps {
     onPay: (loan: Loan) => void;
     onDelete: (id: number) => void;
     onEdit?: (loan: Loan) => void;
+    onHistory?: (loan: Loan) => void;
 }
 
-export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoanCardProps) {
+export default function BankLoanCard({ loan, onPay, onDelete, onEdit, onHistory }: BankLoanCardProps) {
     const [simulating, setSimulating] = useState(false);
 
     // Financials
@@ -116,6 +117,15 @@ export default function BankLoanCard({ loan, onPay, onDelete, onEdit }: BankLoan
                             title="Editar"
                         >
                             <PencilIcon size={20} />
+                        </button>
+                    )}
+                    {onHistory && (
+                        <button
+                            onClick={() => onHistory(loan)}
+                            className="shrink-0 px-4 py-3 bg-white dark:bg-transparent border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-500 rounded-xl transition-colors"
+                            title="Ver historial de pagos"
+                        >
+                            <HistoryIcon size={20} />
                         </button>
                     )}
                     <button

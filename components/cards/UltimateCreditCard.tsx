@@ -3,7 +3,7 @@
 import { calculateCreditHealth, calculateMinimumPayment, calculateMonthlyCharges, getDaysToCutoff } from '@/lib/financial-engine';
 import { formatMoney } from '@/lib/utils';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
-import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, Trash2Icon, TriangleAlertIcon, CheckCheckIcon } from '@animateicons/react/lucide';
+import { CreditCardIcon, WifiIcon, CalendarIcon, TrendingUpIcon, PencilIcon, Trash2Icon, TriangleAlertIcon, CheckCheckIcon, HistoryIcon } from '@animateicons/react/lucide';
 import React from 'react';
 import { ProfileWithData } from '@/types';
 
@@ -15,9 +15,10 @@ interface UltimateCreditCardProps {
     onDelete: (id: number) => void;
     cardholderName?: string;
     onEdit?: (card: CreditCard) => void;
+    onHistory?: (card: CreditCard) => void;
 }
 
-export default function UltimateCreditCard({ card, onPay, onDelete, cardholderName = 'USUARIO', onEdit }: UltimateCreditCardProps) {
+export default function UltimateCreditCard({ card, onPay, onDelete, cardholderName = 'USUARIO', onEdit, onHistory }: UltimateCreditCardProps) {
     // Panama credit cards include desgravamen (insurance) in the bank's balance
     const hasRate = Number(card.interestRate) > 0;
     const effectiveRate = hasRate ? Number(card.interestRate) : 2.0;
@@ -204,6 +205,15 @@ export default function UltimateCreditCard({ card, onPay, onDelete, cardholderNa
                             title="Editar"
                         >
                             <PencilIcon size={20} />
+                        </button>
+                    )}
+                    {onHistory && (
+                        <button
+                            onClick={() => onHistory(card)}
+                            className="px-4 bg-surface dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-500 rounded-xl transition-colors"
+                            title="Ver historial de pagos"
+                        >
+                            <HistoryIcon size={20} />
                         </button>
                     )}
                     <button

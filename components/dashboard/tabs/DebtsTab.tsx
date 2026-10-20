@@ -10,8 +10,8 @@ import { CreditCardIcon as CardIcon } from '@animateicons/react/lucide';
 import { Building } from 'lucide-react';
 import EmptyState from '@/components/shared/EmptyState';
 import { toast } from 'sonner';
-import { createLoan, deleteLoan, payLoan, updateLoan, CreateLoanInput } from '@/app/actions/debts';
-import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails } from '@/app/actions/budget';
+import { createLoan, deleteLoan, payLoan, updateLoan, getLoanPayments, CreateLoanInput, PagoDePrestamo } from '@/app/actions/debts';
+import { createCreditCard, deleteCreditCard, payCreditCard, updateCreditCardDetails, getCreditCardPayments, PagoDeTarjeta } from '@/app/actions/budget';
 import { confirmDelete } from '@/components/shared/DeleteConfirmation';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import UltimateCreditCard from '@/components/cards/UltimateCreditCard';
@@ -22,6 +22,7 @@ import CreditCardWizard from '@/components/shared/CreditCardWizard';
 import DebtFreedomHeader from '@/components/debts/DebtFreedomHeader';
 import DebtWizard from '@/components/debts/DebtWizard';
 import LoanPaymentModal from '@/components/debts/LoanPaymentModal';
+import DebtHistoryModal from '@/components/debts/DebtHistoryModal';
 import {
     esPrestamoBancario,
     calcularFechaDeLibertad,
@@ -57,7 +58,14 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
     const [paymentModal, setPaymentModal] = useState<{ isOpen: boolean; type: 'CARD' | 'LOAN'; id: number; name: string; maxAmount: number } | null>(null);
     const [payingCard, setPayingCard] = useState<CreditCard | null>(null);
 
-    useScrollLock(isWizardOpen || !!paymentModal?.isOpen);
+    // Modal de Historial de pagos — antes no existía ninguna vista de esto,
+    // y el usuario llegó a pagar la misma deuda dos veces por no poder
+    // comprobar si ya la había pagado.
+    const [historyModal, setHistoryModal] = useState<{ nombre: string } | null>(null);
+    const [historyPagos, setHistoryPagos] = useState<(PagoDePrestamo | PagoDeTarjeta)[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    useScrollLock(isWizardOpen || !!paymentModal?.isOpen || !!historyModal);
 
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paymentAccountId, setPaymentAccountId] = useState('');
@@ -309,6 +317,32 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
         }
     }
 
+    async function openLoanHistory(loan: Loan) {
+        setHistoryModal({ nombre: loan.name });
+        setLoadingHistory(true);
+        try {
+            setHistoryPagos(await getLoanPayments(loan.id));
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo cargar el historial');
+            setHistoryPagos([]);
+        } finally {
+            setLoadingHistory(false);
+        }
+    }
+
+    async function openCardHistory(card: CreditCard) {
+        setHistoryModal({ nombre: card.name });
+        setLoadingHistory(true);
+        try {
+            setHistoryPagos(await getCreditCardPayments(card.id));
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'No se pudo cargar el historial');
+            setHistoryPagos([]);
+        } finally {
+            setLoadingHistory(false);
+        }
+    }
+
     function quickPay(loan: Loan, amount: number) {
         // Preferir una cuenta de gasto normal, no bloqueada y no de ahorro —
         // antes tomaba accounts[0] a ciegas, pudiendo drenar una cuenta de
@@ -349,6 +383,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                         onPay={() => openPaymentModal('LOAN', loan.id, loan.name, Number(loan.currentBalance))}
                                         onDelete={() => handleDelete(loan.id, 'LOAN')}
                                         onEdit={() => openEditLoan(loan)}
+                                        onHistory={() => openLoanHistory(loan)}
                                     />
                                 );
                             } else {
@@ -360,6 +395,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                         onDelete={() => handleDelete(loan.id, 'LOAN')}
                                         onQuickPay={(l, amount) => quickPay(l, amount)}
                                         onEdit={() => openEditLoan(loan)}
+                                        onHistory={() => openLoanHistory(loan)}
                                     />
                                 );
                             }
@@ -394,6 +430,7 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                                 onPay={(c) => setPayingCard(c)}
                                 onDelete={(id) => handleDelete(id, 'CARD')}
                                 onEdit={() => openEditCard(card)}
+                                onHistory={() => openCardHistory(card)}
                             />
                         </div>
                     ))}
@@ -459,6 +496,15 @@ export default function DebtsTab({ creditCards, loans, accounts, profileId, prof
                         toast.success("Pago registrado");
                     }}
                     onClose={() => setPayingCard(null)}
+                />
+            )}
+
+            {historyModal && (
+                <DebtHistoryModal
+                    nombre={historyModal.nombre}
+                    pagos={historyPagos}
+                    cargando={loadingHistory}
+                    onClose={() => { setHistoryModal(null); setHistoryPagos([]); }}
                 />
             )}
 
