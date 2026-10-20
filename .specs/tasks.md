@@ -867,18 +867,27 @@ pagado" todavía era cosmético).
       con un script real contra la base de datos de prueba (pagar $200 de un
       préstamo de $1000 y corregirlo deja todo exactamente en su saldo
       original).
-- [x] 26.5 **Auditoría ligera de Cuentas/Ingresos/Metas.** Se encontraron y
-      quedaron documentados en el tablero (no corregidos aún, por volumen):
-      `GEN-01` (~40 sitios en 10 archivos usan `${valor.toFixed(2)}` en vez
-      de `formatMoney()`, perdiendo el separador de miles en montos ≥
-      $1,000 — Metas, Cuentas, Salario, Tarjetas), `GEN-02` (el ícono de
-      "Nuevo Ingreso" es un `<div onClick>`, no accesible por teclado). Se
+- [x] 26.5 **Auditoría ligera de Cuentas/Ingresos/Metas** y su corrección:
+      `GEN-01` (~45 sitios en 12 archivos armaban el monto a mano como
+      `${valor.toFixed(2)}` en vez de `formatMoney()`, perdiendo el
+      separador de miles en montos ≥ $1,000 — BudgetDashboard, Metas,
+      Cuentas, Salario, Tarjetas) y `GEN-02` (el ícono de "Nuevo Ingreso"
+      era un `<div onClick>`, no accesible por teclado) corregidos. Se
       verificó y se descartó como bug la fórmula de "Ausencias" del
       desglose de salario (`GEN-03`, coincide algebraicamente con
       `calculateSalary` en `lib/financial-engine.ts`).
+      → `npx tsc --noEmit`, `npm run lint` y `npm test` (198/198) limpios.
       → Cuentas, Ingresos y Metas: pasada ligera, no una auditoría tan
       exhaustiva como Panorama — queda como trabajo futuro si el usuario
       quiere profundizar ahí con el mismo nivel de detalle.
+
+**Estado final del tablero Scrum al cierre de la Fase 26:** 21 de 23
+hallazgos resueltos. Quedan abiertos únicamente `GAS-03` (corregir a mano
+los datos ya duplicados en producción — necesita que el usuario mande la
+captura completa de su lista real de Suscripciones) y `GAS-04` (por qué una
+suscripción aparecía "Pagado" sin gasto real en el historial — investigación
+abierta, necesita datos reales). Ninguno de los dos se puede avanzar sin
+información que solo tiene el usuario.
 
 **Verificación de toda la Fase 26:** `npx tsc --noEmit`, `npm run lint` y
 `npm test` (198/198) limpios después de cada commit; las dos migraciones de
