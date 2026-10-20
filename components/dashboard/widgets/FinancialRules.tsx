@@ -174,7 +174,14 @@ export default function FinancialRules({ income, expenses, recurringExpenses = [
     // real hubiera en las cuentas. Reportado por el usuario como "el fondo
     // de emergencia sigue en 0 meses" pese a tener ahorro real.
     const { needs, wants } = gastoFijoYVariableDelMes(expenses, recurringExpenses);
-    const monthlyBurn = needs > 0 ? needs : (needs + wants);
+    // Siempre Necesidades + Deseos, nunca solo Necesidades: antes
+    // `needs > 0 ? needs : (needs + wants)` hacía que un gasto fijo mínimo
+    // (ej. $0.50 mal categorizado) colapsara el "gasto fijo mensual" a ese
+    // monto e ignorara por completo el gasto variable, inflando artificialmente
+    // los meses cubiertos. Para un fondo de emergencia, conviene errar hacia
+    // el lado conservador: cuánto necesitás para sostener TODO tu gasto
+    // mensual real, no solo lo estrictamente esencial.
+    const monthlyBurn = needs + wants;
     const liquidFunds = totalCash + totalSavings;
     const monthsCovered = monthlyBurn > 0 ? (liquidFunds / monthlyBurn) : 0;
     const monthsMissing = Math.max(0, 6 - monthsCovered);
@@ -229,15 +236,22 @@ export default function FinancialRules({ income, expenses, recurringExpenses = [
     const dtiColor = dtiStatus === 'healthy' ? 'text-emerald-500' : dtiStatus === 'warning' ? 'text-amber-500' : 'text-red-500';
     const dtiBg = dtiStatus === 'healthy' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' : dtiStatus === 'warning' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20';
 
-    // Health Score — mismos tres factores que antes, ahora documentados uno
-    // por uno en la tarjeta (antes solo había una frase genérica).
+    // Health Score — cuatro factores, documentados uno por uno en la tarjeta
+    // (antes solo había una frase genérica). El Ahorro se suma como factor:
+    // antes el score solo miraba Necesidades+Deseos+Endeudamiento, así que un
+    // usuario podía ver "Ahorro 0%" en el gráfico de al lado y "Score:
+    // Excelente" sin que el score reflejara eso para nada.
     const needsOk = needsDiff <= 5;
     const wantsOk = wantsDiff <= 5;
     const dtiOk = dtiStatus === 'healthy';
+    // Para Ahorro el objetivo es un mínimo, no un máximo: lo que importa es no
+    // quedarse muy por DEBAJO del target (pasarse de ahorro nunca es el problema).
+    const savingsOk = savingsDiff >= -5;
     let score = 0;
-    if (needsOk) score += 33;
-    if (wantsOk) score += 33;
-    if (dtiOk) score += 34;
+    if (needsOk) score += 25;
+    if (wantsOk) score += 25;
+    if (dtiOk) score += 25;
+    if (savingsOk) score += 25;
 
     return (
         <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-700">
@@ -254,19 +268,26 @@ export default function FinancialRules({ income, expenses, recurringExpenses = [
                         <p className="text-2xl font-black text-zinc-900 dark:text-white">{formatMoney(income)}</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Gasto Fijo</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Necesidades</p>
                         <p className="text-2xl font-black text-blue-500">{formatMoney(needs)}</p>
                         <p className="text-[10px] text-zinc-400">{needsPct.toFixed(0)}% del ingreso</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Gasto Variable</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Deseos</p>
                         <p className="text-2xl font-black text-purple-500">{formatMoney(wants)}</p>
                         <p className="text-[10px] text-zinc-400">{wantsPct.toFixed(0)}% del ingreso</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Disponible</p>
+                        {/* Mismo nombre que la leyenda de la Regla de abajo — antes esta
+                            tarjeta decía "Disponible" y la de la Regla decía "Ahorro" para
+                            el mismo número, y el usuario lo reportó como que el ahorro no
+                            calculaba. "Acumulado hasta hoy" (debajo) es justo lo que faltaba
+                            para distinguir esto —cuánto te sobró ESTE mes— de lo que ya
+                            tenés guardado de meses anteriores (mismo dato que Fondo de
+                            Emergencia: totalCash + totalSavings). */}
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Ahorro este mes</p>
                         <p className={`text-2xl font-black ${savings >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{formatMoney(savings)}</p>
-                        <p className="text-[10px] text-zinc-400">{savingsPct.toFixed(0)}% del ingreso</p>
+                        <p className="text-[10px] text-zinc-400">{savingsPct.toFixed(0)}% del ingreso · acumulado hasta hoy: {formatMoney(liquidFunds)}</p>
                     </div>
                 </div>
             </div>
@@ -292,6 +313,7 @@ export default function FinancialRules({ income, expenses, recurringExpenses = [
                             { ok: needsOk, label: `Necesidades dentro del objetivo (${regla.needsTarget}% + 5)` },
                             { ok: wantsOk, label: `Deseos dentro del objetivo (${regla.wantsTarget}% + 5)` },
                             { ok: dtiOk, label: 'Deudas en nivel saludable (≤36% del ingreso)' },
+                            { ok: savingsOk, label: `Ahorro cerca o por encima del objetivo (${regla.savingsTarget}% - 5)` },
                         ].map((factor) => (
                             <div key={factor.label} className="flex items-start gap-2">
                                 {factor.ok
