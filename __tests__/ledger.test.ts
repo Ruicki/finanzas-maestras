@@ -2,6 +2,7 @@ import {
     decrementAccountBalance,
     decrementCreditCardBalance,
     decrementLoanBalance,
+    mensajeSaldoInsuficiente,
 } from '../lib/ledger';
 import type { Prisma } from '@prisma/client';
 
@@ -23,6 +24,24 @@ function makeTx(model: 'account' | 'creditCard' | 'loan', count: number) {
     return { tx: { [model]: { updateMany } } as unknown as Prisma.TransactionClient, calls };
 }
 
+describe('mensajeSaldoInsuficiente', () => {
+    it('da un mensaje en lenguaje de persona, no de error de sistema', () => {
+        // El usuario reportó que "Fondos insuficientes en X (disponible: $Y)"
+        // sonaba a mensaje de código. Esta es la frase que lo reemplaza.
+        expect(mensajeSaldoInsuficiente('PagoyUso', 5.14)).toBe(
+            'Saldo insuficiente en "PagoyUso": tenés $5.14 disponibles',
+        );
+    });
+
+    it('funciona sin nombre de cuenta ni monto', () => {
+        expect(mensajeSaldoInsuficiente()).toBe('Saldo insuficiente');
+    });
+
+    it('funciona solo con nombre, sin monto', () => {
+        expect(mensajeSaldoInsuficiente('Efectivo')).toBe('Saldo insuficiente en "Efectivo"');
+    });
+});
+
 describe('decrementAccountBalance', () => {
     it('condiciona el UPDATE al saldo disponible en vez de leer y luego escribir', async () => {
         const { tx, calls } = makeTx('account', 1);
@@ -34,13 +53,13 @@ describe('decrementAccountBalance', () => {
 
     it('lanza error si no alcanzo el saldo (count 0), sin dejar pasar la operacion', async () => {
         const { tx } = makeTx('account', 0);
-        await expect(decrementAccountBalance(tx, 7, 50)).rejects.toThrow('Fondos insuficientes');
+        await expect(decrementAccountBalance(tx, 7, 50)).rejects.toThrow('Saldo insuficiente');
     });
 
     it('nombra la cuenta en el error cuando se le pasa', async () => {
         const { tx } = makeTx('account', 0);
         await expect(decrementAccountBalance(tx, 7, 50, 'Banco General')).rejects.toThrow(
-            'Fondos insuficientes en la cuenta "Banco General"',
+            'Saldo insuficiente en "Banco General"',
         );
     });
 });

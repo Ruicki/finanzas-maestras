@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum, toNumOrNull } from './serializers';
 import { requireOwnership } from '@/lib/auth-utils';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
+import { mensajeSaldoInsuficiente } from '@/lib/ledger';
 
 // ─── GOALS ─────────────────────────────────────────────────────────────────
 
@@ -264,7 +265,7 @@ export async function handleGoalTransaction(
             const sourceAccount = await tx.account.findUnique({ where: { id: sourceAccountId } });
             if (!sourceAccount) throw new Error('Cuenta origen no encontrada.');
             if (sourceAccount.profileId !== goal.profileId) throw new Error('La cuenta origen no pertenece a este perfil.');
-            if (Number(sourceAccount.balance) < amount) throw new Error('Fondos insuficientes.');
+            if (Number(sourceAccount.balance) < amount) throw new Error(mensajeSaldoInsuficiente(sourceAccount.name, Number(sourceAccount.balance)));
             if (sourceAccount.lockDate && new Date(sourceAccount.lockDate) > new Date()) {
                 throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(sourceAccount.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
             }
@@ -303,7 +304,7 @@ export async function handleGoalTransaction(
                 const savingsAccount = await tx.account.findUnique({ where: { id: goal.destinationAccountId } });
                 if (!savingsAccount) throw new Error('Cuenta de ahorro no encontrada.');
                 if (savingsAccount.profileId !== goal.profileId) throw new Error('La cuenta de ahorro no pertenece a este perfil.');
-                if (Number(savingsAccount.balance) < amount) throw new Error('Fondos insuficientes en la cuenta de ahorro.');
+                if (Number(savingsAccount.balance) < amount) throw new Error(mensajeSaldoInsuficiente(savingsAccount.name, Number(savingsAccount.balance)));
                 if (savingsAccount.lockDate && new Date(savingsAccount.lockDate) > new Date()) {
                     throw new Error(`Cuenta de ahorro bloqueada hasta ${formatEnTimezonaDeNegocio(savingsAccount.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
                 }

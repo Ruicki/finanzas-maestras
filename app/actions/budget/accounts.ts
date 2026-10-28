@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
-import { decrementAccountBalance } from '@/lib/ledger';
+import { decrementAccountBalance, mensajeSaldoInsuficiente } from '@/lib/ledger';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── ACCOUNTS ──────────────────────────────────────────────────────────────
@@ -278,7 +278,7 @@ export async function createTransfer(
     }
 
     if (Number(sourceAccount.balance) < amount) {
-        throw new Error('Fondos insuficientes en la cuenta origen');
+        throw new Error(mensajeSaldoInsuficiente(sourceAccount.name, Number(sourceAccount.balance)));
     }
 
     if (sourceAccount.lockDate && new Date(sourceAccount.lockDate) > new Date()) {

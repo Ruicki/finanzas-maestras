@@ -5,7 +5,7 @@ import { Account } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { toNum, toNumOrNull } from './budget/serializers';
 import { requireOwnership } from '@/lib/auth-utils';
-import { decrementAccountBalance, decrementLoanBalance } from '@/lib/ledger';
+import { decrementAccountBalance, decrementLoanBalance, mensajeSaldoInsuficiente } from '@/lib/ledger';
 import { businessToday, businessMonthKey, formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 export type CreateLoanInput = {
@@ -144,7 +144,7 @@ export async function payLoan(loanId: number, amount: number, sourceAccountId?: 
         if (account.lockDate && new Date(account.lockDate) > new Date()) {
             throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
-        if (Number(account.balance) < amount) throw new Error("Fondos insuficientes en la cuenta de origen");
+        if (Number(account.balance) < amount) throw new Error(mensajeSaldoInsuficiente(account.name, Number(account.balance)));
     }
 
     await prisma.$transaction(async (tx) => {

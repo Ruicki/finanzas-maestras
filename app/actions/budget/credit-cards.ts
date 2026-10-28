@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { serializeCreditCard, toNum } from './serializers';
 import {logger, reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
-import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
+import { decrementAccountBalance, decrementCreditCardBalance, mensajeSaldoInsuficiente } from '@/lib/ledger';
 import { formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── CREDIT CARDS ──────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ export async function payCreditCard(cardId: number, amount: number, accountId: n
     if (account.lockDate && new Date(account.lockDate) > new Date()) {
         throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
     }
-    if (Number(account.balance) < amount) throw new Error('Fondos insuficientes');
+    if (Number(account.balance) < amount) throw new Error(mensajeSaldoInsuficiente(account.name, Number(account.balance)));
 
     const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
     if (!card) throw new Error('Tarjeta no encontrada');

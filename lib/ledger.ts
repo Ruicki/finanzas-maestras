@@ -3,6 +3,19 @@ import type { Prisma } from '@prisma/client';
 type TxClient = Prisma.TransactionClient;
 
 /**
+ * Un solo mensaje para "no alcanza el saldo", en vez de que cada uno de los
+ * ~10 sitios que validan fondos invente su propia frase. "Fondos
+ * insuficientes en X (disponible: $Y)" sonaba a mensaje de sistema — un
+ * usuario real reportó que no le ayudaba a entender qué pasaba. Esta versión
+ * dice lo mismo en una frase que alguien diría: cuánto le falta, en qué cuenta.
+ */
+export function mensajeSaldoInsuficiente(nombreCuenta?: string | null, disponible?: number | null): string {
+    const sufijoNombre = nombreCuenta ? ` en "${nombreCuenta}"` : '';
+    const sufijoMonto = disponible != null ? `: tenés $${disponible.toFixed(2)} disponibles` : '';
+    return `Saldo insuficiente${sufijoNombre}${sufijoMonto}`;
+}
+
+/**
  * Decrementa el saldo de una cuenta solo si alcanza para cubrir el monto, en una
  * única sentencia UPDATE condicionada (WHERE balance >= amount). Un simple
  * "leer saldo, validar, luego decrementar" dentro de una transacción no evita
@@ -21,7 +34,7 @@ export async function decrementAccountBalance(
         data: { balance: { decrement: amount } },
     });
     if (count === 0) {
-        throw new Error(`Fondos insuficientes${accountName ? ` en la cuenta "${accountName}"` : ''}`);
+        throw new Error(mensajeSaldoInsuficiente(accountName));
     }
 }
 

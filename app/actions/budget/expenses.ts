@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { toNum } from './serializers';
 import { reportError } from '@/lib/logger';
 import { requireOwnership } from '@/lib/auth-utils';
-import { decrementAccountBalance, decrementCreditCardBalance } from '@/lib/ledger';
+import { decrementAccountBalance, decrementCreditCardBalance, mensajeSaldoInsuficiente } from '@/lib/ledger';
 import { businessToday, businessMonthKey, formatEnTimezonaDeNegocio } from '@/lib/dates';
 
 // ─── EXPENSES ──────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ export async function createExpense(data: CreateExpenseInput) {
                     throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
                 }
                 if (Number(account.balance) < data.amount) {
-                    throw new Error(`Fondos insuficientes en la cuenta "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+                    throw new Error(mensajeSaldoInsuficiente(account.name, Number(account.balance)));
                 }
             }
         }
@@ -232,7 +232,7 @@ export async function updateExpense(id: number, data: Partial<CreateExpenseInput
             (vieneDeMoverDinero && oldExpense.accountId === newAccountId ? Number(oldExpense.amount) : 0) -
             newAmount;
         if (projectedBalance < 0) {
-            throw new Error(`Fondos insuficientes en la cuenta "${targetAccount.name}" (disponible: $${Number(targetAccount.balance).toFixed(2)})`);
+            throw new Error(mensajeSaldoInsuficiente(targetAccount.name, Number(targetAccount.balance)));
         }
     }
 
@@ -615,7 +615,7 @@ export async function markSubscriptionPaid(expenseId: number): Promise<void> {
             throw new Error(`Cuenta bloqueada hasta ${formatEnTimezonaDeNegocio(account.lockDate, { day: 'numeric', month: 'long', year: 'numeric' })}`);
         }
         if (Number(account.balance) < amount) {
-            throw new Error(`Fondos insuficientes en "${account.name}" (disponible: $${Number(account.balance).toFixed(2)})`);
+            throw new Error(mensajeSaldoInsuficiente(account.name, Number(account.balance)));
         }
     }
 
