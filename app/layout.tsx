@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Plus_Jakarta_Sans,
   JetBrains_Mono,
@@ -13,6 +13,7 @@ import {
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ColorThemeProvider } from "@/components/color-theme-provider";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import { COLOR_THEME_IDS, COLOR_THEME_STORAGE_KEY, DEFAULT_COLOR_THEME } from "@/lib/color-themes";
 import "./globals.css";
 
@@ -54,6 +55,17 @@ const themeInitScript = `(function(){try{var k=${JSON.stringify(COLOR_THEME_STOR
 export const metadata: Metadata = {
   title: "Finanzas Maestras",
   description: "Gestor de finanzas personales by Ricardo Pinzón",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Finanzas",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#2F6699",
 };
 
 export default function RootLayout({
@@ -76,6 +88,7 @@ export default function RootLayout({
         >
           <ColorThemeProvider>
             <Toaster richColors />
+            <ServiceWorkerRegister />
             {children}
           </ColorThemeProvider>
         </ThemeProvider>
