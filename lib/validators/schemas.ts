@@ -89,6 +89,26 @@ export const authSchema = z.object({
     name: z.string().min(1, 'Nombre requerido').max(100).optional(),
 });
 
+export const loginSchema = z.object({
+    email: z.string().email('Correo inválido'),
+    password: z.string().min(1, 'Contraseña requerida'),
+});
+
+// ─── API móvil (widget de alta rápida) ─────────────────────────────────────
+
+export const quickExpenseSchema = z.object({
+    amount: z.number().positive('Monto debe ser positivo').max(999999999),
+    name: z.string().trim().min(1).max(200).optional(),
+    accountId: z.number().int().positive().optional(),
+    categoryId: z.number().int().positive().optional(),
+});
+
+export const quickIncomeSchema = z.object({
+    amount: z.number().positive('Monto debe ser positivo').max(999999999),
+    name: z.string().trim().min(1).max(200).optional(),
+    accountId: z.number().int().positive().optional(),
+});
+
 export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
     const result = schema.safeParse(data);
     if (result.success) return { success: true, data: result.data };

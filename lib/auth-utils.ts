@@ -58,10 +58,23 @@ export async function getImpersonatedId(): Promise<number | null> {
     return parseInt(val);
 }
 
+/**
+ * El navegador manda el JWT en la cookie `httpOnly`. La API móvil (app
+ * Android del widget) no tiene cookie jar, así que manda el mismo JWT en
+ * `Authorization: Bearer <token>` — se acepta como respaldo cuando no hay
+ * cookie, para que `requireOwnership` y toda Server Action que ya depende de
+ * `requireAuth` funcionen también desde el móvil sin tocar cada una.
+ */
 export async function requireAuth(): Promise<{ userId: number; role?: string }> {
-    const { cookies } = await import('next/headers');
+    const { cookies, headers } = await import('next/headers');
     const cookieStore = await cookies();
-    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    let token = cookieStore.get(SESSION_COOKIE)?.value;
+
+    if (!token) {
+        const authHeader = (await headers()).get('authorization');
+        token = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : undefined;
+    }
+
     if (!token) throw new Error('No autenticado');
 
     const payload = await verifySession(token);
