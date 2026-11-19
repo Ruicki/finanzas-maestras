@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // App Expo/React Native aparte (su propio package.json y tsconfig) — se
+    // lintea con lo suyo (`cd mobile && npx expo lint`), no con reglas
+    // pensadas para Next.js.
+    "mobile/**",
   ]),
   {
     // Scripts de Node/CommonJS puros: require() es el patrón correcto aquí, no un ES import faltante.

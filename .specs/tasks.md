@@ -898,3 +898,79 @@ falló por una limitación del sandbox sin red hacia Google Fonts
 (`next/font/google` en `app/layout.tsx`, nada que ver con ningún archivo
 tocado en esta fase) — no se pudo correr una build de producción completa
 ni Playwright esta vez.
+
+## Fase 27: PWA instalable + app móvil con widget de alta rápida
+
+> El usuario pidió tener Finanzas Maestras como app instalable con acceso
+> rápido tipo widget. Ante la disyuntiva real (un widget nativo de verdad
+> necesita código nativo, no hay forma de evitarlo), se le preguntó y eligió
+> "PWA instalable ahora, widget nativo después". Más adelante, ya con la PWA
+> lista, pidió explícitamente el widget nativo real — elige Android primero
+> (sin cuenta de Apple ni Mac necesarios, vs. iOS que exige Swift/WidgetKit y
+> firma con cuenta de Apple Developer de pago).
+
+- [x] 27.1 **PWA instalable.** `app/manifest.ts` (nombre, íconos, `display:
+      standalone`, colores del tema Marino). Íconos generados con un script
+      `sharp` (monograma "F" vectorial, no texto, para no depender de fuentes)
+      en 192/512/512-maskable + `app/apple-icon.png` (180px, autodetectado por
+      Next). `viewport` (export separado de `metadata` — breaking change de
+      Next 14+ confirmado leyendo `node_modules/next/dist/docs/` tal como
+      exige `AGENTS.md`) con `themeColor`, y `appleWebApp` en `metadata`.
+      Service worker (`public/sw.js`) deliberadamente **sin caché** —
+      `fetch` pasa directo a la red en cada request — porque cachear una
+      Server Action o una página con saldos arriesgaría mostrar un número
+      viejo en una app de plata; el único propósito del service worker es la
+      señal de instalabilidad, no acelerar nada.
+      → `tsc`, `lint`, `jest` (201/201) limpios. `next build` se intentó y
+      falló por la misma limitación de red sin Google Fonts que en la Fase
+      26 (confirmado comparando con el mismo build sobre el commit anterior,
+      falla igual) — no es un error introducido acá.
+- [x] 27.2 **API móvil con token Bearer.** El navegador autentica con cookie
+      `httpOnly`; una app nativa no tiene cookie jar. `requireAuth()` en
+      `lib/auth-utils.ts` ahora acepta `Authorization: Bearer <jwt>` como
+      respaldo cuando no hay cookie — mismo JWT, sin tocar ninguno de los
+      ~9 sitios que ya dependen de `requireOwnership`/`requireAuth`. Cuatro
+      rutas nuevas en `app/api/mobile/`: `login` (devuelve el JWT en el
+      body), `context` (cuentas + categorías del perfil, para los selectores
+      de la app), `quick-expense` y `quick-income` (reusan `createExpense`/
+      `createIncome` tal cual — misma validación de fondos, bloqueo de
+      cuenta y pertenencia anti-IDOR que ya tenían). Validación con Zod
+      (`quickExpenseSchema`, `quickIncomeSchema`, `loginSchema`).
+      → Test nuevo `__tests__/auth-utils.test.ts` (5 casos: cookie, header,
+      sin ninguno, token inválido, header sin prefijo `Bearer`) — primera
+      vez que algo en la suite importa `auth-utils.ts`, lo que expuso que
+      `jose` (ESM puro) no tenía transform en `jest.config.js`; se mockeó
+      `jose` en el test en vez de tocar la config global de Jest.
+      → `tsc`, `lint`, `jest` (206/206) limpios.
+- [x] 27.3 **App Android (Expo/React Native) con el widget real.** Carpeta
+      `mobile/` nueva, Expo SDK 58 + expo-router (rutas en `src/app/`: boot
+      `index`, `login`, `quick-add`). JWT guardado en `expo-secure-store`
+      (Keychain/Keystore), nunca en texto plano. `quick-add` lee cuenta y
+      categorías de `/api/mobile/context`, manda el alta a
+      `/api/mobile/quick-expense` o `/quick-income`, y al terminar cierra la
+      pantalla sola (`BackHandler.exitApp` en Android) — vuelve al home tal
+      cual se abrió desde el widget, no deja la app abierta sin motivo.
+      Widget real con `react-native-android-widget` (dos botones, "+ Gasto"
+      / "+ Ingreso", que abren `quick-add` por deep link `OPEN_URI` al
+      scheme `finanzasmaestras://`) — confirmado compatible con Expo 58/RN
+      0.88.1 leyendo el changelog del propio paquete en GitHub (`docs.expo.dev`
+      no es alcanzable desde este sandbox; SDK 58 es más nuevo que cualquier
+      documentación de entrenamiento, así que se leyó la API real desde
+      `node_modules` y desde un proyecto de referencia descartable generado
+      con `create-expo-app` default, no de memoria).
+      → Verificado de verdad, no solo tipado: `npx tsc --noEmit` limpio,
+      `npx expo export` bundlea sin errores (1156 módulos), y
+      `npx expo prebuild --platform android` generó el `AndroidManifest.xml`
+      con el `<receiver>` del widget y su `widgetprovider_quickadd.xml` —
+      prueba de que el config plugin aplica de verdad, no solo que
+      "debería" funcionar. `android/`/`ios/` se descartan después (generados
+      por CNG, no se versionan).
+      → **Pendiente, no se pudo hacer desde este sandbox:** compilar el
+      `.apk` real. `api.expo.dev` y `reactnative.directory` están bloqueados
+      por la política de red del contenedor, y generar un APK con EAS exige
+      además una cuenta de Expo del usuario (`eas login`) que esta sesión no
+      tiene ni puede crear. Pasos exactos para el usuario en
+      `mobile/README.md`. También pendiente: las rutas `/api/mobile/*` viven
+      en esta rama, no en producción — el login desde el celular no
+      funcionará contra `finanzas-maestras.vercel.app` hasta que se
+      mergeen y desplieguen.
